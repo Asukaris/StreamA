@@ -1,0 +1,619 @@
+/* API Documentation Styles */
+
+/* Main Layout */
+.api-main {
+    padding: 2rem 0;
+    min-height: calc(100vh - 200px);
+}
+
+.api-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 3rem;
+    margin-top: 2rem;
+}
+
+/* Sidebar Navigation */
+.api-sidebar {
+    position: sticky;
+    top: 2rem;
+    height: fit-content;
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.api-nav h3 {
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.nav-sections {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-sections > li {
+    margin-bottom: 0.5rem;
+}
+
+.nav-section {
+    display: block;
+    padding: 0.75rem 1rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+}
+
+.nav-section:hover {
+    background: var(--hover-bg);
+    color: var(--text-primary);
+    border-left-color: var(--primary-color);
+}
+
+.nav-section.active {
+    background: var(--primary-color-alpha);
+    color: var(--primary-color);
+    border-left-color: var(--primary-color);
+}
+
+.nav-subsections {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0 1rem;
+}
+
+.nav-subsections li {
+    margin-bottom: 0.25rem;
+}
+
+.nav-subsection {
+    display: block;
+    padding: 0.5rem 0.75rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.nav-subsection:hover {
+    background: var(--hover-bg);
+    color: var(--text-secondary);
+}
+
+/* API Content */
+.api-content {
+    max-width: none;
+}
+
+.api-section {
+    margin-bottom: 4rem;
+    scroll-margin-top: 2rem;
+}
+
+.api-section h2 {
+    color: var(--text-primary);
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 1.5rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.api-section h3 {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 2rem 0 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.api-section h3 i {
+    color: var(--primary-color);
+}
+
+.api-section h4 {
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 1.5rem 0 0.75rem 0;
+}
+
+.api-section p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+/* Info Box */
+.info-box {
+    background: var(--primary-color-alpha);
+    border: 1px solid var(--primary-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1.5rem 0;
+}
+
+.info-box h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-box code {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.9rem;
+}
+
+/* Feature Grid */
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.feature-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-color);
+}
+
+.feature-card i {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.feature-card h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+}
+
+.feature-card p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* Code Blocks */
+.code-block {
+    background: var(--code-bg, #1e1e1e);
+    border-radius: 8px;
+    margin: 1rem 0;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.code-header {
+    background: var(--code-header-bg, #2d2d2d);
+    padding: 0.75rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.code-title {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.copy-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+}
+
+.copy-btn:hover {
+    background: var(--hover-bg);
+    color: var(--text-primary);
+}
+
+.code-block pre {
+    margin: 0;
+    padding: 1rem;
+    overflow-x: auto;
+    background: transparent;
+}
+
+.code-block code {
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--code-text, #f8f8f2);
+}
+
+/* Endpoint Groups */
+.endpoint-group {
+    margin: 3rem 0;
+}
+
+.endpoint {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin: 1.5rem 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.endpoint:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-color-alpha);
+}
+
+.endpoint-header {
+    background: var(--endpoint-header-bg, #f8f9fa);
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.method {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.method.get {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.method.post {
+    background: #e8f5e8;
+    color: #388e3c;
+}
+
+.method.put {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.method.delete {
+    background: #ffebee;
+    color: #d32f2f;
+}
+
+.path {
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.description {
+    color: var(--text-secondary);
+    flex: 1;
+}
+
+.auth-required {
+    background: var(--warning-color-alpha);
+    color: var(--warning-color);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.endpoint-content {
+    padding: 1.5rem;
+}
+
+/* Tables */
+.params-table,
+.status-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    background: var(--card-bg);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.params-table th,
+.status-table th {
+    background: var(--table-header-bg, #f8f9fa);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.params-table td,
+.status-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.params-table tr:last-child td,
+.status-table tr:last-child td {
+    border-bottom: none;
+}
+
+.params-table code {
+    background: var(--code-inline-bg, #f1f3f4);
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    color: var(--code-inline-text, #d73a49);
+}
+
+.status-code {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+    font-family: 'Fira Code', 'Consolas', monospace;
+}
+
+.status-code.success {
+    background: #e8f5e8;
+    color: #388e3c;
+}
+
+.status-code.error {
+    background: #ffebee;
+    color: #d32f2f;
+}
+
+/* Rate Limits */
+.rate-limits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.rate-limit-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.rate-limit-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-color);
+}
+
+.rate-limit-card h4 {
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+}
+
+.rate-limit-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.rate-limit-card p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Dark Theme Adjustments */
+[data-theme="dark"] .api-sidebar {
+    background: var(--card-bg-dark);
+    border-color: var(--border-color-dark);
+}
+
+[data-theme="dark"] .endpoint-header {
+    background: var(--card-bg-dark);
+}
+
+[data-theme="dark"] .params-table th,
+[data-theme="dark"] .status-table th {
+    background: var(--card-bg-dark);
+}
+
+[data-theme="dark"] .code-block {
+    background: #1a1a1a;
+}
+
+[data-theme="dark"] .code-header {
+    background: #2a2a2a;
+}
+
+[data-theme="dark"] .params-table code {
+    background: #2a2a2a;
+    color: #79c0ff;
+}
+
+[data-theme="dark"] .info-box code {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .api-layout {
+        grid-template-columns: 250px 1fr;
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .api-layout {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .api-sidebar {
+        position: static;
+        order: 2;
+    }
+    
+    .api-content {
+        order: 1;
+    }
+    
+    .endpoint-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .feature-grid,
+    .rate-limits-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .params-table,
+    .status-table {
+        font-size: 0.9rem;
+    }
+    
+    .params-table th,
+    .params-table td,
+    .status-table th,
+    .status-table td {
+        padding: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .api-main {
+        padding: 1rem 0;
+    }
+    
+    .api-section h2 {
+        font-size: 1.5rem;
+    }
+    
+    .api-section h3 {
+        font-size: 1.2rem;
+    }
+    
+    .endpoint-content {
+        padding: 1rem;
+    }
+    
+    .code-block pre {
+        padding: 0.75rem;
+    }
+    
+    .code-block code {
+        font-size: 0.8rem;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .api-sidebar {
+        display: none;
+    }
+    
+    .api-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .endpoint {
+        break-inside: avoid;
+    }
+    
+    .code-block {
+        break-inside: avoid;
+    }
+}
+
+/* Accessibility */
+.api-section:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.nav-section:focus,
+.nav-subsection:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.copy-btn:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Smooth Scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .endpoint {
+        border-width: 2px;
+    }
+    
+    .nav-section.active {
+        border-left-width: 4px;
+    }
+    
+    .method {
+        border: 1px solid currentColor;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .endpoint,
+    .feature-card,
+    .rate-limit-card,
+    .nav-section,
+    .nav-subsection,
+    .copy-btn {
+        transition: none;
+    }
+    
+    html {
+        scroll-behavior: auto;
+    }
+}

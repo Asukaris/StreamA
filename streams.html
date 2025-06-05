@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream-Archiv - Factor_KS</title>
+    <meta name="description" content="Durchsuche alle archivierten Streams von Factor_KS">
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/streams.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+</head>
+<body>
+    <!-- Cookie Consent Toast -->
+    <div id="cookieConsent" class="cookie-consent hidden">
+        <div class="cookie-content">
+            <p>Diese Website verwendet Cookies, um Ihren Stream-Fortschritt zu speichern und Ihre Erfahrung zu verbessern.</p>
+            <div class="cookie-buttons">
+                <button id="acceptCookies" class="btn btn-primary">Akzeptieren</button>
+                <button id="declineCookies" class="btn btn-secondary">Ablehnen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <a href="index.html">Stream Archiv</a>
+                </div>
+                
+                <div class="nav-menu">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="streams.html" class="nav-link active">Streams</a>
+                    <a href="api.html" class="nav-link">API</a>
+                    <a href="analytics.html" class="nav-link">Analytics</a>
+                    <a href="admin.html" class="nav-link">Admin</a>
+                </div>
+                
+                <div class="nav-actions">
+                    <button id="themeToggle" class="theme-toggle" title="Theme wechseln">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button id="loginBtn" class="login-btn">
+                        <i class="fab fa-twitch"></i>
+                        Anmelden
+                    </button>
+                    <button id="adminBtn" class="admin-btn hidden">
+                        <i class="fas fa-cog"></i>
+                        Admin
+                    </button>
+                </div>
+                
+                <div class="mobile-menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>Stream-Archiv</h1>
+                <p>Durchsuche alle archivierten Streams und finde deine Lieblingsinhalte</p>
+            </div>
+
+            <!-- Filters and Search -->
+            <div class="stream-filters">
+                <div class="filter-row">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="streamSearch" placeholder="Streams durchsuchen...">
+                    </div>
+                    
+                    <div class="filter-controls">
+                        <select id="gameFilter" class="filter-select">
+                            <option value="">Alle Spiele</option>
+                            <option value="JDM: Japanese Drift Master">JDM: Japanese Drift Master</option>
+                            <option value="Forza Horizon 5">Forza Horizon 5</option>
+                            <option value="Gran Turismo 7">Gran Turismo 7</option>
+                            <option value="Need for Speed">Need for Speed</option>
+                        </select>
+                        
+                        <select id="sortFilter" class="filter-select">
+                            <option value="newest">Neueste zuerst</option>
+                            <option value="oldest">Älteste zuerst</option>
+                            <option value="duration">Nach Dauer</option>
+                            <option value="views">Nach Aufrufen</option>
+                        </select>
+                        
+                        <button id="filterToggle" class="btn btn-secondary">
+                            <i class="fas fa-filter"></i>
+                            Filter
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Advanced Filters (Hidden by default) -->
+                <div id="advancedFilters" class="advanced-filters" style="display: none;">
+                    <div class="filter-group">
+                        <label>Datum:</label>
+                        <input type="date" id="dateFrom" class="filter-input">
+                        <span>bis</span>
+                        <input type="date" id="dateTo" class="filter-input">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Dauer:</label>
+                        <select id="durationFilter" class="filter-select">
+                            <option value="">Alle Längen</option>
+                            <option value="short">Kurz (< 1h)</option>
+                            <option value="medium">Mittel (1-3h)</option>
+                            <option value="long">Lang (> 3h)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Tags:</label>
+                        <div class="tag-filters">
+                            <label class="tag-filter">
+                                <input type="checkbox" value="racing"> Racing
+                            </label>
+                            <label class="tag-filter">
+                                <input type="checkbox" value="drift"> Drift
+                            </label>
+                            <label class="tag-filter">
+                                <input type="checkbox" value="multiplayer"> Multiplayer
+                            </label>
+                            <label class="tag-filter">
+                                <input type="checkbox" value="tutorial"> Tutorial
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-actions">
+                        <button id="applyFilters" class="btn btn-primary">Filter anwenden</button>
+                        <button id="clearFilters" class="btn btn-secondary">Zurücksetzen</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stream Grid -->
+            <div class="streams-grid" id="streamsGrid">
+                <!-- Loading State -->
+                <div class="loading-state">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Streams werden geladen...</p>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination" style="display: none;">
+                <button id="prevPage" class="btn btn-secondary" disabled>
+                    <i class="fas fa-chevron-left"></i>
+                    Zurück
+                </button>
+                
+                <div class="page-info">
+                    <span id="pageInfo">Seite 1 von 1</span>
+                </div>
+                
+                <button id="nextPage" class="btn btn-secondary" disabled>
+                    Weiter
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <i class="fas fa-video-slash"></i>
+                <h3>Keine Streams gefunden</h3>
+                <p>Versuche deine Suchkriterien zu ändern oder schaue später wieder vorbei.</p>
+                <button id="clearSearch" class="btn btn-primary">Suche zurücksetzen</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Factor_KS</h4>
+                    <p>Dein Gaming-Streamer für Racing und mehr!</p>
+                    <div class="social-links">
+                        <a href="https://twitch.tv/factor_ks" target="_blank" title="Twitch">
+                            <i class="fab fa-twitch"></i>
+                        </a>
+                        <a href="https://twitter.com/factor_ks" target="_blank" title="Twitter">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="https://youtube.com/@factor_ks" target="_blank" title="YouTube">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                        <a href="https://discord.gg/factor_ks" target="_blank" title="Discord">
+                            <i class="fab fa-discord"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="streams.html">Streams</a></li>
+                        <li><a href="privacy.html">Datenschutz</a></li>
+                        <li><a href="imprint.html">Impressum</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Rechtliches</h4>
+                    <ul>
+                        <li><a href="privacy.html">Datenschutzerklärung</a></li>
+                        <li><a href="imprint.html">Impressum</a></li>
+                        <li><a href="#">Nutzungsbedingungen</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Factor_KS. Alle Rechte vorbehalten.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Files -->
+    <script src="js/app.js"></script>
+    <script src="js/streams.js"></script>
+</body>
+</html>

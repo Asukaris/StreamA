@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Dokumentation - Factor_KS Stream Archive</title>
+    <meta name="description" content="API Dokumentation für das Factor_KS Stream Archive">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/api.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Prism.js for syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+</head>
+<body>
+    <!-- Cookie Consent Toast -->
+    <div id="cookieConsent" class="cookie-consent hidden">
+        <div class="cookie-content">
+            <p>Diese Website verwendet Cookies, um Ihren Stream-Fortschritt zu speichern und Ihre Erfahrung zu verbessern.</p>
+            <div class="cookie-buttons">
+                <button id="acceptCookies" class="btn btn-primary">Akzeptieren</button>
+                <button id="declineCookies" class="btn btn-secondary">Ablehnen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <a href="index.html">Stream Archiv</a>
+                </div>
+                
+                <div class="nav-menu">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="streams.html" class="nav-link">Streams</a>
+                    <a href="api.html" class="nav-link active">API</a>
+                    <a href="analytics.html" class="nav-link">Analytics</a>
+                    <a href="admin.html" class="nav-link">Admin</a>
+                </div>
+                
+                <div class="nav-actions">
+                    <button id="themeToggle" class="theme-toggle" title="Theme wechseln">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button id="loginBtn" class="login-btn">
+                        <i class="fab fa-twitch"></i>
+                        Anmelden
+                    </button>
+                    <button id="adminBtn" class="admin-btn hidden">
+                        <i class="fas fa-cog"></i>
+                        Admin
+                    </button>
+                </div>
+                
+                <div class="mobile-menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </div>
+        </nav>
+    </header>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main api-main">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1><i class="fas fa-code"></i> API Dokumentation</h1>
+                <p>Entwickler-Dokumentation für das Factor_KS Stream Archive API</p>
+            </div>
+
+            <div class="api-layout">
+                <!-- Sidebar Navigation -->
+                <aside class="api-sidebar">
+                    <nav class="api-nav">
+                        <h3>Inhaltsverzeichnis</h3>
+                        <ul class="nav-sections">
+                            <li><a href="#overview" class="nav-section active">Übersicht</a></li>
+                            <li><a href="#authentication" class="nav-section">Authentifizierung</a></li>
+                            <li><a href="#endpoints" class="nav-section">Endpoints</a>
+                                <ul class="nav-subsections">
+                                    <li><a href="#streams" class="nav-subsection">Streams</a></li>
+                                    <li><a href="#users" class="nav-subsection">Benutzer</a></li>
+                                    <li><a href="#comments" class="nav-subsection">Kommentare</a></li>
+                                    <li><a href="#chat" class="nav-subsection">Chat</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="#examples" class="nav-section">Beispiele</a></li>
+                            <li><a href="#errors" class="nav-section">Fehlerbehandlung</a></li>
+                            <li><a href="#rate-limits" class="nav-section">Rate Limits</a></li>
+                        </ul>
+                    </nav>
+                </aside>
+
+                <!-- API Content -->
+                <div class="api-content">
+                    <!-- Overview Section -->
+                    <section id="overview" class="api-section">
+                        <h2>Übersicht</h2>
+                        <p>Das Factor_KS Stream Archive API ermöglicht es Entwicklern, auf Stream-Daten, Benutzerinformationen und Chat-Nachrichten zuzugreifen. Die API folgt REST-Prinzipien und gibt JSON-Antworten zurück.</p>
+                        
+                        <div class="info-box">
+                            <h4><i class="fas fa-info-circle"></i> Base URL</h4>
+                            <code>https://api.factor-ks-archive.com/v1</code>
+                        </div>
+
+                        <div class="feature-grid">
+                            <div class="feature-card">
+                                <i class="fas fa-video"></i>
+                                <h4>Stream Management</h4>
+                                <p>Vollständiger Zugriff auf Stream-Metadaten, HLS-Links und Thumbnails</p>
+                            </div>
+                            <div class="feature-card">
+                                <i class="fas fa-users"></i>
+                                <h4>Benutzerverwaltung</h4>
+                                <p>Benutzerprofile, Authentifizierung und Berechtigungen verwalten</p>
+                            </div>
+                            <div class="feature-card">
+                                <i class="fas fa-comments"></i>
+                                <h4>Chat Integration</h4>
+                                <p>Synchronisierte Chat-Nachrichten mit Zeitstempeln und Emotes</p>
+                            </div>
+                            <div class="feature-card">
+                                <i class="fas fa-chart-line"></i>
+                                <h4>Analytics</h4>
+                                <p>Detaillierte Statistiken über Views, Engagement und Performance</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Authentication Section -->
+                    <section id="authentication" class="api-section">
+                        <h2>Authentifizierung</h2>
+                        <p>Das API verwendet OAuth 2.0 mit Twitch-Integration für die Authentifizierung. Alle Anfragen müssen einen gültigen Bearer Token enthalten.</p>
+                        
+                        <h3>Token erhalten</h3>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">POST /auth/token</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i></button>
+                            </div>
+                            <pre><code class="language-bash">curl -X POST https://api.factor-ks-archive.com/v1/auth/token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "client_id": "your_client_id",
+    "client_secret": "your_client_secret",
+    "grant_type": "client_credentials"
+  }'</code></pre>
+                        </div>
+
+                        <h3>Token verwenden</h3>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Authorization Header</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i></button>
+                            </div>
+                            <pre><code class="language-bash">Authorization: Bearer your_access_token</code></pre>
+                        </div>
+                    </section>
+
+                    <!-- Endpoints Section -->
+                    <section id="endpoints" class="api-section">
+                        <h2>API Endpoints</h2>
+                        
+                        <!-- Streams Endpoints -->
+                        <div id="streams" class="endpoint-group">
+                            <h3><i class="fas fa-video"></i> Streams</h3>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="path">/streams</span>
+                                    <span class="description">Alle Streams abrufen</span>
+                                </div>
+                                
+                                <div class="endpoint-content">
+                                    <h4>Parameter</h4>
+                                    <table class="params-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Parameter</th>
+                                                <th>Typ</th>
+                                                <th>Beschreibung</th>
+                                                <th>Standard</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><code>page</code></td>
+                                                <td>integer</td>
+                                                <td>Seitennummer für Paginierung</td>
+                                                <td>1</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>limit</code></td>
+                                                <td>integer</td>
+                                                <td>Anzahl Streams pro Seite (max 100)</td>
+                                                <td>20</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>game</code></td>
+                                                <td>string</td>
+                                                <td>Filter nach Spiel</td>
+                                                <td>-</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>status</code></td>
+                                                <td>string</td>
+                                                <td>Filter nach Status (published, draft)</td>
+                                                <td>published</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    
+                                    <h4>Antwort</h4>
+                                    <div class="code-block">
+                                        <div class="code-header">
+                                            <span class="code-title">200 OK</span>
+                                            <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i></button>
+                                        </div>
+                                        <pre><code class="language-json">{
+  "data": [
+    {
+      "id": 1,
+      "title": "Minecraft Hardcore Survival - Tag 1",
+      "description": "Neues Hardcore Survival Projekt!",
+      "game": "Minecraft",
+      "date": "2024-12-28T20:00:00Z",
+      "duration": 14520,
+      "views": 2847,
+      "thumbnail": "https://cdn.example.com/thumb1.jpg",
+      "hls_url": "https://cdn.example.com/stream1.m3u8",
+      "status": "published",
+      "tags": ["Hardcore", "Survival", "Deutsch"],
+      "created_at": "2024-12-28T19:45:00Z",
+      "updated_at": "2024-12-28T21:30:00Z"
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "total_pages": 5,
+    "total_items": 42,
+    "per_page": 20
+  }
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="path">/streams/{id}</span>
+                                    <span class="description">Einzelnen Stream abrufen</span>
+                                </div>
+                                
+                                <div class="endpoint-content">
+                                    <h4>Antwort</h4>
+                                    <div class="code-block">
+                                        <div class="code-header">
+                                            <span class="code-title">200 OK</span>
+                                            <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i></button>
+                                        </div>
+                                        <pre><code class="language-json">{
+  "data": {
+    "id": 1,
+    "title": "Minecraft Hardcore Survival - Tag 1",
+    "description": "Neues Hardcore Survival Projekt! Mal schauen wie lange ich überlebe...",
+    "game": "Minecraft",
+    "date": "2024-12-28T20:00:00Z",
+    "duration": 14520,
+    "views": 2847,
+    "thumbnail": "https://cdn.example.com/thumb1.jpg",
+    "hls_url": "https://cdn.example.com/stream1.m3u8",
+    "status": "published",
+    "tags": ["Hardcore", "Survival", "Deutsch"],
+    "chapters": [
+      {
+        "time": 0,
+        "title": "Stream Start",
+        "description": "Begrüßung und Planung"
+      },
+      {
+        "time": 1800,
+        "title": "Erste Nacht",
+        "description": "Shelter bauen und überleben"
+      }
+    ],
+    "created_at": "2024-12-28T19:45:00Z",
+    "updated_at": "2024-12-28T21:30:00Z"
+  }
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method post">POST</span>
+                                    <span class="path">/streams</span>
+                                    <span class="description">Neuen Stream erstellen</span>
+                                    <span class="auth-required">🔒 Auth erforderlich</span>
+                                </div>
+                                
+                                <div class="endpoint-content">
+                                    <h4>Request Body</h4>
+                                    <div class="code-block">
+                                        <div class="code-header">
+                                            <span class="code-title">JSON</span>
+                                            <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i></button>
+                                        </div>
+                                        <pre><code class="language-json">{
+  "title": "Neuer Stream Titel",
+  "description": "Stream Beschreibung",
+  "game": "Spiel Name",
+  "date": "2024-12-30T20:00:00Z",
+  "hls_url": "https://cdn.example.com/stream.m3u8",
+  "thumbnail": "https://cdn.example.com/thumb.jpg",
+  "tags": ["Tag1", "Tag2"],
+  "status": "published"
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Users Endpoints -->
+                        <div id="users" class="endpoint-group">
+                            <h3><i class="fas fa-users"></i> Benutzer</h3>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="path">/users/me</span>
+                                    <span class="description">Aktueller Benutzer</span>
+                                    <span class="auth-required">🔒 Auth erforderlich</span>
+                                </div>
+                            </div>
+
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="path">/users/{id}</span>
+                                    <span class="description">Benutzerprofil abrufen</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Comments Endpoints -->
+                        <div id="comments" class="endpoint-group">
+                            <h3><i class="fas fa-comments"></i> Kommentare</h3>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="path">/streams/{id}/comments</span>
+                                    <span class="description">Kommentare zu einem Stream</span>
+                                </div>
+                            </div>
+
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method post">POST</span>
+                                    <span class="path">/streams/{id}/comments</span>
+                                    <span class="description">Neuen Kommentar erstellen</span>
+                                    <span class="auth-required">🔒 Auth erforderlich</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chat Endpoints -->
+                        <div id="chat" class="endpoint-group">
+                            <h3><i class="fas fa-comment-dots"></i> Chat</h3>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="path">/streams/{id}/chat</span>
+                                    <span class="description">Chat-Nachrichten für einen Stream</span>
+                                </div>
+                                
+                                <div class="endpoint-content">
+                                    <h4>Parameter</h4>
+                                    <table class="params-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Parameter</th>
+                                                <th>Typ</th>
+                                                <th>Beschreibung</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><code>start_time</code></td>
+                                                <td>integer</td>
+                                                <td>Startzeit in Sekunden</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>end_time</code></td>
+                                                <td>integer</td>
+                                                <td>Endzeit in Sekunden</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    
+                                    <h4>Antwort</h4>
+                                    <div class="code-block">
+                                        <div class="code-header">
+                                            <span class="code-title">200 OK</span>
+                                            <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i></button>
+                                        </div>
+                                        <pre><code class="language-json">{
+  "data": {
+    "messages": [
+      {
+        "time": 120.5,
+        "username": "viewer123",
+        "message": "Geiler Stream! PogChamp",
+        "color": "#FF6B6B",
+        "badges": ["subscriber"],
+        "emotes": [
+          {
+            "name": "PogChamp",
+            "url": "https://static-cdn.jtvnw.net/emoticons/v2/88/default/dark/1.0",
+            "start": 14,
+            "end": 22
+          }
+        ]
+      }
+    ],
+    "chapters": [
+      {
+        "time": 0,
+        "title": "Stream Start",
+        "description": "Begrüßung und Planung"
+      }
+    ]
+  }
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Examples Section -->
+                    <section id="examples" class="api-section">
+                        <h2>Beispiele</h2>
+                        
+                        <h3>JavaScript/Fetch</h3>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">JavaScript</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i></button>
+                            </div>
+                            <pre><code class="language-javascript">// Streams abrufen
+async function getStreams() {
+  const response = await fetch('https://api.factor-ks-archive.com/v1/streams', {
+    headers: {
+      'Authorization': 'Bearer your_access_token',
+      'Content-Type': 'application/json'
+    }
+  });
+  
+  const data = await response.json();
+  return data;
+}
+
+// Chat-Nachrichten für einen Stream abrufen
+async function getChatMessages(streamId, startTime = 0) {
+  const response = await fetch(
+    `https://api.factor-ks-archive.com/v1/streams/${streamId}/chat?start_time=${startTime}`,
+    {
+      headers: {
+        'Authorization': 'Bearer your_access_token'
+      }
+    }
+  );
+  
+  const data = await response.json();
+  return data.data.messages;
+}</code></pre>
+                        </div>
+
+                        <h3>Python/Requests</h3>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Python</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i></button>
+                            </div>
+                            <pre><code class="language-python">import requests
+
+class FactorKSAPI:
+    def __init__(self, access_token):
+        self.base_url = 'https://api.factor-ks-archive.com/v1'
+        self.headers = {
+            'Authorization': f'Bearer {access_token}',
+            'Content-Type': 'application/json'
+        }
+    
+    def get_streams(self, page=1, limit=20, game=None):
+        params = {'page': page, 'limit': limit}
+        if game:
+            params['game'] = game
+            
+        response = requests.get(
+            f'{self.base_url}/streams',
+            headers=self.headers,
+            params=params
+        )
+        return response.json()
+    
+    def get_stream(self, stream_id):
+        response = requests.get(
+            f'{self.base_url}/streams/{stream_id}',
+            headers=self.headers
+        )
+        return response.json()
+
+# Verwendung
+api = FactorKSAPI('your_access_token')
+streams = api.get_streams(game='Minecraft')
+print(f'Gefunden: {len(streams["data"])} Streams')</code></pre>
+                        </div>
+                    </section>
+
+                    <!-- Errors Section -->
+                    <section id="errors" class="api-section">
+                        <h2>Fehlerbehandlung</h2>
+                        <p>Das API verwendet Standard HTTP-Statuscodes und gibt strukturierte Fehlermeldungen zurück.</p>
+                        
+                        <h3>HTTP Status Codes</h3>
+                        <table class="status-table">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Bedeutung</th>
+                                    <th>Beschreibung</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="status-code success">200</span></td>
+                                    <td>OK</td>
+                                    <td>Anfrage erfolgreich</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="status-code success">201</span></td>
+                                    <td>Created</td>
+                                    <td>Ressource erfolgreich erstellt</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="status-code error">400</span></td>
+                                    <td>Bad Request</td>
+                                    <td>Ungültige Anfrage</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="status-code error">401</span></td>
+                                    <td>Unauthorized</td>
+                                    <td>Authentifizierung erforderlich</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="status-code error">403</span></td>
+                                    <td>Forbidden</td>
+                                    <td>Keine Berechtigung</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="status-code error">404</span></td>
+                                    <td>Not Found</td>
+                                    <td>Ressource nicht gefunden</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="status-code error">429</span></td>
+                                    <td>Too Many Requests</td>
+                                    <td>Rate Limit überschritten</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="status-code error">500</span></td>
+                                    <td>Internal Server Error</td>
+                                    <td>Serverfehler</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h3>Fehlerformat</h3>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">400 Bad Request</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i></button>
+                            </div>
+                            <pre><code class="language-json">{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Die Anfrage enthält ungültige Parameter",
+    "details": [
+      {
+        "field": "title",
+        "message": "Titel ist erforderlich"
+      },
+      {
+        "field": "date",
+        "message": "Ungültiges Datumsformat"
+      }
+    ]
+  }
+}</code></pre>
+                        </div>
+                    </section>
+
+                    <!-- Rate Limits Section -->
+                    <section id="rate-limits" class="api-section">
+                        <h2>Rate Limits</h2>
+                        <p>Um die API-Performance zu gewährleisten, gelten folgende Rate Limits:</p>
+                        
+                        <div class="rate-limits-grid">
+                            <div class="rate-limit-card">
+                                <h4>Öffentliche Endpoints</h4>
+                                <div class="rate-limit-value">1000 Anfragen/Stunde</div>
+                                <p>Für nicht-authentifizierte Anfragen</p>
+                            </div>
+                            <div class="rate-limit-card">
+                                <h4>Authentifizierte Benutzer</h4>
+                                <div class="rate-limit-value">5000 Anfragen/Stunde</div>
+                                <p>Für authentifizierte Benutzer</p>
+                            </div>
+                            <div class="rate-limit-card">
+                                <h4>Admin/Moderator</h4>
+                                <div class="rate-limit-value">10000 Anfragen/Stunde</div>
+                                <p>Für privilegierte Benutzer</p>
+                            </div>
+                        </div>
+
+                        <h3>Rate Limit Headers</h3>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Response Headers</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i></button>
+                            </div>
+                            <pre><code class="language-http">X-RateLimit-Limit: 5000
+X-RateLimit-Remaining: 4999
+X-RateLimit-Reset: 1640995200</code></pre>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Factor_KS Archive</h3>
+                    <p>Dein Archiv für alle Factor_KS Streams mit synchronisiertem Chat und HLS-Video-Streaming.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Links</h3>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="streams.html">Stream Archive</a></li>
+                        <li><a href="admin.html">Admin</a></li>
+                        <li><a href="api.html">API</a></li>
+                        <li><a href="privacy.html">Datenschutz</a></li>
+                        <li><a href="imprint.html">Impressum</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Social Media</h3>
+                    <div class="social-links">
+                        <a href="https://twitch.tv/factor_ks" target="_blank" rel="noopener noreferrer" title="Twitch">
+                            <i class="fab fa-twitch"></i>
+                        </a>
+                        <a href="https://youtube.com/@factor_ks" target="_blank" rel="noopener noreferrer" title="YouTube">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                        <a href="https://twitter.com/factor_ks" target="_blank" rel="noopener noreferrer" title="Twitter">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="https://discord.gg/factor_ks" target="_blank" rel="noopener noreferrer" title="Discord">
+                            <i class="fab fa-discord"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Factor_KS. Alle Rechte vorbehalten.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/api.js"></script>
+</body>
+</html>

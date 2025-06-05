@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daten löschen - Stream Archive</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .data-info {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            color: #004085;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 10px 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            text-align: center;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        .actions {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .data-count {
+            font-weight: bold;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗑️ Datenbank bereinigen</h1>
+        
+        <div class="warning">
+            <strong>⚠️ Warnung:</strong> Diese Aktionen löschen alle gespeicherten Daten unwiderruflich!
+        </div>
+        
+        <div class="data-info" id="dataInfo">
+            <h3>📊 Aktuelle Daten:</h3>
+            <p>Streams: <span class="data-count" id="streamCount">0</span></p>
+            <p>Benutzer: <span class="data-count" id="userCount">0</span></p>
+            <p>Einstellungen: <span class="data-count" id="settingsCount">0</span></p>
+            <p>Analytics: <span class="data-count" id="analyticsCount">0</span></p>
+            <p>Favoriten: <span class="data-count" id="favoritesCount">0</span></p>
+        </div>
+        
+        <div class="actions">
+            <button class="btn btn-danger" onclick="clearAllData()">🗑️ Alle Daten löschen</button>
+            <button class="btn btn-danger" onclick="clearStreams()">📺 Nur Streams löschen</button>
+            <button class="btn btn-success" onclick="refreshData()">🔄 Daten aktualisieren</button>
+            <a href="admin.html" class="btn btn-primary">← Zurück zum Admin</a>
+        </div>
+    </div>
+
+    <script>
+        function updateDataCounts() {
+            const streams = JSON.parse(localStorage.getItem('streamArchive_streams') || '[]');
+            const users = JSON.parse(localStorage.getItem('streamArchive_users') || '[]');
+            const settings = localStorage.getItem('streamArchive_settings');
+            const analytics = localStorage.getItem('streamArchive_analytics');
+            const favorites = JSON.parse(localStorage.getItem('streamFavorites') || '[]');
+            
+            document.getElementById('streamCount').textContent = streams.length;
+            document.getElementById('userCount').textContent = users.length;
+            document.getElementById('settingsCount').textContent = settings ? '1' : '0';
+            document.getElementById('analyticsCount').textContent = analytics ? '1' : '0';
+            document.getElementById('favoritesCount').textContent = favorites.length;
+        }
+        
+        function clearAllData() {
+            if (confirm('Sind Sie sicher, dass Sie ALLE Daten löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden!')) {
+                if (confirm('Letzte Bestätigung: Wirklich ALLE Daten löschen?')) {
+                    // Clear all localStorage data
+                    localStorage.removeItem('streamArchive_streams');
+                    localStorage.removeItem('streamArchive_users');
+                    localStorage.removeItem('streamArchive_settings');
+                    localStorage.removeItem('streamArchive_analytics');
+                    localStorage.removeItem('streamFavorites');
+                    
+                    alert('✅ Alle Daten wurden erfolgreich gelöscht!');
+                    updateDataCounts();
+                }
+            }
+        }
+        
+        function clearStreams() {
+            if (confirm('Sind Sie sicher, dass Sie alle Streams löschen möchten?')) {
+                localStorage.removeItem('streamArchive_streams');
+                alert('✅ Alle Streams wurden erfolgreich gelöscht!');
+                updateDataCounts();
+            }
+        }
+        
+        function refreshData() {
+            updateDataCounts();
+            alert('🔄 Daten wurden aktualisiert!');
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDataCounts();
+        });
+    </script>
+</body>
+</html>

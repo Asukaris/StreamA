@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard - Factor_KS Stream Archive</title>
+    <meta name="description" content="Analytics und Statistiken für das Factor_KS Stream Archive">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/analytics.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Cookie Consent Toast -->
+    <div id="cookieConsent" class="cookie-consent hidden">
+        <div class="cookie-content">
+            <p>Diese Website verwendet Cookies, um Ihren Stream-Fortschritt zu speichern und Ihre Erfahrung zu verbessern.</p>
+            <div class="cookie-buttons">
+                <button id="acceptCookies" class="btn btn-primary">Akzeptieren</button>
+                <button id="declineCookies" class="btn btn-secondary">Ablehnen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <a href="index.html">Stream Archiv</a>
+                </div>
+                
+                <div class="nav-menu">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="streams.html" class="nav-link">Streams</a>
+                    <a href="api.html" class="nav-link">API</a>
+                    <a href="analytics.html" class="nav-link active">Analytics</a>
+                    <a href="admin.html" class="nav-link">Admin</a>
+                </div>
+                
+                <div class="nav-actions">
+                    <button id="themeToggle" class="theme-toggle" title="Theme wechseln">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button id="loginBtn" class="login-btn">
+                        <i class="fab fa-twitch"></i>
+                        Anmelden
+                    </button>
+                    <button id="adminBtn" class="admin-btn hidden">
+                        <i class="fas fa-cog"></i>
+                        Admin
+                    </button>
+                </div>
+                
+                <div class="mobile-menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </div>
+        </nav>
+    </header>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main analytics-main">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1><i class="fas fa-chart-line"></i> Analytics Dashboard</h1>
+                <p>Detaillierte Statistiken und Insights für das Factor_KS Stream Archive</p>
+                
+                <!-- Time Range Selector -->
+                <div class="time-range-selector">
+                    <button class="time-btn active" data-range="7d">7 Tage</button>
+                    <button class="time-btn" data-range="30d">30 Tage</button>
+                    <button class="time-btn" data-range="90d">90 Tage</button>
+                    <button class="time-btn" data-range="1y">1 Jahr</button>
+                    <button class="time-btn" data-range="all">Gesamt</button>
+                </div>
+            </div>
+
+            <!-- Key Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value" id="totalViews">0</div>
+                        <div class="metric-label">Gesamte Views</div>
+                        <div class="metric-change positive" id="viewsChange">+0%</div>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value" id="watchTime">0h</div>
+                        <div class="metric-label">Watch Time</div>
+                        <div class="metric-change positive" id="watchTimeChange">+0%</div>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value" id="uniqueViewers">0</div>
+                        <div class="metric-label">Unique Viewers</div>
+                        <div class="metric-change positive" id="viewersChange">+0%</div>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value" id="totalStreams">0</div>
+                        <div class="metric-label">Streams</div>
+                        <div class="metric-change positive" id="streamsChange">+0</div>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value" id="totalComments">0</div>
+                        <div class="metric-label">Kommentare</div>
+                        <div class="metric-change positive" id="commentsChange">+0%</div>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value" id="avgCompletion">0%</div>
+                        <div class="metric-label">Ø Completion Rate</div>
+                        <div class="metric-change positive" id="completionChange">+0%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-section">
+                <!-- Views Over Time -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-area"></i> Views über Zeit</h3>
+                        <div class="chart-controls">
+                            <button class="chart-type-btn active" data-type="line">Linie</button>
+                            <button class="chart-type-btn" data-type="bar">Balken</button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="viewsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Top Streams -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-trophy"></i> Top Streams</h3>
+                        <select id="topStreamsFilter" class="chart-filter">
+                            <option value="views">Nach Views</option>
+                            <option value="watchtime">Nach Watch Time</option>
+                            <option value="comments">Nach Kommentaren</option>
+                            <option value="completion">Nach Completion Rate</option>
+                        </select>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="topStreamsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Game Distribution -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-gamepad"></i> Spiele Verteilung</h3>
+                        <div class="chart-legend" id="gamesLegend"></div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="gamesChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Viewer Activity -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-clock"></i> Viewer Aktivität</h3>
+                        <div class="chart-info">
+                            <span class="info-text">Durchschnittliche Aktivität nach Tageszeit</span>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Tables -->
+            <div class="tables-section">
+                <!-- Stream Performance Table -->
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3><i class="fas fa-table"></i> Stream Performance</h3>
+                        <div class="table-controls">
+                            <input type="text" id="streamSearch" placeholder="Stream suchen..." class="search-input">
+                            <select id="streamSort" class="sort-select">
+                                <option value="date">Nach Datum</option>
+                                <option value="views">Nach Views</option>
+                                <option value="duration">Nach Dauer</option>
+                                <option value="completion">Nach Completion Rate</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="performance-table" id="streamsTable">
+                            <thead>
+                                <tr>
+                                    <th>Stream</th>
+                                    <th>Datum</th>
+                                    <th>Spiel</th>
+                                    <th>Dauer</th>
+                                    <th>Views</th>
+                                    <th>Watch Time</th>
+                                    <th>Completion Rate</th>
+                                    <th>Kommentare</th>
+                                    <th>Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody id="streamsTableBody">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Viewer Demographics -->
+                <div class="demographics-container">
+                    <div class="demographics-header">
+                        <h3><i class="fas fa-users"></i> Viewer Demographics</h3>
+                        <div class="demographics-note">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Anonymisierte Daten basierend auf freiwilligen Angaben</span>
+                        </div>
+                    </div>
+                    
+                    <div class="demographics-grid">
+                        <!-- Device Types -->
+                        <div class="demo-card">
+                            <h4>Geräte</h4>
+                            <div class="demo-chart">
+                                <canvas id="deviceChart"></canvas>
+                            </div>
+                            <div class="demo-stats" id="deviceStats">
+                                <!-- Dynamic content -->
+                            </div>
+                        </div>
+
+                        <!-- Browser Distribution -->
+                        <div class="demo-card">
+                            <h4>Browser</h4>
+                            <div class="demo-chart">
+                                <canvas id="browserChart"></canvas>
+                            </div>
+                            <div class="demo-stats" id="browserStats">
+                                <!-- Dynamic content -->
+                            </div>
+                        </div>
+
+                        <!-- Geographic Distribution -->
+                        <div class="demo-card">
+                            <h4>Regionen</h4>
+                            <div class="demo-chart">
+                                <canvas id="regionChart"></canvas>
+                            </div>
+                            <div class="demo-stats" id="regionStats">
+                                <!-- Dynamic content -->
+                            </div>
+                        </div>
+
+                        <!-- Viewing Patterns -->
+                        <div class="demo-card">
+                            <h4>Viewing Patterns</h4>
+                            <div class="pattern-stats">
+                                <div class="pattern-item">
+                                    <span class="pattern-label">Ø Session Dauer</span>
+                                    <span class="pattern-value" id="avgSessionDuration">0 min</span>
+                                </div>
+                                <div class="pattern-item">
+                                    <span class="pattern-label">Wiederkehrende Viewer</span>
+                                    <span class="pattern-value" id="returningViewers">0%</span>
+                                </div>
+                                <div class="pattern-item">
+                                    <span class="pattern-label">Mobile Anteil</span>
+                                    <span class="pattern-value" id="mobilePercentage">0%</span>
+                                </div>
+                                <div class="pattern-item">
+                                    <span class="pattern-label">Peak Viewing Time</span>
+                                    <span class="pattern-value" id="peakTime">--:--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Section -->
+            <div class="export-section">
+                <div class="export-header">
+                    <h3><i class="fas fa-download"></i> Daten Export</h3>
+                    <p>Exportiere Analytics-Daten für weitere Analysen</p>
+                </div>
+                
+                <div class="export-options">
+                    <div class="export-card">
+                        <div class="export-icon">
+                            <i class="fas fa-file-csv"></i>
+                        </div>
+                        <div class="export-content">
+                            <h4>CSV Export</h4>
+                            <p>Stream-Daten als CSV-Datei</p>
+                            <button class="btn btn-outline" onclick="exportData('csv')">CSV Download</button>
+                        </div>
+                    </div>
+                    
+                    <div class="export-card">
+                        <div class="export-icon">
+                            <i class="fas fa-file-code"></i>
+                        </div>
+                        <div class="export-content">
+                            <h4>JSON Export</h4>
+                            <p>Rohdaten im JSON-Format</p>
+                            <button class="btn btn-outline" onclick="exportData('json')">JSON Download</button>
+                        </div>
+                    </div>
+                    
+                    <div class="export-card">
+                        <div class="export-icon">
+                            <i class="fas fa-file-pdf"></i>
+                        </div>
+                        <div class="export-content">
+                            <h4>PDF Report</h4>
+                            <p>Zusammenfassender Bericht</p>
+                            <button class="btn btn-outline" onclick="exportData('pdf')">PDF Download</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Factor_KS Archive</h3>
+                    <p>Dein Archiv für alle Factor_KS Streams mit synchronisiertem Chat und HLS-Video-Streaming.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Links</h3>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="streams.html">Stream Archive</a></li>
+                        <li><a href="admin.html">Admin</a></li>
+                        <li><a href="api.html">API</a></li>
+                        <li><a href="analytics.html">Analytics</a></li>
+                        <li><a href="privacy.html">Datenschutz</a></li>
+                        <li><a href="imprint.html">Impressum</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Social Media</h3>
+                    <div class="social-links">
+                        <a href="https://twitch.tv/factor_ks" target="_blank" rel="noopener noreferrer" title="Twitch">
+                            <i class="fab fa-twitch"></i>
+                        </a>
+                        <a href="https://youtube.com/@factor_ks" target="_blank" rel="noopener noreferrer" title="YouTube">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                        <a href="https://twitter.com/factor_ks" target="_blank" rel="noopener noreferrer" title="Twitter">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="https://discord.gg/factor_ks" target="_blank" rel="noopener noreferrer" title="Discord">
+                            <i class="fab fa-discord"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Factor_KS. Alle Rechte vorbehalten.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="js/app.js"></script>
+    <script src="js/analytics.js"></script>
+</body>
+</html>

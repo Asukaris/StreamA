@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream ansehen - Factor_KS</title>
+    <meta name="description" content="Schaue dir diesen Stream von Factor_KS an">
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/player.css">
+    <link rel="stylesheet" href="css/chat.css">
+    <link rel="stylesheet" href="css/comments.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- HLS.js -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+</head>
+<body>
+    <!-- Cookie Consent Toast -->
+    <div id="cookieConsent" class="cookie-consent hidden">
+        <div class="cookie-content">
+            <p>Diese Website verwendet Cookies, um Ihren Stream-Fortschritt zu speichern und Ihre Erfahrung zu verbessern.</p>
+            <div class="cookie-buttons">
+                <button id="acceptCookies" class="btn btn-primary">Akzeptieren</button>
+                <button id="declineCookies" class="btn btn-secondary">Ablehnen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <a href="index.html">Stream Archiv</a>
+                </div>
+                
+                <div class="nav-menu">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="streams.html" class="nav-link active">Streams</a>
+                    <a href="api.html" class="nav-link">API</a>
+                    <a href="analytics.html" class="nav-link">Analytics</a>
+                    <a href="admin.html" class="nav-link">Admin</a>
+                </div>
+                
+                <div class="nav-actions">
+                    <button id="themeToggle" class="theme-toggle" title="Theme wechseln">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button id="loginBtn" class="login-btn">
+                        <i class="fab fa-twitch"></i>
+                        Anmelden
+                    </button>
+                    <button id="adminBtn" class="admin-btn hidden">
+                        <i class="fas fa-cog"></i>
+                        Admin
+                    </button>
+                </div>
+                
+                <div class="mobile-menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+
+
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Back Navigation -->
+            <div class="back-navigation">
+                <a href="streams.html" class="back-link">
+                    <i class="fas fa-arrow-left"></i>
+                    Zurück zu den Streams
+                </a>
+            </div>
+
+            <!-- Latest Stream Section -->
+            <section class="latest-stream">
+                <div class="stream-player-container">
+                    <!-- Video Player -->
+                    <div class="player-wrapper">
+                        <div class="player-container">
+                            <video id="hlsPlayer" class="hls-player" preload="metadata">
+                                Dein Browser unterstützt das Video-Element nicht.
+                            </video>
+                            <!-- Loading Overlay -->
+                            <div class="player-loading" id="playerLoading">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Video wird geladen...</p>
+                            </div>
+                            
+                            <!-- Error Overlay -->
+                            <div class="player-error" id="playerError" style="display: none;">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <h3>Fehler beim Laden</h3>
+                                <p>Das Video konnte nicht geladen werden.</p>
+                                <button class="btn btn-primary" onclick="location.reload()">Neu laden</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Chapter Navigation -->
+                        <div class="chapter-navigation" id="chapterNavigation">
+                            <h4>Kapitel</h4>
+                            <div class="chapter-list" id="chapterList">
+                                <!-- Chapters will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Chat Section -->
+                    <div class="chat-container">
+                        <div class="chat-header">
+                            <h3>Stream Chat</h3>
+                            <div class="chat-controls">
+                                <button id="chatSyncToggle" class="btn btn-sm" title="Chat-Synchronisation">
+                                    <i class="fas fa-sync"></i>
+                                </button>
+                                <button id="chatSettingsBtn" class="btn btn-sm" title="Chat-Einstellungen">
+                                    <i class="fas fa-cog"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="chat-messages" id="chatMessages">
+                            <!-- Chat messages will be populated by JavaScript -->
+                        </div>
+                        
+                        <div class="chat-sync-indicator" id="chatSyncIndicator">
+                            <i class="fas fa-clock"></i>
+                            <span>Chat synchronisiert</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stream Information -->
+            <section class="stream-info-section">
+                <div class="stream-details">
+                    <div class="stream-header">
+                        <h1 id="streamTitle">Stream wird geladen...</h1>
+                        <div class="stream-actions">
+                            <button class="btn btn-secondary" id="favoriteBtn">
+                                <i class="far fa-heart"></i>
+                                Favorit
+                            </button>
+                            <button class="btn btn-secondary" id="shareBtn">
+                                <i class="fas fa-share"></i>
+                                Teilen
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="stream-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-gamepad"></i>
+                            <span id="streamGame">-</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-calendar"></i>
+                            <span id="streamDate">-</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-clock"></i>
+                            <span id="streamDuration">-</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-eye"></i>
+                            <span id="streamViews">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stream-tags" id="streamTags">
+                        <!-- Tags will be populated by JavaScript -->
+                    </div>
+                    
+                    <div class="stream-description">
+                        <h3>Beschreibung</h3>
+                        <p id="streamDescriptionText">Beschreibung wird geladen...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Comments Section -->
+            <section class="comments-section">
+                <div class="comments-container">
+                    <div class="comments-header">
+                        <h3>Kommentare</h3>
+                        <div class="comments-stats">
+                            <span id="commentsCount">0 Kommentare</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Comment Form -->
+                    <div class="comment-form" id="commentForm">
+                        <div class="comment-input-container">
+                            <img src="https://static-cdn.jtvnw.net/jtv_user_pictures/6345d801-5d04-4fca-a819-b4bb7a70f03e-profile_image-300x300.png" 
+                                 alt="User" class="comment-avatar">
+                            <div class="comment-input-wrapper">
+                                <textarea id="commentText" placeholder="Schreibe einen Kommentar..." rows="3"></textarea>
+                                <div class="comment-actions">
+                                    <div class="comment-formatting">
+                                        <button type="button" class="format-btn" title="Fett">
+                                            <i class="fas fa-bold"></i>
+                                        </button>
+                                        <button type="button" class="format-btn" title="Kursiv">
+                                            <i class="fas fa-italic"></i>
+                                        </button>
+                                        <button type="button" class="format-btn" title="Link">
+                                            <i class="fas fa-link"></i>
+                                        </button>
+                                    </div>
+                                    <div class="comment-submit">
+                                        <button type="button" id="cancelComment" class="btn btn-secondary" style="display: none;">Abbrechen</button>
+                                        <button type="button" id="submitComment" class="btn btn-primary">Kommentieren</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Comments List -->
+                    <div class="comments-list" id="commentsList">
+                        <!-- Comments will be populated by JavaScript -->
+                    </div>
+                    
+                    <!-- Load More Comments -->
+                    <div class="load-more-comments" id="loadMoreComments" style="display: none;">
+                        <button class="btn btn-secondary">Weitere Kommentare laden</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Factor_KS</h4>
+                    <p>Dein Gaming-Streamer für Racing und mehr!</p>
+                    <div class="social-links">
+                        <a href="https://twitch.tv/factor_ks" target="_blank" title="Twitch">
+                            <i class="fab fa-twitch"></i>
+                        </a>
+                        <a href="https://twitter.com/factor_ks" target="_blank" title="Twitter">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="https://youtube.com/@factor_ks" target="_blank" title="YouTube">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                        <a href="https://discord.gg/factor_ks" target="_blank" title="Discord">
+                            <i class="fab fa-discord"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="streams.html">Streams</a></li>
+                        <li><a href="privacy.html">Datenschutz</a></li>
+                        <li><a href="imprint.html">Impressum</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Rechtliches</h4>
+                    <ul>
+                        <li><a href="privacy.html">Datenschutzerklärung</a></li>
+                        <li><a href="imprint.html">Impressum</a></li>
+                        <li><a href="#">Nutzungsbedingungen</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Factor_KS. Alle Rechte vorbehalten.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Files -->
+    <script src="js/app.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/stream.js"></script>
+    <script src="js/comments.js"></script>
+</body>
+</html>

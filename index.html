@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Archiv - Home</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/player.css">
+    <link rel="stylesheet" href="css/chat.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Cookie Consent Toast -->
+    <div id="cookieConsent" class="cookie-consent hidden">
+        <div class="cookie-content">
+            <p>Diese Website verwendet Cookies, um Ihren Stream-Fortschritt zu speichern und Ihre Erfahrung zu verbessern.</p>
+            <div class="cookie-buttons">
+                <button id="acceptCookies" class="btn btn-primary">Akzeptieren</button>
+                <button id="declineCookies" class="btn btn-secondary">Ablehnen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <a href="index.html">Stream Archiv</a>
+                </div>
+                
+                <div class="nav-menu">
+                    <a href="index.html" class="nav-link active">Home</a>
+                    <a href="streams.html" class="nav-link">Streams</a>
+                </div>
+                
+                <div class="nav-actions">
+                    <button id="themeToggle" class="theme-toggle" title="Theme wechseln">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button id="loginBtn" class="login-btn">
+                        <i class="fab fa-twitch"></i>
+                        Anmelden
+                    </button>
+                    <button id="adminBtn" class="admin-btn hidden">
+                        <i class="fas fa-cog"></i>
+                        Admin
+                    </button>
+                </div>
+                
+                <div class="mobile-menu-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Latest Stream Section -->
+        <section class="latest-stream">
+            <div class="container">
+                <h1>Neuester Stream</h1>
+                
+                <div class="stream-player-container">
+                    <div class="video-section">
+                        <div class="video-player">
+                            <video id="mainPlayer" class="hls-player" controls>
+                                <source src="https://vid.asukaris.live/streams/_0005/master.m3u8" type="application/x-mpegURL">
+                                Ihr Browser unterstützt das Video-Element nicht.
+                            </video>
+                            <div class="player-overlay">
+                                <div class="quality-selector">
+                                    <select id="qualitySelect">
+                                        <option value="auto">Auto</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-section">
+                        <div class="chat-container">
+                            <div class="chat-header">
+                                <h3>Stream Chat</h3>
+                            </div>
+                            <div id="chatMessages" class="chat-messages">
+                                <!-- Chat messages will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Stream Info -->
+                <div class="stream-info">
+                    <div class="info-container">
+                        <h2 id="streamTitle">Pferdestärke lets GO</h2>
+                        <div class="stream-meta">
+                            <span class="stream-number">#5</span>
+                            <span class="stream-date">04.06.2025</span>
+                            <span class="stream-duration">21 Sekunden</span>
+                            <span class="stream-game">JDM: Japanese Drift Master</span>
+                        </div>
+                        <p id="streamDescription" class="stream-description">
+                            Ein kurzer Test-Stream mit JDM: Japanese Drift Master
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Recent Streams Grid -->
+        <section class="recent-streams">
+            <div class="container">
+                <h2>Letzte Streams</h2>
+                <div class="streams-grid" id="recentStreamsGrid">
+                    <!-- Stream cards will be populated here -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="impressum.html">Impressum</a>
+                    <a href="datenschutz.html">Datenschutzerklärung</a>
+                    <button id="deleteCookies">Cookies löschen</button>
+                </div>
+                <div class="social-links">
+                    <a href="#" class="social-link"><i class="fab fa-twitch"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-discord"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="js/app.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cookies.js"></script>
+</body>
+</html>

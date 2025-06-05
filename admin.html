@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin-Bereich - Factor_KS Stream Archive</title>
+    <meta name="description" content="Admin-Bereich für das Factor_KS Stream Archive">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Cookie Consent Toast -->
+    <div id="cookieConsent" class="cookie-consent hidden">
+        <div class="cookie-content">
+            <p>Diese Website verwendet Cookies, um Ihren Stream-Fortschritt zu speichern und Ihre Erfahrung zu verbessern.</p>
+            <div class="cookie-buttons">
+                <button id="acceptCookies" class="btn btn-primary">Akzeptieren</button>
+                <button id="declineCookies" class="btn btn-secondary">Ablehnen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <a href="index.html">Stream Archiv</a>
+                </div>
+                
+                <div class="nav-menu">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="streams.html" class="nav-link">Streams</a>
+                    <a href="api.html" class="nav-link">API</a>
+                    <a href="analytics.html" class="nav-link">Analytics</a>
+                    <a href="admin.html" class="nav-link active">Admin</a>
+                </div>
+                
+                <div class="nav-actions">
+                    <button id="themeToggle" class="theme-toggle" title="Theme wechseln">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button id="loginBtn" class="login-btn">
+                        <i class="fab fa-twitch"></i>
+                        Anmelden
+                    </button>
+                    <button id="adminBtn" class="admin-btn hidden">
+                        <i class="fas fa-cog"></i>
+                        Admin
+                    </button>
+                </div>
+                
+                <div class="mobile-menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main admin-main">
+        <div class="admin-container">
+            <!-- Sidebar Navigation -->
+            <aside class="admin-sidebar">
+                <div class="sidebar-header">
+                    <h2><i class="fas fa-cog"></i> Admin Panel</h2>
+                </div>
+                <nav class="sidebar-nav">
+                    <ul class="sidebar-menu">
+                        <li class="menu-item active" data-tab="dashboard">
+                            <a href="#dashboard">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="menu-item" data-tab="users">
+                            <a href="#users">
+                                <i class="fas fa-users"></i>
+                                <span>Benutzerverwaltung</span>
+                            </a>
+                        </li>
+                        <li class="menu-item" data-tab="upload">
+                            <a href="#upload">
+                                <i class="fas fa-upload"></i>
+                                <span>Stream Upload</span>
+                            </a>
+                        </li>
+                        <li class="menu-item" data-tab="archive">
+                            <a href="#archive">
+                                <i class="fas fa-archive"></i>
+                                <span>Stream Archive</span>
+                            </a>
+                        </li>
+                        <li class="menu-item" data-tab="settings">
+                            <a href="#settings">
+                                <i class="fas fa-cog"></i>
+                                <span>Einstellungen</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+                <div class="sidebar-footer">
+                    <div class="user-info">
+                        <img id="adminAvatar" src="https://static-cdn.jtvnw.net/jtv_user_pictures/6345d801-5d04-4fca-a819-b4bb7a70f03e-profile_image-300x300.png" alt="Admin" class="user-avatar">
+                        <div class="user-details">
+                            <span id="adminName" class="user-name">Factor_KS</span>
+                            <span class="user-role">Administrator</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <div class="admin-content">
+                <!-- Dashboard Tab -->
+                <div id="dashboard" class="tab-content active">
+                    <div class="content-header">
+                        <h1>Dashboard</h1>
+                        <p>Übersicht über dein Stream Archive</p>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-video"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="totalStreams">42</h3>
+                                <p>Gesamt Streams</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="totalViews">15.2K</h3>
+                                <p>Gesamt Aufrufe</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="totalUsers">1.8K</h3>
+                                <p>Registrierte Nutzer</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-comments"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="totalComments">3.4K</h3>
+                                <p>Kommentare</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <h3>Neueste Streams</h3>
+                            <div class="recent-streams" id="recentStreams">
+                                <!-- Recent streams will be populated here -->
+                            </div>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>Systemstatus</h3>
+                            <div class="system-status">
+                                <div class="status-item">
+                                    <span class="status-label">Server Status</span>
+                                    <span class="status-value online">Online</span>
+                                </div>
+                                <div class="status-item">
+                                    <span class="status-label">Speicherplatz</span>
+                                    <span class="status-value">78% belegt</span>
+                                </div>
+                                <div class="status-item">
+                                    <span class="status-label">Letzte Sicherung</span>
+                                    <span class="status-value">vor 2 Stunden</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Tab -->
+                <div id="users" class="tab-content">
+                    <div class="content-header">
+                        <h1>Benutzerverwaltung</h1>
+                        <p>Verwalte Benutzer, Rollen und Berechtigungen</p>
+                    </div>
+                    
+                    <div class="users-controls">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="userSearch" placeholder="Benutzer suchen...">
+                        </div>
+                        <div class="filter-controls">
+                            <select id="roleFilter">
+                                <option value="">Alle Rollen</option>
+                                <option value="admin">Administrator</option>
+                                <option value="moderator">Moderator</option>
+                                <option value="user">Benutzer</option>
+                            </select>
+                            <button class="btn btn-primary" id="addUserBtn">
+                                <i class="fas fa-plus"></i>
+                                Benutzer hinzufügen
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="users-table-container">
+                        <table class="users-table">
+                            <thead>
+                                <tr>
+                                    <th>Benutzer</th>
+                                    <th>E-Mail</th>
+                                    <th>Rolle</th>
+                                    <th>Registriert</th>
+                                    <th>Status</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <!-- Users will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Upload Tab -->
+                <div id="upload" class="tab-content">
+                    <div class="content-header">
+                        <h1>Stream Upload</h1>
+                        <p>Lade neue Streams hoch und verwalte Stream-Daten</p>
+                    </div>
+                    
+                    <form id="streamUploadForm" class="upload-form">
+                        <div class="form-grid">
+                            <div class="form-section">
+                                <h3>Stream-Informationen</h3>
+                                <div class="form-group">
+                                    <label for="streamTitle">Titel *</label>
+                                    <input type="text" id="streamTitle" name="title" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="streamDescription">Beschreibung</label>
+                                    <textarea id="streamDescription" name="description" rows="4"></textarea>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="streamGame">Spiel</label>
+                                        <input type="text" id="streamGame" name="game">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="streamDate">Stream-Datum *</label>
+                                        <input type="datetime-local" id="streamDate" name="date" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="streamDuration">Dauer (in Sekunden)</label>
+                                    <input type="number" id="streamDuration" name="duration" min="1" placeholder="3600">
+                                    <small class="form-help">Dauer des Streams in Sekunden (z.B. 3600 für 1 Stunde)</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="streamTags">Tags</label>
+                                    <div class="tags-input">
+                                        <input type="text" id="streamTags" placeholder="Tag eingeben und Enter drücken">
+                                        <div class="tags-list" id="tagsList"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-section">
+                                <h3>Dateien</h3>
+                                <div class="form-group">
+                                    <label for="streamLink">Stream-Link (HLS) *</label>
+                                    <input type="url" id="streamLink" name="link" required placeholder="https://example.com/stream.m3u8">
+                                </div>
+                                <div class="form-group">
+                                    <label for="chatFile">Chat-JSON *</label>
+                                    <div class="file-upload">
+                                        <input type="file" id="chatFile" name="chatFile" accept=".json" required>
+                                        <label for="chatFile" class="file-upload-label">
+                                            <i class="fas fa-upload"></i>
+                                            Chat-Datei auswählen
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="thumbnailFile">Thumbnail</label>
+                                    <div class="file-upload">
+                                        <input type="file" id="thumbnailFile" name="thumbnailFile" accept="image/*">
+                                        <label for="thumbnailFile" class="file-upload-label">
+                                            <i class="fas fa-image"></i>
+                                            Thumbnail auswählen
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="videoFile">Video-Datei (optional)</label>
+                                    <div class="file-upload">
+                                        <input type="file" id="videoFile" name="videoFile" accept="video/*">
+                                        <label for="videoFile" class="file-upload-label">
+                                            <i class="fas fa-video"></i>
+                                            Video-Datei auswählen
+                                        </label>
+                                    </div>
+                                    <div class="upload-progress" id="videoUploadProgress" style="display: none;">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill"></div>
+                                        </div>
+                                        <span class="progress-text">0%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h3>Veröffentlichung</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="releaseType">Veröffentlichung</label>
+                                    <select id="releaseType" name="releaseType">
+                                        <option value="immediate">Sofort</option>
+                                        <option value="scheduled">Geplant</option>
+                                        <option value="draft">Entwurf</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" id="scheduleGroup" style="display: none;">
+                                    <label for="scheduleDate">Veröffentlichungsdatum</label>
+                                    <input type="datetime-local" id="scheduleDate" name="scheduleDate">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="autoNumber" name="autoNumber" checked>
+                                    <span class="checkmark"></span>
+                                    Automatische Stream-Nummerierung
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" id="resetForm">Zurücksetzen</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-upload"></i>
+                                Stream hochladen
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Archive Tab -->
+                <div id="archive" class="tab-content">
+                    <div class="content-header">
+                        <h1>Stream Archive</h1>
+                        <p>Verwalte und bearbeite vorhandene Streams</p>
+                    </div>
+                    
+                    <div class="archive-controls">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="archiveSearch" placeholder="Streams suchen...">
+                        </div>
+                        <div class="filter-controls">
+                            <select id="archiveGameFilter">
+                                <option value="">Alle Spiele</option>
+                            </select>
+                            <select id="archiveStatusFilter">
+                                <option value="">Alle Status</option>
+                                <option value="published">Veröffentlicht</option>
+                                <option value="draft">Entwurf</option>
+                                <option value="scheduled">Geplant</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="archive-table-container">
+                        <table class="archive-table">
+                            <thead>
+                                <tr>
+                                    <th>Thumbnail</th>
+                                    <th>Titel</th>
+                                    <th>Spiel</th>
+                                    <th>Datum</th>
+                                    <th>Dauer</th>
+                                    <th>Aufrufe</th>
+                                    <th>Status</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody id="archiveTableBody">
+                                <!-- Archive streams will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Settings Tab -->
+                <div id="settings" class="tab-content">
+                    <div class="content-header">
+                        <h1>Einstellungen</h1>
+                        <p>Konfiguriere dein Stream Archive</p>
+                    </div>
+                    
+                    <div class="settings-grid">
+                        <div class="settings-section">
+                            <h3>Allgemeine Einstellungen</h3>
+                            <div class="form-group">
+                                <label for="siteName">Website-Name</label>
+                                <input type="text" id="siteName" value="Factor_KS Stream Archive">
+                            </div>
+                            <div class="form-group">
+                                <label for="siteDescription">Website-Beschreibung</label>
+                                <textarea id="siteDescription" rows="3">Dein Archiv für alle Factor_KS Streams mit synchronisiertem Chat und HLS-Video-Streaming.</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="maxFileSize">Maximale Dateigröße (MB)</label>
+                                <input type="number" id="maxFileSize" value="500" min="1" max="5000">
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section">
+                            <h3>Stream-Einstellungen</h3>
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="autoHLS" checked>
+                                    <span class="checkmark"></span>
+                                    Automatische HLS-Konvertierung
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label for="hlsQualities">HLS-Qualitäten</label>
+                                <div class="checkbox-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="hlsQuality" value="360p" checked>
+                                        <span class="checkmark"></span>
+                                        360p
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="hlsQuality" value="720p" checked>
+                                        <span class="checkmark"></span>
+                                        720p
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="hlsQuality" value="1080p" checked>
+                                        <span class="checkmark"></span>
+                                        1080p
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section">
+                            <h3>Benutzer-Einstellungen</h3>
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="allowComments" checked>
+                                    <span class="checkmark"></span>
+                                    Kommentare erlauben
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="requireLogin">
+                                    <span class="checkmark"></span>
+                                    Login für Kommentare erforderlich
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="moderateComments">
+                                    <span class="checkmark"></span>
+                                    Kommentare moderieren
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-actions">
+                        <button type="button" class="btn btn-secondary" id="resetSettings">Zurücksetzen</button>
+                        <button type="button" class="btn btn-primary" id="saveSettings">
+                            <i class="fas fa-save"></i>
+                            Einstellungen speichern
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Factor_KS Archive</h3>
+                    <p>Dein Archiv für alle Factor_KS Streams mit synchronisiertem Chat und HLS-Video-Streaming.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Links</h3>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="streams.html">Stream Archive</a></li>
+                        <li><a href="privacy.html">Datenschutz</a></li>
+                        <li><a href="imprint.html">Impressum</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Social Media</h3>
+                    <div class="social-links">
+                        <a href="https://twitch.tv/factor_ks" target="_blank" rel="noopener noreferrer" title="Twitch">
+                            <i class="fab fa-twitch"></i>
+                        </a>
+                        <a href="https://youtube.com/@factor_ks" target="_blank" rel="noopener noreferrer" title="YouTube">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                        <a href="https://twitter.com/factor_ks" target="_blank" rel="noopener noreferrer" title="Twitter">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="https://discord.gg/factor_ks" target="_blank" rel="noopener noreferrer" title="Discord">
+                            <i class="fab fa-discord"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Factor_KS. Alle Rechte vorbehalten.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modals -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="userModalTitle">Benutzer bearbeiten</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="userForm">
+                    <div class="form-group">
+                        <label for="userName">Benutzername</label>
+                        <input type="text" id="userName" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userEmail">E-Mail</label>
+                        <input type="email" id="userEmail" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userRole">Rolle</label>
+                        <select id="userRole" name="role">
+                            <option value="user">Benutzer</option>
+                            <option value="moderator">Moderator</option>
+                            <option value="admin">Administrator</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="userActive" name="active">
+                            <span class="checkmark"></span>
+                            Aktiv
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelUser">Abbrechen</button>
+                <button type="button" class="btn btn-primary" id="saveUser">Speichern</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/app.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>
