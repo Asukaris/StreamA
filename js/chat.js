@@ -350,12 +350,134 @@ class ChatSync {
                     gameElement.style.display = this.currentChapter.subDescription ? 'block' : 'none';
                 }
                 
+                // Load game logo
+                this.loadGameLogo(this.currentChapter.gameDisplayName || this.currentChapter.description);
+                
                 this.currentChapterDisplay.style.display = 'block';
             } else {
                 // Hide the current chapter display if no chapter is active
                 this.currentChapterDisplay.style.display = 'none';
             }
         }
+     }
+     
+     async loadGameLogo(gameName) {
+         if (!gameName) return;
+         
+         const logoElement = document.getElementById('currentChapterLogo');
+         const fallbackIcon = document.getElementById('currentChapterFallbackIcon');
+         
+         if (!logoElement || !fallbackIcon) return;
+         
+         // Reset to fallback state
+         logoElement.style.display = 'none';
+         fallbackIcon.style.display = 'block';
+         
+         try {
+             // Try multiple sources for game logos
+             const logoUrl = await this.findGameLogo(gameName);
+             
+             if (logoUrl) {
+                 // Test if image loads successfully
+                 const img = new Image();
+                 img.onload = () => {
+                     logoElement.src = logoUrl;
+                     logoElement.style.display = 'block';
+                     fallbackIcon.style.display = 'none';
+                 };
+                 img.onerror = () => {
+                     // Keep fallback icon if image fails to load
+                     console.log('Failed to load game logo for:', gameName);
+                 };
+                 img.src = logoUrl;
+             }
+         } catch (error) {
+             console.log('Error loading game logo:', error);
+         }
+     }
+     
+     async findGameLogo(gameName) {
+         // Clean game name for better search results
+         const cleanName = gameName.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+         
+         // Try different logo sources
+         const logoSources = [
+             // Steam API (unofficial)
+             () => this.getSteamLogo(cleanName),
+             // IGDB API (requires API key, fallback to generic search)
+             () => this.getGenericGameLogo(cleanName),
+             // Fallback to a game logo database
+             () => this.getFallbackLogo(cleanName)
+         ];
+         
+         for (const source of logoSources) {
+             try {
+                 const logoUrl = await source();
+                 if (logoUrl) return logoUrl;
+             } catch (error) {
+                 console.log('Logo source failed:', error);
+             }
+         }
+         
+         return null;
+     }
+     
+     async getSteamLogo(gameName) {
+         // This is a simplified approach - in production you'd want to use proper APIs
+         // For now, we'll use a generic approach with common game logos
+         const commonGames = {
+             'minecraft': 'https://www.minecraft.net/etc.clientlibs/minecraft/clientlibs/main/resources/favicon-96x96.png',
+             'fortnite': 'https://cdn2.unrealengine.com/Fortnite%2Ffn-game-icon-285x285-285x285-0b364143e0c9.png',
+             'valorant': 'https://images.contentstack.io/v3/assets/bltb6530b271fddd0b1/blt5c6a35b51b0e8c7e/5eb26f5e31bb7e28d2444b7e/V_LOGOMARK_1920x1080_Red.png',
+             'league of legends': 'https://universe-meeps.leagueoflegends.com/v1/assets/images/factions/demacia-crest.png',
+             'world of warcraft': 'https://bnetcmsus-a.akamaihd.net/cms/gallery/LKXYBFP8ZZ6D1509472919930.png',
+             'overwatch': 'https://d15f34w2p8l1cc.cloudfront.net/overwatch/images/logos/overwatch-share-icon.jpg',
+             'counter-strike': 'https://cdn.cloudflare.steamstatic.com/steam/apps/730/header.jpg',
+             'dota 2': 'https://cdn.cloudflare.steamstatic.com/steam/apps/570/header.jpg',
+             'apex legends': 'https://media.contentapi.ea.com/content/dam/apex-legends/images/2019/01/apex-legends-meta-image.jpg'
+         };
+         
+         const lowerName = gameName.toLowerCase();
+         for (const [game, logo] of Object.entries(commonGames)) {
+             if (lowerName.includes(game) || game.includes(lowerName)) {
+                 return logo;
+             }
+         }
+         
+         return null;
+     }
+     
+     async getGenericGameLogo(gameName) {
+         // This would typically use a proper game database API
+         // For demonstration, we'll return null and let it fall back
+         return null;
+     }
+     
+     async getFallbackLogo(gameName) {
+         // Generate a simple text-based logo as ultimate fallback
+         // This creates a data URL with the first letter of the game
+         const firstLetter = gameName.charAt(0).toUpperCase();
+         const canvas = document.createElement('canvas');
+         canvas.width = 40;
+         canvas.height = 40;
+         const ctx = canvas.getContext('2d');
+         
+         // Create gradient background
+         const gradient = ctx.createLinearGradient(0, 0, 40, 40);
+         gradient.addColorStop(0, '#667eea');
+         gradient.addColorStop(1, '#764ba2');
+         
+         ctx.fillStyle = gradient;
+         ctx.fillRect(0, 0, 40, 40);
+         
+         // Add text
+         ctx.fillStyle = 'white';
+         ctx.font = 'bold 20px Arial';
+         ctx.textAlign = 'center';
+         ctx.textBaseline = 'middle';
+         ctx.fillText(firstLetter, 20, 20);
+         
+         return canvas.toDataURL();
      }
      
      showLoading() {
