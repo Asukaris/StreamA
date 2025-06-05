@@ -489,16 +489,25 @@ class AdminPanel {
                                 <input type="date" id="editDate" value="${stream.date}" required>
                             </div>
                             <div class="form-group">
-                                <label for="editDuration">Dauer (Sekunden)</label>
-                                <input type="number" id="editDuration" value="${stream.duration}" min="1">
-                            </div>
-                            <div class="form-group">
                                 <label for="editLink">Stream-Link *</label>
                                 <input type="url" id="editLink" value="${stream.link}" required>
                             </div>
                             <div class="form-group">
-                                <label for="editThumbnail">Thumbnail URL</label>
-                                <input type="url" id="editThumbnail" value="${stream.thumbnail}">
+                                <label for="editThumbnail">Thumbnail</label>
+                                <div class="thumbnail-edit-section">
+                                    ${stream.thumbnail ? `<div class="current-thumbnail">
+                                        <img src="${stream.thumbnail}" alt="Current thumbnail" style="max-width: 200px; max-height: 120px; border-radius: 4px; margin-bottom: 10px;">
+                                        <p><small>Aktuelles Thumbnail</small></p>
+                                    </div>` : ''}
+                                    <div class="file-upload">
+                                        <input type="file" id="editThumbnailFile" accept="image/*">
+                                        <label for="editThumbnailFile" class="file-upload-label">
+                                            <i class="fas fa-upload"></i>
+                                            Neues Thumbnail hochladen
+                                        </label>
+                                    </div>
+                                    <small class="form-help">Unterstützte Formate: JPG, PNG, GIF (max. 5MB)</small>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="editStatus">Status</label>
@@ -540,7 +549,7 @@ class AdminPanel {
         }
     }
     
-    saveStreamEdit(streamId) {
+    async saveStreamEdit(streamId) {
         const form = document.getElementById('editStreamForm');
         const formData = new FormData(form);
         
@@ -561,6 +570,31 @@ class AdminPanel {
             return;
         }
         
+        // Handle thumbnail upload
+        let thumbnailUrl = this.streams[streamIndex].thumbnail;
+        const thumbnailFile = document.getElementById('editThumbnailFile').files[0];
+        
+        if (thumbnailFile) {
+            // Validate file size (max 5MB)
+            if (thumbnailFile.size > 5 * 1024 * 1024) {
+                this.showToast('Thumbnail-Datei ist zu groß (max. 5MB)', 'error');
+                return;
+            }
+            
+            // Validate file type
+            if (!thumbnailFile.type.startsWith('image/')) {
+                this.showToast('Bitte wählen Sie eine gültige Bilddatei', 'error');
+                return;
+            }
+            
+            try {
+                thumbnailUrl = await this.convertFileToBase64(thumbnailFile);
+            } catch (error) {
+                this.showToast('Fehler beim Verarbeiten des Thumbnails', 'error');
+                return;
+            }
+        }
+        
         // Update stream data
         this.streams[streamIndex] = {
             ...this.streams[streamIndex],
@@ -568,9 +602,9 @@ class AdminPanel {
             description: document.getElementById('editDescription').value.trim(),
             game: document.getElementById('editGame').value.trim(),
             date: date,
-            duration: parseInt(document.getElementById('editDuration').value) || this.streams[streamIndex].duration,
+            duration: this.streams[streamIndex].duration,
             link: link,
-            thumbnail: document.getElementById('editThumbnail').value.trim() || this.streams[streamIndex].thumbnail,
+            thumbnail: thumbnailUrl,
             status: document.getElementById('editStatus').value
         };
         
@@ -744,6 +778,67 @@ class AdminPanel {
         upload.classList.remove('has-file');
         input.value = '';
     }
+    
+    updateExistingStreamDurations() {
+        let updatedCount = 0;
+        
+        this.streams.forEach((stream, index) => {
+            if (stream.chatData) {
+                let extractedDuration = stream.duration; // Keep current duration as fallback
+                
+                // Try to extract duration from various possible fields in chat JSON
+                if (stream.chatData.video && stream.chatData.video.lengthSeconds) {
+                    extractedDuration = parseInt(stream.chatData.video.lengthSeconds);
+                    console.log(`Stream "${stream.title}": Duration extracted from video.lengthSeconds:`, extractedDuration);
+                } else if (stream.chatData.video && stream.chatData.video.duration) {
+                    extractedDuration = parseInt(stream.chatData.video.duration);
+                    console.log(`Stream "${stream.title}": Duration extracted from video.duration:`, extractedDuration);
+                } else if (stream.chatData.lengthSeconds) {
+                    extractedDuration = parseInt(stream.chatData.lengthSeconds);
+                    console.log(`Stream "${stream.title}": Duration extracted from lengthSeconds:`, extractedDuration);
+                } else if (stream.chatData.duration) {
+                    extractedDuration = parseInt(stream.chatData.duration);
+                    console.log(`Stream "${stream.title}": Duration extracted from duration:`, extractedDuration);
+                } else if (stream.chatData.video && stream.chatData.video.lengthMilliseconds) {
+                    extractedDuration = Math.floor(parseInt(stream.chatData.video.lengthMilliseconds) / 1000);
+                    console.log(`Stream "${stream.title}": Duration extracted from video.lengthMilliseconds:`, extractedDuration);
+                } else if (stream.chatData.lengthMilliseconds) {
+                    extractedDuration = Math.floor(parseInt(stream.chatData.lengthMilliseconds) / 1000);
+                    console.log(`Stream "${stream.title}": Duration extracted from lengthMilliseconds:`, extractedDuration);
+                } else if (stream.chatData.comments && stream.chatData.comments.length > 0) {
+                    // Try to find the last comment's timestamp as duration estimate
+                    const lastComment = stream.chatData.comments[stream.chatData.comments.length - 1];
+                    if (lastComment.content_offset_seconds) {
+                        extractedDuration = Math.ceil(parseFloat(lastComment.content_offset_seconds));
+                        console.log(`Stream "${stream.title}": Duration estimated from last comment offset:`, extractedDuration);
+                    } else if (lastComment.offset) {
+                        extractedDuration = Math.ceil(parseFloat(lastComment.offset));
+                        console.log(`Stream "${stream.title}": Duration estimated from last comment offset:`, extractedDuration);
+                    }
+                }
+                
+                // Update duration if it's different from current
+                if (extractedDuration !== stream.duration && extractedDuration > 0) {
+                    console.log(`Updating stream "${stream.title}" duration from ${stream.duration}s to ${extractedDuration}s`);
+                    this.streams[index].duration = extractedDuration;
+                    updatedCount++;
+                }
+            }
+        });
+        
+        if (updatedCount > 0) {
+            // Save updated streams to localStorage
+            localStorage.setItem('streamArchive_streams', JSON.stringify(this.streams));
+            console.log(`Updated duration for ${updatedCount} streams from their chat data`);
+            this.showToast(`${updatedCount} Stream(s) wurden mit Dauer aus Chat-Daten aktualisiert`, 'success');
+            
+            // Reload displays to show updated durations
+            this.loadArchive();
+            this.loadDashboard();
+        } else {
+            console.log('No streams needed duration updates from chat data');
+        }
+    }
 
     simulateUploadProgress() {
         const progressContainer = document.getElementById('videoUploadProgress');
@@ -854,6 +949,40 @@ class AdminPanel {
                 console.log('Parsed chat data:', chatData);
                 console.log('Chat comments count:', chatData.comments ? chatData.comments.length : 'No comments array');
                 
+                // Extract duration from chat JSON structure
+                let extractedDuration = parseInt(formData.get('duration')) || 3600;
+                
+                // Try to extract duration from various possible fields in chat JSON
+                if (chatData.video && chatData.video.lengthSeconds) {
+                    extractedDuration = parseInt(chatData.video.lengthSeconds);
+                    console.log('Duration extracted from video.lengthSeconds:', extractedDuration);
+                } else if (chatData.video && chatData.video.duration) {
+                    extractedDuration = parseInt(chatData.video.duration);
+                    console.log('Duration extracted from video.duration:', extractedDuration);
+                } else if (chatData.lengthSeconds) {
+                    extractedDuration = parseInt(chatData.lengthSeconds);
+                    console.log('Duration extracted from lengthSeconds:', extractedDuration);
+                } else if (chatData.duration) {
+                    extractedDuration = parseInt(chatData.duration);
+                    console.log('Duration extracted from duration:', extractedDuration);
+                } else if (chatData.video && chatData.video.lengthMilliseconds) {
+                    extractedDuration = Math.floor(parseInt(chatData.video.lengthMilliseconds) / 1000);
+                    console.log('Duration extracted from video.lengthMilliseconds:', extractedDuration);
+                } else if (chatData.lengthMilliseconds) {
+                    extractedDuration = Math.floor(parseInt(chatData.lengthMilliseconds) / 1000);
+                    console.log('Duration extracted from lengthMilliseconds:', extractedDuration);
+                } else if (chatData.comments && chatData.comments.length > 0) {
+                    // Try to find the last comment's timestamp as duration estimate
+                    const lastComment = chatData.comments[chatData.comments.length - 1];
+                    if (lastComment.content_offset_seconds) {
+                        extractedDuration = Math.ceil(parseFloat(lastComment.content_offset_seconds));
+                        console.log('Duration estimated from last comment offset:', extractedDuration);
+                    } else if (lastComment.offset) {
+                        extractedDuration = Math.ceil(parseFloat(lastComment.offset));
+                        console.log('Duration estimated from last comment offset:', extractedDuration);
+                    }
+                }
+                
                 // Create new stream object with chat data
                 const newStream = {
                     id: Date.now().toString(),
@@ -861,7 +990,7 @@ class AdminPanel {
                     description: formData.get('description') || '',
                     game: formData.get('game') || '',
                     date: formData.get('date'),
-                    duration: parseInt(formData.get('duration')) || 3600,
+                    duration: extractedDuration,
                     views: 0,
                     streamer: {
                         name: 'Current User',
@@ -887,6 +1016,9 @@ class AdminPanel {
                 this.tags = [];
                 this.updateTagsList();
                 this.resetFileUploads();
+                
+                // Update existing streams with duration from their chat data
+                this.updateExistingStreamDurations();
                 
                 this.showToast('Stream wurde erfolgreich hochgeladen!', 'success');
             } catch (error) {
@@ -1430,10 +1562,20 @@ class AdminPanel {
         };
         return icons[type] || 'info-circle';
     }
+
+    convertFileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+            reader.readAsDataURL(file);
+        });
+    }
 }
 
 // Initialize admin panel when DOM is loaded
 let adminPanel;
 document.addEventListener('DOMContentLoaded', () => {
     adminPanel = new AdminPanel();
+    window.adminManager = adminPanel; // Make it globally accessible
 });

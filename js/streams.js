@@ -350,8 +350,11 @@ class StreamsManager {
                     </div>
                     
                     <div class="stream-actions">
-                        <div class="stream-progress" title="${progressPercent}% angesehen">
-                            <div class="stream-progress-bar" style="width: ${progressPercent}%"></div>
+                        <div class="stream-progress-container">
+                            <div class="stream-progress" title="${progressPercent}% angesehen">
+                                <div class="stream-progress-bar" style="width: ${progressPercent}%"></div>
+                            </div>
+                            <span class="stream-progress-text">${progressPercent}%</span>
                         </div>
                         <button class="stream-action-btn" title="Zu Favoriten hinzufügen">
                             <i class="fas fa-heart"></i>

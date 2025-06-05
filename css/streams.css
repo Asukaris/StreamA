@@ -168,19 +168,36 @@
 /* Streams Grid */
 .streams-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.2rem;
     margin-bottom: 2rem;
+}
+
+@media (min-width: 1200px) {
+    .streams-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .streams-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+    }
 }
 
 .stream-card {
     background: var(--bg-secondary);
-    border-radius: 12px;
+    border-radius: 10px;
     overflow: hidden;
     border: 1px solid var(--border-color);
     transition: all 0.3s ease;
     cursor: pointer;
     position: relative;
+    height: 320px;
+    display: flex;
+    flex-direction: column;
 }
 
 .stream-card:hover {
@@ -192,9 +209,10 @@
 .stream-thumbnail {
     position: relative;
     width: 100%;
-    height: 180px;
+    height: 140px;
     overflow: hidden;
     background: var(--bg-tertiary);
+    flex-shrink: 0;
 }
 
 .stream-thumbnail img {
@@ -234,15 +252,18 @@
 }
 
 .stream-info {
-    padding: 1rem;
+    padding: 0.75rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .stream-title {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 0.5rem;
-    line-height: 1.3;
+    margin-bottom: 0.4rem;
+    line-height: 1.2;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -251,17 +272,17 @@
 
 .stream-game {
     color: var(--accent-color);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 500;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.4rem;
 }
 
 .stream-meta {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.75rem;
-    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.8rem;
     color: var(--text-secondary);
 }
 
@@ -280,49 +301,80 @@
 .stream-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
 }
 
 .stream-tag {
     background: var(--bg-tertiary);
     color: var(--text-secondary);
-    padding: 0.25rem 0.5rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
+    padding: 0.2rem 0.4rem;
+    border-radius: 10px;
+    font-size: 0.7rem;
     font-weight: 500;
 }
 
 .stream-description {
     color: var(--text-secondary);
-    font-size: 0.9rem;
-    line-height: 1.4;
+    font-size: 0.85rem;
+    line-height: 1.3;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
+    flex: 1;
 }
 
 .stream-actions {
     display: flex;
     gap: 0.5rem;
     align-items: center;
+    margin-top: auto;
+}
+
+.stream-progress-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stream-progress-text {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    min-width: 30px;
+    text-align: right;
 }
 
 .stream-progress {
     flex: 1;
-    height: 4px;
+    height: 6px;
     background: var(--bg-tertiary);
-    border-radius: 2px;
+    border-radius: 3px;
     overflow: hidden;
+    position: relative;
+    min-width: 60px;
 }
 
 .stream-progress-bar {
     height: 100%;
-    background: var(--accent-color);
-    border-radius: 2px;
+    background: linear-gradient(90deg, var(--accent-color), var(--primary-color));
+    border-radius: 3px;
     transition: width 0.3s ease;
+    position: relative;
+}
+
+.stream-progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 2px;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 1px;
 }
 
 .stream-action-btn {
