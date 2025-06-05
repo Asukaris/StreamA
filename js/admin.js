@@ -7,6 +7,8 @@ class AdminPanel {
         this.streams = [];
         this.settings = {};
         this.tags = [];
+        this.logos = [];
+        this.currentLogoId = null;
         
         this.init();
     }
@@ -19,6 +21,7 @@ class AdminPanel {
         this.loadUsers();
         this.loadArchive();
         this.loadSettings();
+        this.loadLogos();
         this.setupUploadForm();
     }
 
@@ -26,6 +29,64 @@ class AdminPanel {
         // Load data from localStorage or initialize empty arrays
         this.users = JSON.parse(localStorage.getItem('streamArchive_users') || '[]');
         this.streams = JSON.parse(localStorage.getItem('streamArchive_streams') || '[]');
+        
+        // Load logos from localStorage or initialize with default logos
+        this.logos = JSON.parse(localStorage.getItem('streamArchive_logos') || JSON.stringify([
+            {
+                id: 1,
+                gameName: 'Minecraft',
+                logoUrl: 'https://www.minecraft.net/etc.clientlibs/minecraft/clientlibs/main/resources/favicon-96x96.png',
+                aliases: ['MC', 'Minecraft Java', 'Minecraft Bedrock']
+            },
+            {
+                id: 2,
+                gameName: 'Fortnite',
+                logoUrl: 'https://cdn2.unrealengine.com/Fortnite%2Ffn-game-icon-285x285-285x285-0b364143e0c9.png',
+                aliases: ['Fortnite Battle Royale']
+            },
+            {
+                id: 3,
+                gameName: 'Valorant',
+                logoUrl: 'https://images.contentstack.io/v3/assets/bltb6530b271fddd0b1/blt5c6a35b51b0e8c7e/5eb26f5e31bb7e28d2444b7e/V_LOGOMARK_1920x1080_Red.png',
+                aliases: ['Valorant Riot']
+            },
+            {
+                id: 4,
+                gameName: 'League of Legends',
+                logoUrl: 'https://universe-meeps.leagueoflegends.com/v1/assets/images/factions/demacia-crest.png',
+                aliases: ['LoL', 'League']
+            },
+            {
+                id: 5,
+                gameName: 'World of Warcraft',
+                logoUrl: 'https://bnetcmsus-a.akamaihd.net/cms/gallery/LKXYBFP8ZZ6D1509472919930.png',
+                aliases: ['WoW', 'World of Warcraft Classic']
+            },
+            {
+                id: 6,
+                gameName: 'Overwatch',
+                logoUrl: 'https://d15f34w2p8l1cc.cloudfront.net/overwatch/images/logos/overwatch-share-icon.jpg',
+                aliases: ['Overwatch 2', 'OW', 'OW2']
+            },
+            {
+                id: 7,
+                gameName: 'Counter-Strike',
+                logoUrl: 'https://cdn.cloudflare.steamstatic.com/steam/apps/730/header.jpg',
+                aliases: ['CS', 'CS:GO', 'Counter-Strike 2', 'CS2']
+            },
+            {
+                id: 8,
+                gameName: 'Dota 2',
+                logoUrl: 'https://cdn.cloudflare.steamstatic.com/steam/apps/570/header.jpg',
+                aliases: ['Dota']
+            },
+            {
+                id: 9,
+                gameName: 'Apex Legends',
+                logoUrl: 'https://media.contentapi.ea.com/content/dam/apex-legends/images/2019/01/apex-legends-meta-image.jpg',
+                aliases: ['Apex']
+            }
+        ]));
         
         // Default settings
         this.settings = JSON.parse(localStorage.getItem('streamArchive_settings') || JSON.stringify({
@@ -81,8 +142,22 @@ class AdminPanel {
             addUserBtn.addEventListener('click', () => this.showUserModal());
         }
 
+        // Logo management events
+        const addLogoBtn = document.getElementById('addLogoBtn');
+        if (addLogoBtn) {
+            addLogoBtn.addEventListener('click', () => this.showLogoModal());
+        }
+
+        const logoSearch = document.getElementById('logoSearch');
+        if (logoSearch) {
+            logoSearch.addEventListener('input', (e) => {
+                this.filterLogos(e.target.value);
+            });
+        }
+
         // Modal events
         this.setupModalEvents();
+        this.setupLogoModalEvents();
 
         // Settings events
         this.setupSettingsEvents();
@@ -927,6 +1002,255 @@ class AdminPanel {
             'scheduled': 'Geplant'
         };
         return statusNames[status] || status;
+    }
+
+    // Logo Management Methods
+    loadLogos() {
+        this.renderLogos(this.logos);
+    }
+
+    renderLogos(logos) {
+        const container = document.getElementById('logosGrid');
+        if (!container) return;
+
+        if (logos.length === 0) {
+            container.innerHTML = `
+                <div class="logo-empty-state">
+                    <i class="fas fa-images"></i>
+                    <h3>Keine Logos vorhanden</h3>
+                    <p>Füge dein erstes Spiel-Logo hinzu, um loszulegen.</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = logos.map(logo => `
+            <div class="logo-card">
+                <div class="logo-card-header">
+                    <img src="${logo.logoUrl}" alt="${logo.gameName}" class="logo-card-image" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="logo-card-fallback" style="display: none; width: 48px; height: 48px; background: var(--primary-color); border-radius: 8px; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                        ${logo.gameName.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="logo-card-info">
+                        <h3>${logo.gameName}</h3>
+                        <p>${logo.logoUrl}</p>
+                    </div>
+                </div>
+                ${logo.aliases && logo.aliases.length > 0 ? `
+                    <div class="logo-card-aliases">
+                        <strong>Alternative Namen:</strong>
+                        <div class="logo-aliases">
+                            ${logo.aliases.map(alias => `<span class="logo-alias">${alias}</span>`).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                <div class="logo-card-actions">
+                    <button class="action-btn edit" onclick="adminPanel.editLogo(${logo.id})" title="Bearbeiten">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete" onclick="adminPanel.deleteLogo(${logo.id})" title="Löschen">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    filterLogos(searchTerm) {
+        if (!searchTerm.trim()) {
+            this.renderLogos(this.logos);
+            return;
+        }
+
+        const filtered = this.logos.filter(logo => {
+            const searchLower = searchTerm.toLowerCase();
+            return logo.gameName.toLowerCase().includes(searchLower) ||
+                   logo.aliases.some(alias => alias.toLowerCase().includes(searchLower));
+        });
+
+        this.renderLogos(filtered);
+    }
+
+    showLogoModal(logo = null) {
+        const modal = document.getElementById('logoModal');
+        const title = document.getElementById('logoModalTitle');
+        const form = document.getElementById('logoForm');
+        
+        if (logo) {
+            title.textContent = 'Logo bearbeiten';
+            document.getElementById('logoGameName').value = logo.gameName;
+            document.getElementById('logoUrl').value = logo.logoUrl;
+            document.getElementById('logoAliases').value = logo.aliases.join(', ');
+            this.currentLogoId = logo.id;
+            this.updateLogoPreview(logo.logoUrl);
+        } else {
+            title.textContent = 'Logo hinzufügen';
+            form.reset();
+            this.currentLogoId = null;
+            this.updateLogoPreview('');
+        }
+        
+        modal.style.display = 'block';
+    }
+
+    hideLogoModal() {
+        const modal = document.getElementById('logoModal');
+        modal.style.display = 'none';
+        this.currentLogoId = null;
+    }
+
+    setupLogoModalEvents() {
+        const modal = document.getElementById('logoModal');
+        const closeBtn = modal?.querySelector('.modal-close');
+        const cancelBtn = document.getElementById('cancelLogo');
+        const saveBtn = document.getElementById('saveLogo');
+        const logoUrlInput = document.getElementById('logoUrl');
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.hideLogoModal());
+        }
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => this.hideLogoModal());
+        }
+
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => this.saveLogo());
+        }
+
+        if (logoUrlInput) {
+            logoUrlInput.addEventListener('input', (e) => {
+                this.updateLogoPreview(e.target.value);
+            });
+        }
+
+        // Close modal when clicking outside
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.hideLogoModal();
+                }
+            });
+        }
+    }
+
+    updateLogoPreview(url) {
+        const preview = document.getElementById('logoPreview');
+        const img = document.getElementById('logoPreviewImg');
+        const placeholder = preview?.querySelector('.logo-preview-placeholder');
+
+        if (!preview || !img || !placeholder) return;
+
+        if (url && url.trim()) {
+            img.src = url;
+            img.style.display = 'block';
+            placeholder.style.display = 'none';
+            preview.classList.add('has-image');
+            
+            img.onerror = () => {
+                img.style.display = 'none';
+                placeholder.style.display = 'block';
+                placeholder.textContent = 'Fehler beim Laden des Bildes';
+                preview.classList.remove('has-image');
+            };
+            
+            img.onload = () => {
+                preview.classList.add('has-image');
+            };
+        } else {
+            img.style.display = 'none';
+            placeholder.style.display = 'block';
+            placeholder.textContent = 'Logo-URL eingeben für Vorschau';
+            preview.classList.remove('has-image');
+        }
+    }
+
+    saveLogo() {
+        const form = document.getElementById('logoForm');
+        const formData = new FormData(form);
+        
+        const logoData = {
+            gameName: formData.get('gameName').trim(),
+            logoUrl: formData.get('logoUrl').trim(),
+            aliases: formData.get('aliases') ? 
+                formData.get('aliases').split(',').map(alias => alias.trim()).filter(alias => alias) : []
+        };
+
+        // Validation
+        if (!logoData.gameName || !logoData.logoUrl) {
+            alert('Bitte fülle alle Pflichtfelder aus.');
+            return;
+        }
+
+        // Check for duplicate game names (excluding current logo when editing)
+        const existingLogo = this.logos.find(logo => 
+            logo.gameName.toLowerCase() === logoData.gameName.toLowerCase() && 
+            logo.id !== this.currentLogoId
+        );
+        
+        if (existingLogo) {
+            alert('Ein Logo für dieses Spiel existiert bereits.');
+            return;
+        }
+
+        if (this.currentLogoId) {
+            // Edit existing logo
+            const logoIndex = this.logos.findIndex(logo => logo.id === this.currentLogoId);
+            if (logoIndex !== -1) {
+                this.logos[logoIndex] = { ...this.logos[logoIndex], ...logoData };
+            }
+        } else {
+            // Add new logo
+            const newId = Math.max(...this.logos.map(logo => logo.id), 0) + 1;
+            this.logos.push({ id: newId, ...logoData });
+        }
+
+        // Save to localStorage
+        localStorage.setItem('streamArchive_logos', JSON.stringify(this.logos));
+        
+        // Update UI
+        this.loadLogos();
+        this.hideLogoModal();
+        
+        // Update chat.js logo database
+        this.updateChatLogoDatabase();
+    }
+
+    editLogo(logoId) {
+        const logo = this.logos.find(l => l.id === logoId);
+        if (logo) {
+            this.showLogoModal(logo);
+        }
+    }
+
+    deleteLogo(logoId) {
+        const logo = this.logos.find(l => l.id === logoId);
+        if (!logo) return;
+
+        if (confirm(`Möchtest du das Logo für "${logo.gameName}" wirklich löschen?`)) {
+            this.logos = this.logos.filter(l => l.id !== logoId);
+            localStorage.setItem('streamArchive_logos', JSON.stringify(this.logos));
+            this.loadLogos();
+            this.updateChatLogoDatabase();
+        }
+    }
+
+    updateChatLogoDatabase() {
+        // This method updates the logo database used by chat.js
+        // We'll store it in a format that chat.js can easily access
+        const chatLogos = {};
+        this.logos.forEach(logo => {
+            const lowerName = logo.gameName.toLowerCase();
+            chatLogos[lowerName] = logo.logoUrl;
+            
+            // Add aliases
+            logo.aliases.forEach(alias => {
+                chatLogos[alias.toLowerCase()] = logo.logoUrl;
+            });
+        });
+        
+        localStorage.setItem('streamArchive_chatLogos', JSON.stringify(chatLogos));
     }
 
     showToast(message, type = 'info') {

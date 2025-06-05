@@ -423,29 +423,57 @@ class ChatSync {
      }
      
      async getSteamLogo(gameName) {
-         // This is a simplified approach - in production you'd want to use proper APIs
-         // For now, we'll use a generic approach with common game logos
-         const commonGames = {
-             'minecraft': 'https://www.minecraft.net/etc.clientlibs/minecraft/clientlibs/main/resources/favicon-96x96.png',
-             'fortnite': 'https://cdn2.unrealengine.com/Fortnite%2Ffn-game-icon-285x285-285x285-0b364143e0c9.png',
-             'valorant': 'https://images.contentstack.io/v3/assets/bltb6530b271fddd0b1/blt5c6a35b51b0e8c7e/5eb26f5e31bb7e28d2444b7e/V_LOGOMARK_1920x1080_Red.png',
-             'league of legends': 'https://universe-meeps.leagueoflegends.com/v1/assets/images/factions/demacia-crest.png',
-             'world of warcraft': 'https://bnetcmsus-a.akamaihd.net/cms/gallery/LKXYBFP8ZZ6D1509472919930.png',
-             'overwatch': 'https://d15f34w2p8l1cc.cloudfront.net/overwatch/images/logos/overwatch-share-icon.jpg',
-             'counter-strike': 'https://cdn.cloudflare.steamstatic.com/steam/apps/730/header.jpg',
-             'dota 2': 'https://cdn.cloudflare.steamstatic.com/steam/apps/570/header.jpg',
-             'apex legends': 'https://media.contentapi.ea.com/content/dam/apex-legends/images/2019/01/apex-legends-meta-image.jpg'
-         };
-         
-         const lowerName = gameName.toLowerCase();
-         for (const [game, logo] of Object.entries(commonGames)) {
-             if (lowerName.includes(game) || game.includes(lowerName)) {
-                 return logo;
-             }
-         }
-         
-         return null;
-     }
+        // Load logo database from admin panel
+        const chatLogos = JSON.parse(localStorage.getItem('streamArchive_chatLogos') || '{}');
+        
+        // Fallback to default logos if admin database is empty
+        const defaultGames = {
+            'minecraft': 'https://www.minecraft.net/etc.clientlibs/minecraft/clientlibs/main/resources/favicon-96x96.png',
+            'fortnite': 'https://cdn2.unrealengine.com/Fortnite%2Ffn-game-icon-285x285-285x285-0b364143e0c9.png',
+            'valorant': 'https://images.contentstack.io/v3/assets/bltb6530b271fddd0b1/blt5c6a35b51b0e8c7e/5eb26f5e31bb7e28d2444b7e/V_LOGOMARK_1920x1080_Red.png',
+            'league of legends': 'https://universe-meeps.leagueoflegends.com/v1/assets/images/factions/demacia-crest.png',
+            'world of warcraft': 'https://bnetcmsus-a.akamaihd.net/cms/gallery/LKXYBFP8ZZ6D1509472919930.png',
+            'overwatch': 'https://d15f34w2p8l1cc.cloudfront.net/overwatch/images/logos/overwatch-share-icon.jpg',
+            'counter-strike': 'https://cdn.cloudflare.steamstatic.com/steam/apps/730/header.jpg',
+            'dota 2': 'https://cdn.cloudflare.steamstatic.com/steam/apps/570/header.jpg',
+            'apex legends': 'https://media.contentapi.ea.com/content/dam/apex-legends/images/2019/01/apex-legends-meta-image.jpg'
+        };
+        
+        // Combine admin logos with default logos (admin logos take priority)
+        const allLogos = { ...defaultGames, ...chatLogos };
+        
+        const lowerName = gameName.toLowerCase().trim();
+        
+        console.log('Looking for logo for game:', gameName);
+        console.log('Normalized name:', lowerName);
+        console.log('Available logos:', Object.keys(allLogos));
+        
+        // First try exact match
+        if (allLogos[lowerName]) {
+            console.log('Found exact match:', lowerName);
+            return allLogos[lowerName];
+        }
+        
+        // Try case-insensitive exact match
+        for (const [game, logo] of Object.entries(allLogos)) {
+            if (game.toLowerCase() === lowerName) {
+                console.log('Found case-insensitive exact match:', game);
+                return logo;
+            }
+        }
+        
+        // Then try partial matches
+        for (const [game, logo] of Object.entries(allLogos)) {
+            const lowerGame = game.toLowerCase();
+            if (lowerName.includes(lowerGame) || lowerGame.includes(lowerName)) {
+                console.log('Found partial match:', game, 'for', lowerName);
+                return logo;
+            }
+        }
+        
+        console.log('No logo found for:', lowerName);
+        return null;
+    }
      
      async getGenericGameLogo(gameName) {
          // This would typically use a proper game database API
