@@ -1093,7 +1093,7 @@ class AdminPanel {
             this.updateLogoPreview('');
         }
         
-        modal.style.display = 'block';
+        modal.style.display = 'flex';
     }
 
     hideLogoModal() {
