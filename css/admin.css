@@ -1166,6 +1166,56 @@
     margin: 0;
 }
 
+/* Logo source tabs */
+.logo-source-tabs {
+    display: flex;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-secondary);
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.tab-content input[type="file"] {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tab-content input[type="file"]:hover {
+    border-color: var(--primary-color);
+    background-color: var(--bg-primary);
+}
+
 @media (max-width: 768px) {
     .stats-grid {
         grid-template-columns: 1fr;
@@ -1211,6 +1261,11 @@
     
     .logos-grid {
         grid-template-columns: 1fr;
+    }
+    
+    .tab-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
     }
 }
 

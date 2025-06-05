@@ -1034,7 +1034,6 @@ class AdminPanel {
                     </div>
                     <div class="logo-card-info">
                         <h3>${logo.gameName}</h3>
-                        <p>${logo.logoUrl}</p>
                     </div>
                 </div>
                 ${logo.aliases && logo.aliases.length > 0 ? `
@@ -1076,6 +1075,9 @@ class AdminPanel {
         const modal = document.getElementById('logoModal');
         const title = document.getElementById('logoModalTitle');
         const form = document.getElementById('logoForm');
+        
+        // Initialize tabs - default to URL tab
+        this.switchLogoTab('url');
         
         if (logo) {
             title.textContent = 'Logo bearbeiten';
@@ -1125,6 +1127,20 @@ class AdminPanel {
             });
         }
 
+        // File upload handling
+        const logoFileInput = document.getElementById('logoFile');
+        if (logoFileInput) {
+            logoFileInput.addEventListener('change', () => this.handleFileUpload());
+        }
+
+        // Tab switching
+        const tabBtns = modal?.querySelectorAll('.tab-btn');
+        if (tabBtns) {
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => this.switchLogoTab(btn.dataset.tab));
+            });
+        }
+
         // Close modal when clicking outside
         if (modal) {
             modal.addEventListener('click', (e) => {
@@ -1166,22 +1182,118 @@ class AdminPanel {
         }
     }
 
+    switchLogoTab(tab) {
+        const modal = document.getElementById('logoModal');
+        const tabBtns = modal.querySelectorAll('.tab-btn');
+        const tabContents = modal.querySelectorAll('.tab-content');
+        
+        // Update tab buttons
+        tabBtns.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tab);
+        });
+        
+        // Update tab contents
+        tabContents.forEach(content => {
+            content.classList.toggle('active', content.dataset.tab === tab);
+        });
+        
+        // Clear preview when switching tabs
+        this.updateLogoPreview('');
+        
+        // Clear file input when switching away from upload tab
+        if (tab !== 'upload') {
+            const fileInput = document.getElementById('logoFile');
+            if (fileInput) fileInput.value = '';
+        }
+        
+        // Clear URL input when switching away from URL tab
+        if (tab !== 'url') {
+            const urlInput = document.getElementById('logoUrl');
+            if (urlInput) urlInput.value = '';
+        }
+    }
+
+    handleFileUpload() {
+        const fileInput = document.getElementById('logoFile');
+        const file = fileInput.files[0];
+        
+        if (!file) return;
+        
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+        if (!allowedTypes.includes(file.type)) {
+            alert('Bitte wählen Sie eine gültige Bilddatei (JPG, PNG, GIF, WebP, SVG).');
+            fileInput.value = '';
+            return;
+        }
+        
+        // Validate file size (5MB limit)
+        const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+        if (file.size > maxSize) {
+            alert('Die Datei ist zu groß. Maximale Größe: 5MB.');
+            fileInput.value = '';
+            return;
+        }
+        
+        // Convert to base64 and preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const base64 = e.target.result;
+            this.updateLogoPreview(base64);
+        };
+        reader.readAsDataURL(file);
+    }
+
     saveLogo() {
         const form = document.getElementById('logoForm');
         const formData = new FormData(form);
         
-        const logoData = {
-            gameName: formData.get('gameName').trim(),
-            logoUrl: formData.get('logoUrl').trim(),
-            aliases: formData.get('aliases') ? 
-                formData.get('aliases').split(',').map(alias => alias.trim()).filter(alias => alias) : []
-        };
-
-        // Validation
-        if (!logoData.gameName || !logoData.logoUrl) {
-            alert('Bitte fülle alle Pflichtfelder aus.');
+        const gameName = formData.get('gameName')?.trim();
+        const logoUrl = formData.get('logoUrl')?.trim();
+        const aliases = formData.get('aliases');
+        const logoFile = formData.get('logoFile');
+        
+        // Check which tab is active
+        const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
+        
+        if (!gameName) {
+            alert('Bitte geben Sie einen Spielnamen ein.');
             return;
         }
+        
+        let finalLogoUrl = '';
+        
+        if (activeTab === 'url') {
+            if (!logoUrl) {
+                alert('Bitte geben Sie eine Logo-URL ein.');
+                return;
+            }
+            finalLogoUrl = logoUrl;
+        } else if (activeTab === 'upload') {
+            if (!logoFile || logoFile.size === 0) {
+                alert('Bitte wählen Sie eine Datei aus.');
+                return;
+            }
+            
+            // For file uploads, we use the base64 data that was set in the preview
+            const previewImg = document.getElementById('logoPreviewImg');
+            if (previewImg && previewImg.src && previewImg.src.startsWith('data:')) {
+                finalLogoUrl = previewImg.src;
+            } else {
+                alert('Fehler beim Verarbeiten der Datei.');
+                return;
+            }
+        } else {
+            alert('Bitte wählen Sie eine Logo-Quelle aus.');
+            return;
+        }
+        
+        const logoData = {
+            gameName,
+            logoUrl: finalLogoUrl,
+            aliases: aliases ? 
+                aliases.split(',').map(alias => alias.trim()).filter(alias => alias) : []
+        };
 
         // Check for duplicate game names (excluding current logo when editing)
         const existingLogo = this.logos.find(logo => 
