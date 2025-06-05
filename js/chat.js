@@ -8,6 +8,9 @@ class ChatSync {
         this.emoteCache = new Map();
         this.badgeCache = new Map();
         this.isLoading = false;
+        this.chapters = [];
+        this.currentChapter = null;
+        this.currentChapterDisplay = null;
         
         this.options = {
             maxMessages: options.maxMessages || 500,
@@ -30,6 +33,7 @@ class ChatSync {
         if (!this.container) return;
         
         this.messagesContainer = this.container.querySelector('.chat-messages') || this.container;
+        this.currentChapterDisplay = document.getElementById('currentChapterDisplay');
         this.showLoading();
     }
     
@@ -62,6 +66,7 @@ class ChatSync {
         
         // Process video chapters as chat markers
         if (data.video && data.video.chapters) {
+            this.chapters = data.video.chapters;
             data.video.chapters.forEach(chapter => {
                 this.messages.push({
                     type: 'chapter',
@@ -113,6 +118,9 @@ class ChatSync {
             this.displayedMessages.splice(0, excess);
             this.removeOldMessages(excess);
         }
+        
+        // Update current chapter display
+        this.updateCurrentChapter(currentTime);
         
         // Auto-scroll to bottom
         if (this.options.autoScroll) {
@@ -308,7 +316,49 @@ class ChatSync {
         }
     }
     
-    showLoading() {
+    updateCurrentChapter(currentTime) {
+        if (!this.chapters || this.chapters.length === 0 || !this.currentChapterDisplay) {
+            return;
+        }
+        
+        // Find the current chapter based on timestamp (in seconds)
+        let newCurrentChapter = null;
+        for (let i = this.chapters.length - 1; i >= 0; i--) {
+            const chapter = this.chapters[i];
+            const chapterStartTime = chapter.startMilliseconds / 1000;
+            if (currentTime >= chapterStartTime) {
+                newCurrentChapter = chapter;
+                break;
+            }
+        }
+        
+        // Only update if chapter has changed
+        if (newCurrentChapter !== this.currentChapter) {
+            this.currentChapter = newCurrentChapter;
+            
+            if (this.currentChapter) {
+                // Show and update the current chapter display
+                const titleElement = document.getElementById('currentChapterTitle');
+                const gameElement = document.getElementById('currentChapterGame');
+                
+                if (titleElement) {
+                    titleElement.textContent = this.currentChapter.description || this.currentChapter.gameDisplayName || 'Aktuelles Kapitel';
+                }
+                
+                if (gameElement) {
+                    gameElement.textContent = this.currentChapter.subDescription || '';
+                    gameElement.style.display = this.currentChapter.subDescription ? 'block' : 'none';
+                }
+                
+                this.currentChapterDisplay.style.display = 'block';
+            } else {
+                // Hide the current chapter display if no chapter is active
+                this.currentChapterDisplay.style.display = 'none';
+            }
+        }
+     }
+     
+     showLoading() {
         if (!this.messagesContainer) return;
         
         this.messagesContainer.innerHTML = `

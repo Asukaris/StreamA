@@ -6,6 +6,14 @@
     <title>Stream ansehen - Factor_KS</title>
     <meta name="description" content="Schaue dir diesen Stream von Factor_KS an">
     
+    <script>
+        // Prevent FOUC by applying theme immediately
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    
     <!-- CSS Files -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/player.css">
@@ -83,18 +91,32 @@
                     </div>
                     
                     <!-- Chat Section -->
-                    <div class="chat-container">
-                        <div class="chat-header">
-                            <h3>Stream Chat</h3>
-                            <div class="chat-controls">
-                                <button id="chatSyncToggle" class="btn btn-sm" title="Chat-Synchronisation">
-                                    <i class="fas fa-sync"></i>
-                                </button>
-                                <button id="chatSettingsBtn" class="btn btn-sm" title="Chat-Einstellungen">
-                                    <i class="fas fa-cog"></i>
-                                </button>
+                    <div class="chat-section">
+                        <!-- Current Chapter Display -->
+                        <div class="current-chapter-display" id="currentChapterDisplay" style="display: none;">
+                            <div class="current-chapter-content">
+                                <div class="current-chapter-icon">
+                                    <i class="fas fa-play"></i>
+                                </div>
+                                <div class="current-chapter-info">
+                                    <div class="current-chapter-title" id="currentChapterTitle">Aktuelles Kapitel</div>
+                                    <div class="current-chapter-game" id="currentChapterGame"></div>
+                                </div>
                             </div>
                         </div>
+                        
+                        <div class="chat-container">
+                            <div class="chat-header">
+                                <h3>Stream Chat</h3>
+                                <div class="chat-controls">
+                                    <button id="chatSyncToggle" class="btn btn-sm" title="Chat-Synchronisation">
+                                        <i class="fas fa-sync"></i>
+                                    </button>
+                                    <button id="chatSettingsBtn" class="btn btn-sm" title="Chat-Einstellungen">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                </div>
+                            </div>
                         
                         <div class="chat-messages" id="chatMessages">
                             <!-- Chat messages will be populated by JavaScript -->
@@ -103,6 +125,7 @@
                         <div class="chat-sync-indicator" id="chatSyncIndicator">
                             <i class="fas fa-clock"></i>
                             <span>Chat synchronisiert</span>
+                        </div>
                         </div>
                     </div>
                 </div>

@@ -6,6 +6,14 @@
     <title>Stream-Archiv - Factor_KS</title>
     <meta name="description" content="Durchsuche alle archivierten Streams von Factor_KS">
     
+    <script>
+        // Prevent FOUC by applying theme immediately
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    
     <!-- CSS Files -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/streams.css">
