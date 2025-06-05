@@ -26,6 +26,7 @@ class HeaderComponent {
             
             this.setActiveNavigation();
             this.initMobileMenu();
+            this.initThemeToggle();
             
         } catch (error) {
             console.error('Error loading header:', error);
@@ -77,6 +78,40 @@ class HeaderComponent {
                     mobileToggle.classList.remove('active');
                 }
             });
+        }
+    }
+
+    initThemeToggle() {
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            // Get current theme from localStorage or default to light
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            this.updateThemeIcon(currentTheme);
+
+            // Add click event listener
+            themeToggle.addEventListener('click', () => {
+                const newTheme = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                this.updateThemeIcon(newTheme);
+            });
+        }
+    }
+
+    updateThemeIcon(theme) {
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            const icon = themeToggle.querySelector('i');
+            if (icon) {
+                if (theme === 'dark') {
+                    icon.className = 'fas fa-sun';
+                    themeToggle.title = 'Helles Design';
+                } else {
+                    icon.className = 'fas fa-moon';
+                    themeToggle.title = 'Dunkles Design';
+                }
+            }
         }
     }
 }

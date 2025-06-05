@@ -1,7 +1,6 @@
 // Main Application JavaScript
 class StreamArchiveApp {
     constructor() {
-        this.currentTheme = localStorage.getItem('theme') || 'light';
         this.isLoggedIn = false;
         this.currentUser = null;
         this.streams = [];
@@ -10,45 +9,15 @@ class StreamArchiveApp {
     }
     
     init() {
-        this.initTheme();
         this.initEventListeners();
         this.loadStreams();
         this.checkAuthStatus();
     }
     
-    // Theme Management
-    initTheme() {
-        document.documentElement.setAttribute('data-theme', this.currentTheme);
-        this.updateThemeIcon();
-    }
-    
-    toggleTheme() {
-        this.currentTheme = this.currentTheme === 'light' ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', this.currentTheme);
-        localStorage.setItem('theme', this.currentTheme);
-        this.updateThemeIcon();
-    }
-    
-    updateThemeIcon() {
-        const themeToggle = document.getElementById('themeToggle');
-        const icon = themeToggle.querySelector('i');
-        
-        if (this.currentTheme === 'dark') {
-            icon.className = 'fas fa-sun';
-            themeToggle.title = 'Helles Design';
-        } else {
-            icon.className = 'fas fa-moon';
-            themeToggle.title = 'Dunkles Design';
-        }
-    }
+    // Theme Management is now handled by HeaderComponent
     
     // Event Listeners
     initEventListeners() {
-        // Theme toggle
-        document.getElementById('themeToggle')?.addEventListener('click', () => {
-            this.toggleTheme();
-        });
-        
         // Login button
         document.getElementById('loginBtn')?.addEventListener('click', () => {
             this.handleLogin();
