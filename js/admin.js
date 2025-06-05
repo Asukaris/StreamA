@@ -1571,6 +1571,75 @@ class AdminPanel {
             reader.readAsDataURL(file);
         });
     }
+
+    exportData() {
+        try {
+            const exportData = {
+                streams: this.streams,
+                users: this.users,
+                settings: this.settings,
+                logos: this.logos,
+                exportDate: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `stream-archive-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            this.showToast('Daten wurden erfolgreich exportiert', 'success');
+        } catch (error) {
+            console.error('Export error:', error);
+            this.showToast('Fehler beim Exportieren der Daten', 'error');
+        }
+    }
+
+    clearAllData() {
+        if (confirm('Sind Sie sicher, dass Sie alle gespeicherten Daten löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden!')) {
+            if (confirm('LETZTE WARNUNG: Alle Streams, Benutzer und Einstellungen werden unwiderruflich gelöscht. Fortfahren?')) {
+                try {
+                    // Clear all localStorage data
+                    localStorage.removeItem('streamArchive_streams');
+                    localStorage.removeItem('streamArchive_users');
+                    localStorage.removeItem('streamArchive_settings');
+                    localStorage.removeItem('streamArchive_logos');
+                    
+                    // Reset class properties
+                    this.streams = [];
+                    this.users = [];
+                    this.logos = [];
+                    this.settings = {
+                        siteName: 'Stream Archive',
+                        siteDescription: 'Dein persönliches Stream-Archiv',
+                        maxFileSize: 100,
+                        autoHLS: true,
+                        allowComments: true,
+                        requireLogin: false,
+                        moderateComments: false,
+                        hlsQualities: ['720p', '480p', '360p']
+                    };
+                    
+                    // Reload all sections
+                    this.loadDashboard();
+                    this.loadUsers();
+                    this.loadArchive();
+                    this.loadSettings();
+                    this.loadLogos();
+                    
+                    this.showToast('Alle Daten wurden erfolgreich gelöscht', 'success');
+                } catch (error) {
+                    console.error('Clear data error:', error);
+                    this.showToast('Fehler beim Löschen der Daten', 'error');
+                }
+            }
+        }
+    }
 }
 
 // Initialize admin panel when DOM is loaded
