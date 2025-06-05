@@ -37,8 +37,8 @@ Eine moderne Web-Anwendung für das Archivieren und Verwalten von Twitch-Streams
 
 1. Repository klonen:
 ```bash
-git clone [repository-url]
-cd projekt3
+git clone https://github.com/Asukaris/StreamA.git
+cd StreamA
 ```
 
 2. Einen lokalen Webserver starten:
