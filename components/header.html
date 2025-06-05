@@ -1,0 +1,59 @@
+<!-- Header Component -->
+<header class="header">
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="index.html">Stream Archiv</a>
+            </div>
+            
+            <div class="nav-menu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="streams.html" class="nav-link">Streams</a>
+                <a href="api.html" class="nav-link">API</a>
+                <a href="analytics.html" class="nav-link">Analytics</a>
+                <a href="admin.html" class="nav-link">Admin</a>
+            </div>
+            
+            <div class="nav-actions">
+                <button id="themeToggle" class="theme-toggle" title="Theme wechseln">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button id="loginBtn" class="login-btn">
+                    <i class="fab fa-twitch"></i>
+                    Anmelden
+                </button>
+                <button id="adminBtn" class="admin-btn hidden">
+                    <i class="fas fa-cog"></i>
+                    Admin
+                </button>
+            </div>
+            
+            <div class="mobile-menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<!-- Mobile Menu -->
+<div id="mobileMenu" class="mobile-menu">
+    <ul class="mobile-nav-list">
+        <li><a href="index.html" class="mobile-nav-link">Home</a></li>
+        <li><a href="streams.html" class="mobile-nav-link">Streams</a></li>
+        <li><a href="api.html" class="mobile-nav-link">API</a></li>
+        <li><a href="analytics.html" class="mobile-nav-link">Analytics</a></li>
+        <li><a href="admin.html" class="mobile-nav-link">Admin</a></li>
+    </ul>
+    <div class="mobile-actions">
+        <button id="mobileLoginBtn" class="mobile-action-btn">
+            <i class="fab fa-twitch"></i>
+            <span>Login</span>
+        </button>
+        <button id="mobileAdminBtn" class="mobile-action-btn admin-btn" style="display: none;">
+            <i class="fas fa-cog"></i>
+            <span>Admin</span>
+        </button>
+    </div>
+</div>

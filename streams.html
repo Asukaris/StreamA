@@ -28,42 +28,7 @@
         </div>
     </div>
 
-    <!-- Header -->
-    <header class="header">
-        <nav class="navbar">
-            <div class="nav-container">
-                <div class="nav-logo">
-                    <a href="index.html">Stream Archiv</a>
-                </div>
-                
-                <div class="nav-menu">
-                    <a href="index.html" class="nav-link">Home</a>
-                    <a href="streams.html" class="nav-link active">Streams</a>
-                    <a href="api.html" class="nav-link">API</a>
-                    <a href="analytics.html" class="nav-link">Analytics</a>
-                    <a href="admin.html" class="nav-link">Admin</a>
-                </div>
-                
-                <div class="nav-actions">
-                    <button id="themeToggle" class="theme-toggle" title="Theme wechseln">
-                        <i class="fas fa-moon"></i>
-                    </button>
-                    <button id="loginBtn" class="login-btn">
-                        <i class="fab fa-twitch"></i>
-                        Anmelden
-                    </button>
-                    <button id="adminBtn" class="admin-btn hidden">
-                        <i class="fas fa-cog"></i>
-                        Admin
-                    </button>
-                </div>
-                
-                <div class="mobile-menu-toggle">
-                    <i class="fas fa-bars"></i>
-                </div>
-            </div>
-        </nav>
-    </header>
+    <!-- Header wird dynamisch geladen -->
 
     <!-- Main Content -->
     <main class="main">
@@ -186,55 +151,11 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h4>Factor_KS</h4>
-                    <p>Dein Gaming-Streamer für Racing und mehr!</p>
-                    <div class="social-links">
-                        <a href="https://twitch.tv/factor_ks" target="_blank" title="Twitch">
-                            <i class="fab fa-twitch"></i>
-                        </a>
-                        <a href="https://twitter.com/factor_ks" target="_blank" title="Twitter">
-                            <i class="fab fa-twitter"></i>
-                        </a>
-                        <a href="https://youtube.com/@factor_ks" target="_blank" title="YouTube">
-                            <i class="fab fa-youtube"></i>
-                        </a>
-                        <a href="https://discord.gg/factor_ks" target="_blank" title="Discord">
-                            <i class="fab fa-discord"></i>
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="footer-section">
-                    <h4>Links</h4>
-                    <ul>
-                        <li><a href="index.html">Home</a></li>
-                        <li><a href="streams.html">Streams</a></li>
-                        <li><a href="privacy.html">Datenschutz</a></li>
-                        <li><a href="imprint.html">Impressum</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-section">
-                    <h4>Rechtliches</h4>
-                    <ul>
-                        <li><a href="privacy.html">Datenschutzerklärung</a></li>
-                        <li><a href="imprint.html">Impressum</a></li>
-                        <li><a href="#">Nutzungsbedingungen</a></li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="footer-bottom">
-                <p>&copy; 2024 Factor_KS. Alle Rechte vorbehalten.</p>
-            </div>
-        </div>
-    </footer>
+    <!-- Footer will be loaded dynamically by footer.js -->
 
     <!-- JavaScript Files -->
+    <script src="js/header.js"></script>
+    <script src="js/footer.js"></script>
     <script src="js/app.js"></script>
     <script src="js/streams.js"></script>
 </body>

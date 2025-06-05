@@ -484,6 +484,72 @@ html {
     }
 }
 
+/* Cookie Toast */
+.cookie-toast {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 32px var(--shadow);
+    z-index: 10000;
+    max-width: 500px;
+    margin: 0 auto;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.cookie-toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.cookie-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.cookie-text {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.cookie-text i {
+    color: var(--warning-color);
+    font-size: 1.2rem;
+}
+
+.cookie-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+/* Responsive adjustments for cookie toast */
+@media (max-width: 768px) {
+    .cookie-toast {
+        left: 10px;
+        right: 10px;
+        padding: 1rem;
+    }
+    
+    .cookie-actions {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .cookie-content {
+        text-align: center;
+    }
+}
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
     html {
@@ -495,6 +561,10 @@ html {
     }
     
     .skip-to-content {
+        transition: none;
+    }
+    
+    .cookie-toast {
         transition: none;
     }
 }

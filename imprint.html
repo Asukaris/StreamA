@@ -31,64 +31,7 @@
         </div>
     </div>
 
-    <!-- Header -->
-    <header class="header">
-        <div class="container">
-            <div class="header-content">
-                <!-- Logo -->
-                <div class="logo">
-                    <a href="index.html">
-                        <i class="fas fa-video"></i>
-                        <span>Factor_KS Archive</span>
-                    </a>
-                </div>
-
-                <!-- Navigation -->
-                <nav class="nav">
-                    <ul class="nav-list">
-                        <li><a href="index.html" class="nav-link">Home</a></li>
-                        <li><a href="streams.html" class="nav-link">Streams</a></li>
-                    </ul>
-                </nav>
-
-                <!-- Actions -->
-                <div class="header-actions">
-                    <button id="themeToggle" class="action-btn" title="Theme wechseln">
-                        <i class="fas fa-moon"></i>
-                    </button>
-                    <button id="loginBtn" class="action-btn" title="Mit Twitch anmelden">
-                        <i class="fab fa-twitch"></i>
-                        <span class="btn-text">Login</span>
-                    </button>
-                    <button id="adminBtn" class="action-btn admin-btn" title="Admin-Bereich" style="display: none;">
-                        <i class="fas fa-cog"></i>
-                        <span class="btn-text">Admin</span>
-                    </button>
-                    <button id="mobileMenuToggle" class="mobile-menu-toggle">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Mobile Menu -->
-            <div id="mobileMenu" class="mobile-menu">
-                <ul class="mobile-nav-list">
-                    <li><a href="index.html" class="mobile-nav-link">Home</a></li>
-                    <li><a href="streams.html" class="mobile-nav-link">Streams</a></li>
-                </ul>
-                <div class="mobile-actions">
-                    <button id="mobileLoginBtn" class="mobile-action-btn">
-                        <i class="fab fa-twitch"></i>
-                        <span>Login</span>
-                    </button>
-                    <button id="mobileAdminBtn" class="mobile-action-btn admin-btn" style="display: none;">
-                        <i class="fas fa-cog"></i>
-                        <span>Admin</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
+    <!-- Header will be loaded dynamically by header.js -->
 
     <!-- Main Content -->
     <main class="main">
@@ -246,47 +189,11 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>Factor_KS Archive</h3>
-                    <p>Dein Archiv für alle Factor_KS Streams mit synchronisiertem Chat und HLS-Video-Streaming.</p>
-                </div>
-                <div class="footer-section">
-                    <h3>Links</h3>
-                    <ul>
-                        <li><a href="index.html">Home</a></li>
-                        <li><a href="streams.html">Stream Archive</a></li>
-                        <li><a href="privacy.html">Datenschutz</a></li>
-                        <li><a href="imprint.html">Impressum</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h3>Social Media</h3>
-                    <div class="social-links">
-                        <a href="https://twitch.tv/factor_ks" target="_blank" rel="noopener noreferrer" title="Twitch">
-                            <i class="fab fa-twitch"></i>
-                        </a>
-                        <a href="https://youtube.com/@factor_ks" target="_blank" rel="noopener noreferrer" title="YouTube">
-                            <i class="fab fa-youtube"></i>
-                        </a>
-                        <a href="https://twitter.com/factor_ks" target="_blank" rel="noopener noreferrer" title="Twitter">
-                            <i class="fab fa-twitter"></i>
-                        </a>
-                        <a href="https://discord.gg/factor_ks" target="_blank" rel="noopener noreferrer" title="Discord">
-                            <i class="fab fa-discord"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2025 Factor_KS. Alle Rechte vorbehalten.</p>
-            </div>
-        </div>
-    </footer>
+    <!-- Footer will be loaded dynamically by footer.js -->
 
     <!-- JavaScript -->
+    <script src="js/header.js"></script>
+    <script src="js/footer.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

@@ -14,7 +14,6 @@ class StreamArchiveApp {
         this.initEventListeners();
         this.loadStreams();
         this.checkAuthStatus();
-        this.initMobileMenu();
     }
     
     // Theme Management
@@ -75,18 +74,7 @@ class StreamArchiveApp {
         });
     }
     
-    // Mobile Menu
-    initMobileMenu() {
-        const mobileToggle = document.querySelector('.mobile-menu-toggle');
-        const navMenu = document.querySelector('.nav-menu');
-        
-        if (mobileToggle && navMenu) {
-            mobileToggle.addEventListener('click', () => {
-                navMenu.classList.toggle('active');
-                mobileToggle.classList.toggle('active');
-            });
-        }
-    }
+
     
     // Authentication
     async handleLogin() {

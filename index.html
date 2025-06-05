@@ -21,41 +21,7 @@
         </div>
     </div>
 
-    <!-- Header -->
-    <header class="header">
-        <nav class="navbar">
-            <div class="nav-container">
-                <div class="nav-logo">
-                    <a href="index.html">Stream Archiv</a>
-                </div>
-                
-                <div class="nav-menu">
-                    <a href="index.html" class="nav-link active">Home</a>
-                    <a href="streams.html" class="nav-link">Streams</a>
-                </div>
-                
-                <div class="nav-actions">
-                    <button id="themeToggle" class="theme-toggle" title="Theme wechseln">
-                        <i class="fas fa-moon"></i>
-                    </button>
-                    <button id="loginBtn" class="login-btn">
-                        <i class="fab fa-twitch"></i>
-                        Anmelden
-                    </button>
-                    <button id="adminBtn" class="admin-btn hidden">
-                        <i class="fas fa-cog"></i>
-                        Admin
-                    </button>
-                </div>
-                
-                <div class="mobile-menu-toggle">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-            </div>
-        </nav>
-    </header>
+    <!-- Header wird dynamisch geladen -->
 
     <!-- Main Content -->
     <main class="main-content">
@@ -123,26 +89,12 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-links">
-                    <a href="impressum.html">Impressum</a>
-                    <a href="datenschutz.html">Datenschutzerklärung</a>
-                    <button id="deleteCookies">Cookies löschen</button>
-                </div>
-                <div class="social-links">
-                    <a href="#" class="social-link"><i class="fab fa-twitch"></i></a>
-                    <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
-                    <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
-                    <a href="#" class="social-link"><i class="fab fa-discord"></i></a>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <!-- Footer will be loaded dynamically by footer.js -->
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="js/header.js"></script>
+    <script src="js/footer.js"></script>
     <script src="js/app.js"></script>
     <script src="js/player.js"></script>
     <script src="js/chat.js"></script>
