@@ -6,29 +6,37 @@ error_reporting(E_ALL);
 // Also log errors to file in case display_errors is disabled by server
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/php_errors.log');
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
+// Handle preflight requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
+    http_response_code(200);
+    exit();
 }
 
 require_once 'database.php';
 
 class UserAPI {
-    private $db;
+    private $database;
     
     public function __construct($database) {
-        $this->db = $database;
+        $this->database = $database;
     }
     
     public function handleRequest() {
-        $method = $_SERVER['REQUEST_METHOD'];
-        $path = $_SERVER['PATH_INFO'] ?? '';
-        
         try {
+            $method = $_SERVER['REQUEST_METHOD'];
+            $path = $_SERVER['PATH_INFO'] ?? '';
+            
+            // Add debug endpoint
+            if ($path === '/debug' && $method === 'GET') {
+                return $this->debug();
+            }
+            
             switch ($method) {
                 case 'POST':
                     if ($path === '/register') {
@@ -46,17 +54,27 @@ class UserAPI {
                         return $this->verifySession();
                     }
                     break;
-                case 'PUT':
-                    if ($path === '/profile') {
-                        return $this->updateProfile();
-                    }
-                    break;
             }
             
-            throw new Exception('Endpoint not found', 404);
+            return $this->errorResponse('Endpoint not found', 404);
         } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage(), $e->getCode() ?: 500);
+            error_log('UserAPI Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
+            return $this->errorResponse('Internal server error: ' . $e->getMessage(), 500);
         }
+    }
+    
+    private function debug() {
+        return $this->successResponse([
+            'php_version' => phpversion(),
+            'error_reporting' => error_reporting(),
+            'display_errors' => ini_get('display_errors'),
+            'log_errors' => ini_get('log_errors'),
+            'error_log' => ini_get('error_log'),
+            'database_connected' => $this->database ? 'yes' : 'no',
+            'server_time' => date('Y-m-d H:i:s'),
+            'request_method' => $_SERVER['REQUEST_METHOD'],
+            'path_info' => $_SERVER['PATH_INFO'] ?? 'none'
+        ]);
     }
     
     private function register() {
@@ -84,7 +102,7 @@ class UserAPI {
         }
         
         // Check if user already exists
-        $stmt = $this->db->query(
+        $stmt = $this->database->query(
             'SELECT id FROM users WHERE username = ? OR email = ?',
             [$username, $email]
         );
@@ -95,12 +113,12 @@ class UserAPI {
         
         // Create user
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $this->db->query(
+        $stmt = $this->database->query(
             'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
             [$username, $email, $passwordHash]
         );
         
-        $userId = $this->db->lastInsertId();
+        $userId = $this->database->lastInsertId();
         
         return $this->successResponse([
             'message' => 'User registered successfully',
@@ -119,7 +137,7 @@ class UserAPI {
         $password = $input['password'];
         
         // Find user by username or email
-        $stmt = $this->db->query(
+        $stmt = $this->database->query(
             'SELECT id, username, email, password_hash FROM users WHERE (username = ? OR email = ?) AND is_active = 1',
             [$login, $login]
         );
@@ -134,7 +152,7 @@ class UserAPI {
         $sessionToken = bin2hex(random_bytes(32));
         $expiresAt = date('Y-m-d H:i:s', strtotime('+30 days'));
         
-        $this->db->query(
+        $this->database->query(
             'INSERT INTO sessions (user_id, session_token, expires_at) VALUES (?, ?, ?)',
             [$user['id'], $sessionToken, $expiresAt]
         );
@@ -154,7 +172,7 @@ class UserAPI {
         $sessionToken = $this->getSessionToken();
         
         if ($sessionToken) {
-            $this->db->query(
+            $this->database->query(
                 'DELETE FROM sessions WHERE session_token = ?',
                 [$sessionToken]
             );
@@ -228,7 +246,7 @@ class UserAPI {
         $updates[] = 'updated_at = CURRENT_TIMESTAMP';
         $params[] = $user['id'];
         
-        $this->db->query(
+        $this->database->query(
             'UPDATE users SET ' . implode(', ', $updates) . ' WHERE id = ?',
             $params
         );
@@ -243,7 +261,7 @@ class UserAPI {
             throw new Exception('No session token provided', 401);
         }
         
-        $stmt = $this->db->query(
+        $stmt = $this->database->query(
             'SELECT u.id, u.username, u.email, u.created_at 
              FROM users u 
              JOIN sessions s ON u.id = s.user_id 
