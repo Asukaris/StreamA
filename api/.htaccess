@@ -1,0 +1,20 @@
+RewriteEngine On
+
+# Enable CORS for all requests
+Header always set Access-Control-Allow-Origin "*"
+Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+Header always set Access-Control-Allow-Headers "Content-Type, Authorization"
+
+# Handle preflight OPTIONS requests
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^(.*)$ $1 [R=200,L]
+
+# API Routes
+RewriteRule ^users/?(.*)$ users.php/$1 [QSA,L]
+RewriteRule ^settings/?(.*)$ settings.php/$1 [QSA,L]
+RewriteRule ^streams/?(.*)$ streams.php/$1 [QSA,L]
+RewriteRule ^chat/?(.*)$ chat.php/$1 [QSA,L]
+
+# Deny direct access to PHP files except through rewrite rules
+RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/+api/[^\s]*\.php[\s?] [NC]
+RewriteRule ^ - [F,L]
