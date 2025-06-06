@@ -20,6 +20,7 @@ RewriteCond %{REQUEST_URI} !server_check\.php$ [NC]
 RewriteCond %{REQUEST_URI} !test_register\.php$ [NC]
 RewriteCond %{REQUEST_URI} !minimal_test\.php$ [NC]
 RewriteCond %{REQUEST_URI} !debug_routing\.php$ [NC]
+RewriteCond %{REQUEST_URI} !direct_register\.php$ [NC]
 # Deny direct access to other PHP files except through rewrite rules
 RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/+api/[^\s]*\.php[\s?] [NC]
 RewriteRule ^ - [F,L]

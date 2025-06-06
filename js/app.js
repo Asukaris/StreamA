@@ -207,13 +207,26 @@ class StreamArchiveApp {
     
     async register(username, email, password) {
         try {
-            const response = await fetch(`${this.apiBase}/users/register`, {
+            // Try the main API endpoint first
+            let response = await fetch(`${this.apiBase}/users/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ username, email, password })
             });
+            
+            // If main API fails with 500 error, try direct endpoint
+            if (!response.ok && response.status === 500) {
+                console.log('Main API failed, trying direct endpoint...');
+                response = await fetch(`${this.apiBase}/direct_register.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, email, password })
+                });
+            }
             
             if (!response.ok) {
                 const errorText = await response.text();
