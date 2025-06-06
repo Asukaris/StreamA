@@ -4,7 +4,7 @@ class StreamArchiveApp {
         this.isLoggedIn = false;
         this.currentUser = null;
         this.streams = [];
-        this.apiBase = '/api';
+        this.apiBase = window.CONFIG ? window.CONFIG.getApiBase() : '/api';
         
         this.init();
     }
