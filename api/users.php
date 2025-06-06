@@ -1,4 +1,11 @@
 <?php
+// Simple test to check if PHP is working
+if (isset($_GET['test'])) {
+    header('Content-Type: text/plain');
+    echo 'PHP is working! Time: ' . date('Y-m-d H:i:s');
+    exit;
+}
+
 // Enable error reporting for debugging
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
