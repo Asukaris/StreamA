@@ -162,18 +162,27 @@ class UserAPI {
             throw new Exception('Username or email already exists', 409);
         }
         
+        // Check if this is the first user (should be admin)
+        $countStmt = $this->database->query('SELECT COUNT(*) as count FROM users');
+        $userCount = $countStmt->fetch()['count'];
+        $isFirstUser = ($userCount == 0);
+        
         // Create user
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+        $role = $isFirstUser ? 'admin' : 'user';
         $stmt = $this->database->query(
-            'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
-            [$username, $email, $passwordHash]
+            'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
+            [$username, $email, $passwordHash, $role]
         );
         
         $userId = $this->database->lastInsertId();
         
+        $message = $isFirstUser ? 'First user registered successfully as admin' : 'User registered successfully';
+        
         return $this->successResponse([
-            'message' => 'User registered successfully',
-            'user_id' => $userId
+            'message' => $message,
+            'user_id' => $userId,
+            'role' => $role
         ]);
     }
     
