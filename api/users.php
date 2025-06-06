@@ -275,6 +275,7 @@ class UserAPI {
 }
 
 // Handle the request
+$database = new Database();
 $userAPI = new UserAPI($database);
 echo $userAPI->handleRequest();
 ?>
