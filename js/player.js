@@ -520,7 +520,7 @@ class HLSPlayer {
         this.isPlaying = false;
         // Mark stream as completed
         if (this.streamId) {
-            localStorage.setItem(`stream_completed_${this.streamId}`, 'true');
+            cookieManager.setPreference(`stream_completed_${this.streamId}`, 'true');
         }
     }
     
@@ -561,13 +561,13 @@ class HLSPlayer {
     
     saveProgress(currentTime) {
         if (this.streamId && currentTime > 5) { // Only save after 5 seconds
-            localStorage.setItem(`stream_progress_${this.streamId}`, Math.floor(currentTime).toString());
+            cookieManager.setPreference(`stream_progress_${this.streamId}`, Math.floor(currentTime).toString());
         }
     }
     
     loadProgress() {
         if (this.streamId) {
-            const savedProgress = localStorage.getItem(`stream_progress_${this.streamId}`);
+            const savedProgress = cookieManager.getPreference(`stream_progress_${this.streamId}`);
             if (savedProgress) {
                 const time = parseInt(savedProgress);
                 // Set time when video is ready

@@ -47,49 +47,29 @@ class AuthManager {
     }
 
     getAuthToken() {
-        return window.cookieManager ? 
-            window.cookieManager.getCookie('authToken') : 
-            localStorage.getItem('authToken');
+        return cookieManager.getPreference('authToken');
     }
 
     setAuthToken(token) {
-        if (window.cookieManager) {
-            window.cookieManager.setCookie('authToken', token);
-        } else {
-            localStorage.setItem('authToken', token);
-        }
+        cookieManager.setPreference('authToken', token);
     }
 
     clearAuthToken() {
-        if (window.cookieManager) {
-            window.cookieManager.deleteCookie('authToken');
-        } else {
-            localStorage.removeItem('authToken');
-        }
+        cookieManager.deletePreference('authToken');
     }
 
     getUserData() {
-        const data = window.cookieManager ? 
-            window.cookieManager.getCookie('userData') : 
-            localStorage.getItem('userData');
-        return data ? JSON.parse(data) : null;
+        const cookieData = cookieManager.getPreference('userData');
+        return cookieData ? JSON.parse(cookieData) : null;
     }
 
     setUserData(userData) {
         const dataString = JSON.stringify(userData);
-        if (window.cookieManager) {
-            window.cookieManager.setCookie('userData', dataString);
-        } else {
-            localStorage.setItem('userData', dataString);
-        }
+        cookieManager.setPreference('userData', dataString);
     }
 
     clearUserData() {
-        if (window.cookieManager) {
-            window.cookieManager.deleteCookie('userData');
-        } else {
-            localStorage.removeItem('userData');
-        }
+        cookieManager.deletePreference('userData');
     }
 
     updateUI() {

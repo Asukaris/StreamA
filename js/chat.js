@@ -424,7 +424,7 @@ class ChatSync {
      
      async getSteamLogo(gameName) {
         // Load logo database from admin panel
-        const chatLogos = JSON.parse(localStorage.getItem('streamArchive_chatLogos') || '{}');
+        const chatLogos = JSON.parse(cookieManager.getPreference('streamArchive_chatLogos') || '{}');
         
         // Fallback to default logos if admin database is empty
         const defaultGames = {

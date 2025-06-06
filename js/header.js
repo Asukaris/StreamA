@@ -84,8 +84,8 @@ class HeaderComponent {
     initThemeToggle() {
         const themeToggle = document.getElementById('themeToggle');
         if (themeToggle) {
-            // Get current theme from localStorage or default to light
-            const currentTheme = localStorage.getItem('theme') || 'light';
+            // Get current theme from cookieManager or default to light
+        const currentTheme = cookieManager.getPreference('theme') || 'light';
             document.documentElement.setAttribute('data-theme', currentTheme);
             this.updateThemeIcon(currentTheme);
 
@@ -93,7 +93,7 @@ class HeaderComponent {
             themeToggle.addEventListener('click', () => {
                 const newTheme = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
                 document.documentElement.setAttribute('data-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
+                cookieManager.setPreference('theme', newTheme);
                 this.updateThemeIcon(newTheme);
             });
         }
