@@ -1,8 +1,20 @@
 <?php
-// Simple test to check if PHP is working
-if (isset($_GET['test'])) {
+// Debug information - log all request details
+error_log('=== REQUEST DEBUG ===');
+error_log('REQUEST_METHOD: ' . ($_SERVER['REQUEST_METHOD'] ?? 'not set'));
+error_log('REQUEST_URI: ' . ($_SERVER['REQUEST_URI'] ?? 'not set'));
+error_log('PATH_INFO: ' . ($_SERVER['PATH_INFO'] ?? 'not set'));
+error_log('QUERY_STRING: ' . ($_SERVER['QUERY_STRING'] ?? 'not set'));
+error_log('GET params: ' . print_r($_GET, true));
+error_log('POST params: ' . print_r($_POST, true));
+
+// Simple test to check if PHP is working - check both GET and query string
+if (isset($_GET['test']) || strpos($_SERVER['QUERY_STRING'] ?? '', 'test') !== false) {
     header('Content-Type: text/plain');
-    echo 'PHP is working! Time: ' . date('Y-m-d H:i:s');
+    echo 'PHP is working! Time: ' . date('Y-m-d H:i:s') . "\n";
+    echo 'Request Method: ' . ($_SERVER['REQUEST_METHOD'] ?? 'unknown') . "\n";
+    echo 'Query String: ' . ($_SERVER['QUERY_STRING'] ?? 'none') . "\n";
+    echo 'Path Info: ' . ($_SERVER['PATH_INFO'] ?? 'none') . "\n";
     exit;
 }
 
