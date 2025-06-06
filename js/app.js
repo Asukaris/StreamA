@@ -207,6 +207,8 @@ class StreamArchiveApp {
     
     async register(username, email, password) {
         try {
+            console.log('API Base URL:', this.apiBase);
+            console.log('Full URL:', `${this.apiBase}/users/register`);
             const response = await fetch(`${this.apiBase}/users/register`, {
                 method: 'POST',
                 headers: {
