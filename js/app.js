@@ -207,8 +207,6 @@ class StreamArchiveApp {
     
     async register(username, email, password) {
         try {
-            console.log('API Base URL:', this.apiBase);
-            console.log('Full URL:', `${this.apiBase}/users/register`);
             const response = await fetch(`${this.apiBase}/users/register`, {
                 method: 'POST',
                 headers: {
@@ -216,6 +214,12 @@ class StreamArchiveApp {
                 },
                 body: JSON.stringify({ username, email, password })
             });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Server Error Response:', errorText);
+                throw new Error(`Server error: ${response.status} - ${errorText}`);
+            }
             
             const data = await response.json();
             
