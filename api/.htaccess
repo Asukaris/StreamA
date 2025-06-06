@@ -18,6 +18,7 @@ RewriteRule ^chat/?(.*)$ chat.php/$1 [QSA,L]
 # Allow access to diagnostic and test scripts
 RewriteCond %{REQUEST_URI} !server_check\.php$ [NC]
 RewriteCond %{REQUEST_URI} !test_register\.php$ [NC]
+RewriteCond %{REQUEST_URI} !minimal_test\.php$ [NC]
 # Deny direct access to other PHP files except through rewrite rules
 RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/+api/[^\s]*\.php[\s?] [NC]
 RewriteRule ^ - [F,L]
