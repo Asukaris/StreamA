@@ -34,11 +34,15 @@ class Database {
                 username VARCHAR(50) UNIQUE NOT NULL,
                 email VARCHAR(100) UNIQUE NOT NULL,
                 password_hash VARCHAR(255) NOT NULL,
+                role VARCHAR(20) DEFAULT 'user',
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 is_active BOOLEAN DEFAULT 1
             )
         ");
+        
+        // Add role column to existing users table if it doesn't exist
+        $this->addRoleColumnIfNotExists();
         
         // Sessions table
         $this->db->exec("
@@ -135,6 +139,31 @@ class Database {
     
     public function lastInsertId() {
         return $this->db->lastInsertId();
+    }
+    
+    private function addRoleColumnIfNotExists() {
+        try {
+            // Check if role column exists
+            $result = $this->db->query("PRAGMA table_info(users)");
+            $columns = $result->fetchAll(PDO::FETCH_ASSOC);
+            
+            $roleColumnExists = false;
+            foreach ($columns as $column) {
+                if ($column['name'] === 'role') {
+                    $roleColumnExists = true;
+                    break;
+                }
+            }
+            
+            // Add role column if it doesn't exist
+            if (!$roleColumnExists) {
+                $this->db->exec("ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT 'user'");
+                error_log('Added role column to users table');
+            }
+        } catch (PDOException $e) {
+            error_log('Failed to add role column: ' . $e->getMessage());
+            // Don't throw exception here to avoid breaking existing functionality
+        }
     }
 }
 
