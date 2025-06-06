@@ -14,7 +14,7 @@ class ChatAPI {
     private $db;
     
     public function __construct($database) {
-        $this->db = $database;
+        $this->database = $database;
     }
     
     public function handleRequest() {
@@ -68,7 +68,7 @@ class ChatAPI {
         $params[] = $limit;
         $params[] = $offset;
         
-        $stmt = $this->db->query($sql, $params);
+        $stmt = $this->database->query($sql, $params);
         $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // Format messages
@@ -84,7 +84,7 @@ class ChatAPI {
         $limit = min((int)($_GET['limit'] ?? 50), 100);
         $offset = max((int)($_GET['offset'] ?? 0), 0);
         
-        $stmt = $this->db->query(
+        $stmt = $this->database->query(
             'SELECT cm.*, u.username 
              FROM chat_messages cm 
              LEFT JOIN users u ON cm.user_id = u.id 
@@ -143,21 +143,21 @@ class ChatAPI {
         
         // Validate stream exists if stream_id provided
         if ($streamId) {
-            $stmt = $this->db->query('SELECT id FROM streams WHERE id = ?', [$streamId]);
+            $stmt = $this->database->query('SELECT id FROM streams WHERE id = ?', [$streamId]);
             if (!$stmt->fetch()) {
                 throw new Exception('Stream not found', 404);
             }
         }
         
-        $stmt = $this->db->query(
+        $stmt = $this->database->query(
             'INSERT INTO chat_messages (user_id, stream_id, username, message) VALUES (?, ?, ?, ?)',
             [$userId, $streamId, $username, $message]
         );
         
-        $messageId = $this->db->lastInsertId();
+        $messageId = $this->database->lastInsertId();
         
         // Get the created message
-        $stmt = $this->db->query(
+        $stmt = $this->database->query(
             'SELECT cm.*, u.username as user_username 
              FROM chat_messages cm 
              LEFT JOIN users u ON cm.user_id = u.id 
@@ -180,7 +180,7 @@ class ChatAPI {
         $user = $this->getCurrentUser();
         
         // Check if message exists and user owns it
-        $stmt = $this->db->query(
+        $stmt = $this->database->query(
             'SELECT user_id FROM chat_messages WHERE id = ?',
             [$id]
         );
@@ -195,7 +195,7 @@ class ChatAPI {
             throw new Exception('You can only delete your own messages', 403);
         }
         
-        $this->db->query('DELETE FROM chat_messages WHERE id = ?', [$id]);
+        $this->database->query('DELETE FROM chat_messages WHERE id = ?', [$id]);
         
         return $this->successResponse(['message' => 'Message deleted successfully']);
     }
@@ -207,7 +207,7 @@ class ChatAPI {
             throw new Exception('No session token provided', 401);
         }
         
-        $stmt = $this->db->query(
+        $stmt = $this->database->query(
             'SELECT u.id, u.username, u.email 
              FROM users u 
              JOIN sessions s ON u.id = s.user_id 

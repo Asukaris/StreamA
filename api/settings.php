@@ -14,7 +14,7 @@ class SettingsAPI {
     private $db;
     
     public function __construct($database) {
-        $this->db = $database;
+        $this->database = $database;
     }
     
     public function handleRequest() {
@@ -49,7 +49,7 @@ class SettingsAPI {
     private function getAllSettings() {
         $user = $this->getCurrentUser();
         
-        $stmt = $this->db->query(
+        $stmt = $this->database->query(
             'SELECT setting_key, setting_value FROM settings WHERE user_id = ? OR user_id IS NULL ORDER BY setting_key',
             [$user['id']]
         );
@@ -65,7 +65,7 @@ class SettingsAPI {
     private function getSetting($key) {
         $user = $this->getCurrentUser();
         
-        $stmt = $this->db->query(
+        $stmt = $this->database->query(
             'SELECT setting_value FROM settings WHERE setting_key = ? AND (user_id = ? OR user_id IS NULL) ORDER BY user_id DESC LIMIT 1',
             [$key, $user['id']]
         );
@@ -95,7 +95,7 @@ class SettingsAPI {
         }
         
         // Check if setting exists for this user
-        $stmt = $this->db->query(
+        $stmt = $this->database->query(
             'SELECT id FROM settings WHERE setting_key = ? AND user_id = ?',
             [$key, $user['id']]
         );
@@ -106,13 +106,13 @@ class SettingsAPI {
         
         if ($existing) {
             // Update existing setting
-            $this->db->query(
+            $this->database->query(
                 'UPDATE settings SET setting_value = ?, updated_at = CURRENT_TIMESTAMP WHERE setting_key = ? AND user_id = ?',
                 [$valueString, $key, $user['id']]
             );
         } else {
             // Create new setting
-            $this->db->query(
+            $this->database->query(
                 'INSERT INTO settings (user_id, setting_key, setting_value) VALUES (?, ?, ?)',
                 [$user['id'], $key, $valueString]
             );
@@ -128,7 +128,7 @@ class SettingsAPI {
     private function deleteSetting($key) {
         $user = $this->getCurrentUser();
         
-        $stmt = $this->db->query(
+        $stmt = $this->database->query(
             'DELETE FROM settings WHERE setting_key = ? AND user_id = ?',
             [$key, $user['id']]
         );
@@ -146,7 +146,7 @@ class SettingsAPI {
             throw new Exception('No session token provided', 401);
         }
         
-        $stmt = $this->db->query(
+        $stmt = $this->database->query(
             'SELECT u.id, u.username, u.email 
              FROM users u 
              JOIN sessions s ON u.id = s.user_id 

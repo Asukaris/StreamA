@@ -14,7 +14,7 @@ class StreamsAPI {
     private $db;
     
     public function __construct($database) {
-        $this->db = $database;
+        $this->database = $database;
     }
     
     public function handleRequest() {
@@ -84,7 +84,7 @@ class StreamsAPI {
         $params[] = $limit;
         $params[] = $offset;
         
-        $stmt = $this->db->query($sql, $params);
+        $stmt = $this->database->query($sql, $params);
         $streams = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // Get total count
@@ -103,7 +103,7 @@ class StreamsAPI {
             $countParams[] = $searchTerm;
         }
         
-        $countStmt = $this->db->query($countSql, $countParams);
+        $countStmt = $this->database->query($countSql, $countParams);
         $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
         
         return $this->successResponse([
@@ -118,7 +118,7 @@ class StreamsAPI {
     }
     
     private function getStream($id) {
-        $stmt = $this->db->query(
+        $stmt = $this->database->query(
             'SELECT * FROM streams WHERE id = ?',
             [$id]
         );
@@ -152,12 +152,12 @@ class StreamsAPI {
             throw new Exception('Title cannot be empty', 400);
         }
         
-        $stmt = $this->db->query(
+        $stmt = $this->database->query(
             'INSERT INTO streams (title, description, stream_url, thumbnail_url, category, is_live, viewer_count) VALUES (?, ?, ?, ?, ?, ?, ?)',
             [$title, $description, $streamUrl, $thumbnailUrl, $category, $isLive, $viewerCount]
         );
         
-        $streamId = $this->db->lastInsertId();
+        $streamId = $this->database->lastInsertId();
         
         return $this->successResponse([
             'message' => 'Stream created successfully',
@@ -228,7 +228,7 @@ class StreamsAPI {
         $updates[] = 'updated_at = CURRENT_TIMESTAMP';
         $params[] = $id;
         
-        $this->db->query(
+        $this->database->query(
             'UPDATE streams SET ' . implode(', ', $updates) . ' WHERE id = ?',
             $params
         );
@@ -239,7 +239,7 @@ class StreamsAPI {
     private function deleteStream($id) {
         $user = $this->getCurrentUser();
         
-        $stmt = $this->db->query('DELETE FROM streams WHERE id = ?', [$id]);
+        $stmt = $this->database->query('DELETE FROM streams WHERE id = ?', [$id]);
         
         return $this->successResponse(['message' => 'Stream deleted successfully']);
     }
@@ -247,7 +247,7 @@ class StreamsAPI {
     private function getFavorites() {
         $user = $this->getCurrentUser();
         
-        $stmt = $this->db->query(
+        $stmt = $this->database->query(
             'SELECT s.* FROM streams s 
              JOIN favorites f ON s.id = f.stream_id 
              WHERE f.user_id = ? 
@@ -264,13 +264,13 @@ class StreamsAPI {
         $user = $this->getCurrentUser();
         
         // Check if stream exists
-        $stmt = $this->db->query('SELECT id FROM streams WHERE id = ?', [$streamId]);
+        $stmt = $this->database->query('SELECT id FROM streams WHERE id = ?', [$streamId]);
         if (!$stmt->fetch()) {
             throw new Exception('Stream not found', 404);
         }
         
         try {
-            $this->db->query(
+            $this->database->query(
                 'INSERT INTO favorites (user_id, stream_id) VALUES (?, ?)',
                 [$user['id'], $streamId]
             );
@@ -287,7 +287,7 @@ class StreamsAPI {
     private function removeFavorite($streamId) {
         $user = $this->getCurrentUser();
         
-        $this->db->query(
+        $this->database->query(
             'DELETE FROM favorites WHERE user_id = ? AND stream_id = ?',
             [$user['id'], $streamId]
         );
@@ -302,7 +302,7 @@ class StreamsAPI {
             throw new Exception('No session token provided', 401);
         }
         
-        $stmt = $this->db->query(
+        $stmt = $this->database->query(
             'SELECT u.id, u.username, u.email 
              FROM users u 
              JOIN sessions s ON u.id = s.user_id 
