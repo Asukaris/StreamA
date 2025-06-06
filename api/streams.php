@@ -174,7 +174,7 @@ class StreamsAPI {
         }
         
         // Check if stream exists
-        $stmt = $this->db->query('SELECT id FROM streams WHERE id = ?', [$id]);
+        $stmt = $this->database->query('SELECT id FROM streams WHERE id = ?', [$id]);
         if (!$stmt->fetch()) {
             throw new Exception('Stream not found', 404);
         }
