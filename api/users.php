@@ -318,8 +318,39 @@ class UserAPI {
     }
 }
 
-// Handle the request
-$database = new Database();
-$userAPI = new UserAPI($database);
-echo $userAPI->handleRequest();
+// Handle the request with enhanced error handling
+try {
+    // Check if we can write to current directory
+    if (!is_writable(__DIR__)) {
+        throw new Exception('API directory is not writable. Please check file permissions.');
+    }
+    
+    // Check if PDO SQLite extension is loaded
+    if (!extension_loaded('pdo_sqlite')) {
+        throw new Exception('PDO SQLite extension is not loaded. Please contact your hosting provider.');
+    }
+    
+    $database = new Database();
+    $userAPI = new UserAPI($database);
+    echo $userAPI->handleRequest();
+    
+} catch (Exception $e) {
+    // Log the error
+    error_log('Critical API Error: ' . $e->getMessage());
+    error_log('Stack trace: ' . $e->getTraceAsString());
+    
+    // Return a proper JSON error response
+    http_response_code(500);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => false,
+        'error' => 'Server configuration error: ' . $e->getMessage(),
+        'debug_info' => [
+            'php_version' => phpversion(),
+            'pdo_sqlite' => extension_loaded('pdo_sqlite'),
+            'directory_writable' => is_writable(__DIR__),
+            'server_check_url' => 'Run server_check.php to diagnose issues'
+        ]
+    ]);
+}
 ?>
