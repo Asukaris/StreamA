@@ -3,6 +3,9 @@
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+// Also log errors to file in case display_errors is disabled by server
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/php_errors.log');
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
