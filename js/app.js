@@ -10,9 +10,26 @@ class StreamArchiveApp {
     }
     
     init() {
-        this.initEventListeners();
+        // Wait for header to load before initializing event listeners
+        this.waitForHeader().then(() => {
+            this.initEventListeners();
+        });
         this.loadStreams();
         this.checkAuthStatus();
+    }
+    
+    async waitForHeader() {
+        // Wait for header elements to be available
+        return new Promise((resolve) => {
+            const checkHeader = () => {
+                if (document.getElementById('loginBtn')) {
+                    resolve();
+                } else {
+                    setTimeout(checkHeader, 100);
+                }
+            };
+            checkHeader();
+        });
     }
     
     // Theme Management is now handled by HeaderComponent
