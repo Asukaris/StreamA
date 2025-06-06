@@ -51,6 +51,20 @@ class UserAPI {
             $method = $_SERVER['REQUEST_METHOD'];
             $path = $_SERVER['PATH_INFO'] ?? '';
             
+            // Fallback: if PATH_INFO is empty, try to extract from REQUEST_URI
+            if (empty($path)) {
+                $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+                // Extract path after /api/users
+                if (preg_match('#/api/users(/.*?)(?:\?|$)#', $requestUri, $matches)) {
+                    $path = $matches[1];
+                } elseif (preg_match('#/users(/.*?)(?:\?|$)#', $requestUri, $matches)) {
+                    $path = $matches[1];
+                }
+            }
+            
+            // Log the routing information for debugging
+            error_log('UserAPI Routing - Method: ' . $method . ', PATH_INFO: ' . ($_SERVER['PATH_INFO'] ?? 'empty') . ', Extracted Path: ' . $path . ', REQUEST_URI: ' . ($_SERVER['REQUEST_URI'] ?? 'empty'));
+            
             // Add debug endpoint
             if ($path === '/debug' && $method === 'GET') {
                 return $this->debug();
