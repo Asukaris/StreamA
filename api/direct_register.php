@@ -70,7 +70,7 @@ try {
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
     
     // Insert new user
-    $stmt = $database->prepare('INSERT INTO users (username, email, password, created_at) VALUES (?, ?, ?, ?)');
+    $stmt = $database->prepare('INSERT INTO users (username, email, password_hash, created_at) VALUES (?, ?, ?, ?)');
     $result = $stmt->execute([$username, $email, $hashedPassword, date('Y-m-d H:i:s')]);
     
     if (!$result) {

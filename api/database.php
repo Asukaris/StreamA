@@ -124,6 +124,15 @@ class Database {
         }
     }
     
+    public function prepare($sql) {
+        try {
+            return $this->db->prepare($sql);
+        } catch (PDOException $e) {
+            error_log('Database prepare failed: ' . $e->getMessage());
+            throw new Exception('Database prepare failed');
+        }
+    }
+    
     public function lastInsertId() {
         return $this->db->lastInsertId();
     }

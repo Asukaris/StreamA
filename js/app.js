@@ -119,6 +119,9 @@ class StreamArchiveApp {
         
         document.body.appendChild(modal);
         
+        // Show the modal
+        modal.style.display = 'block';
+        
         // Event listeners for modal
         modal.querySelector('.close').onclick = () => modal.remove();
         modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
@@ -165,17 +168,28 @@ class StreamArchiveApp {
                 
                 if (response.ok) {
                     const data = await response.json();
-                    this.currentUser = data.data;
-                    this.isLoggedIn = true;
-                    this.updateLoginUI();
+                    if (data.success && data.data && data.data.user && data.data.user.username) {
+                        this.currentUser = data.data.user;
+                        this.isLoggedIn = true;
+                        this.updateLoginUI();
+                    } else {
+                        this.resetAuthState();
+                    }
                 } else {
-                    cookieManager.deletePreference('session_token');
+                    this.resetAuthState();
                 }
             } catch (error) {
                 console.error('Auth check failed:', error);
-                cookieManager.deletePreference('session_token');
+                this.resetAuthState();
             }
         }
+    }
+    
+    resetAuthState() {
+        cookieManager.deletePreference('session_token');
+        this.currentUser = null;
+        this.isLoggedIn = false;
+        this.updateLoginUI();
     }
     
     async login(email, password) {
@@ -207,8 +221,8 @@ class StreamArchiveApp {
     
     async register(username, email, password) {
         try {
-            // Try the main API endpoint first
-            let response = await fetch(`${this.apiBase}/users/register`, {
+            // Use the main API endpoint
+            const response = await fetch(`${this.apiBase}/users/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -216,29 +230,12 @@ class StreamArchiveApp {
                 body: JSON.stringify({ username, email, password })
             });
             
-            // If main API fails with 500 error, try direct endpoint
-            if (!response.ok && response.status === 500) {
-                console.log('Main API failed, trying direct endpoint...');
-                response = await fetch(`${this.apiBase}/direct_register.php`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username, email, password })
-                });
-            }
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Server Error Response:', errorText);
-                throw new Error(`Server error: ${response.status} - ${errorText}`);
-            }
-            
             const data = await response.json();
             
             if (data.success) {
                 alert('Registrierung erfolgreich! Sie können sich jetzt anmelden.');
             } else {
+                // Handle specific error cases with appropriate user feedback
                 alert('Registrierung fehlgeschlagen: ' + data.error);
             }
         } catch (error) {
@@ -262,35 +259,41 @@ class StreamArchiveApp {
             }
         }
         
-        cookieManager.deletePreference('session_token');
-        this.isLoggedIn = false;
-        this.currentUser = null;
-        this.updateLoginUI();
+        this.resetAuthState();
     }
     
     updateLoginUI() {
         const loginBtn = document.getElementById('loginBtn');
         const adminBtn = document.getElementById('adminBtn');
+        const mobileAdminBtn = document.getElementById('mobileAdminBtn');
+        const adminNavLinks = document.querySelectorAll('.admin-nav-link');
         
-        if (this.isLoggedIn && this.currentUser) {
+        if (this.isLoggedIn && this.currentUser && this.currentUser.username) {
             loginBtn.innerHTML = `
                 <i class="fas fa-user"></i> ${this.currentUser.username}
             `;
             
-            // Show admin button for authorized users
+            // Show admin elements only for authorized users
             if (this.isAdmin()) {
-                adminBtn.classList.remove('hidden');
+                adminBtn?.classList.remove('hidden');
+                mobileAdminBtn?.style.setProperty('display', 'flex');
+                adminNavLinks.forEach(link => link.classList.remove('hidden'));
+            } else {
+                adminBtn?.classList.add('hidden');
+                mobileAdminBtn?.style.setProperty('display', 'none');
+                adminNavLinks.forEach(link => link.classList.add('hidden'));
             }
         } else {
             loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Anmelden';
-            adminBtn.classList.add('hidden');
+            adminBtn?.classList.add('hidden');
+            mobileAdminBtn?.style.setProperty('display', 'none');
+            adminNavLinks.forEach(link => link.classList.add('hidden'));
         }
     }
     
     isAdmin() {
-        // Check if current user has admin privileges
-        const adminUsers = ['factor_ks', 'admin']; // Add admin usernames here
-        return this.currentUser && adminUsers.includes(this.currentUser.username.toLowerCase());
+        // Check if current user has admin privileges based on role
+        return this.currentUser && this.currentUser.role === 'admin';
     }
     
     // Stream Management

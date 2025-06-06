@@ -85,6 +85,22 @@ class UserAPI {
                         return $this->getProfile();
                     } elseif ($path === '/verify') {
                         return $this->verifySession();
+                    } elseif ($path === '/list') {
+                        return $this->listUsers();
+                    } elseif ($path === '/register') {
+                        return $this->errorResponse('Register endpoint requires POST method with JSON data: {"username": "...", "email": "...", "password": "..."}', 405);
+                    }
+                    break;
+                case 'PUT':
+                    if (preg_match('#^/([0-9]+)$#', $path, $matches)) {
+                        return $this->updateUser($matches[1]);
+                    } elseif ($path === '/profile') {
+                        return $this->updateProfile();
+                    }
+                    break;
+                case 'DELETE':
+                    if (preg_match('#^/([0-9]+)$#', $path, $matches)) {
+                        return $this->deleteUser($matches[1]);
                     }
                     break;
             }
@@ -92,7 +108,9 @@ class UserAPI {
             return $this->errorResponse('Endpoint not found', 404);
         } catch (Exception $e) {
             error_log('UserAPI Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
-            return $this->errorResponse('Internal server error: ' . $e->getMessage(), 500);
+            $statusCode = $e->getCode() ?: 500;
+            $message = $statusCode === 500 ? 'Internal server error: ' . $e->getMessage() : $e->getMessage();
+            return $this->errorResponse($message, $statusCode);
         }
     }
     
@@ -162,11 +180,19 @@ class UserAPI {
     private function login() {
         $input = json_decode(file_get_contents('php://input'), true);
         
-        if (!$input || !isset($input['login'], $input['password'])) {
+        if (!$input || !isset($input['password'])) {
             throw new Exception('Missing login credentials', 400);
         }
         
-        $login = trim($input['login']); // Can be username or email
+        // Accept both 'login' and 'email' as login identifier
+        $login = '';
+        if (isset($input['login'])) {
+            $login = trim($input['login']);
+        } elseif (isset($input['email'])) {
+            $login = trim($input['email']);
+        } else {
+            throw new Exception('Missing login credentials', 400);
+        }
         $password = $input['password'];
         
         // Find user by username or email
@@ -222,6 +248,7 @@ class UserAPI {
                 'id' => $user['id'],
                 'username' => $user['username'],
                 'email' => $user['email'],
+                'role' => $user['role'] ?? 'user',
                 'created_at' => $user['created_at']
             ]
         ]);
@@ -235,7 +262,8 @@ class UserAPI {
                 'user' => [
                     'id' => $user['id'],
                     'username' => $user['username'],
-                    'email' => $user['email']
+                    'email' => $user['email'],
+                    'role' => $user['role'] ?? 'user'
                 ]
             ]);
         } catch (Exception $e) {
@@ -286,6 +314,164 @@ class UserAPI {
         
         return $this->successResponse(['message' => 'Profile updated successfully']);
     }
+
+    private function updateUser($userId) {
+        $currentUser = $this->getCurrentUser();
+        
+        // Check if current user is admin
+        if ($currentUser['role'] !== 'admin') {
+            throw new Exception('Access denied. Admin privileges required.', 403);
+        }
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if (!$input) {
+            throw new Exception('Invalid input', 400);
+        }
+        
+        // Check if target user exists
+        $stmt = $this->database->query(
+            'SELECT id, username, email, role FROM users WHERE id = ?',
+            [$userId]
+        );
+        
+        $targetUser = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$targetUser) {
+            throw new Exception('User not found', 404);
+        }
+        
+        $updates = [];
+        $params = [];
+        
+        if (isset($input['username'])) {
+            $username = trim($input['username']);
+            if (strlen($username) < 3 || strlen($username) > 50) {
+                throw new Exception('Username must be between 3 and 50 characters', 400);
+            }
+            
+            // Check if username is already taken by another user
+            $stmt = $this->database->query(
+                'SELECT id FROM users WHERE username = ? AND id != ?',
+                [$username, $userId]
+            );
+            if ($stmt->fetch()) {
+                throw new Exception('Username already exists', 400);
+            }
+            
+            $updates[] = 'username = ?';
+            $params[] = $username;
+        }
+        
+        if (isset($input['email'])) {
+            $email = trim($input['email']);
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new Exception('Invalid email format', 400);
+            }
+            
+            // Check if email is already taken by another user
+            $stmt = $this->database->query(
+                'SELECT id FROM users WHERE email = ? AND id != ?',
+                [$email, $userId]
+            );
+            if ($stmt->fetch()) {
+                throw new Exception('Email already exists', 400);
+            }
+            
+            $updates[] = 'email = ?';
+            $params[] = $email;
+        }
+        
+        if (isset($input['role'])) {
+            $role = trim($input['role']);
+            if (!in_array($role, ['user', 'admin'])) {
+                throw new Exception('Invalid role. Must be "user" or "admin"', 400);
+            }
+            $updates[] = 'role = ?';
+            $params[] = $role;
+        }
+        
+        if (isset($input['is_active'])) {
+            $isActive = (bool)$input['is_active'];
+            $updates[] = 'is_active = ?';
+            $params[] = $isActive ? 1 : 0;
+        }
+        
+        if (empty($updates)) {
+            throw new Exception('No fields to update', 400);
+        }
+        
+        $updates[] = 'updated_at = CURRENT_TIMESTAMP';
+        $params[] = $userId;
+        
+        $this->database->query(
+            'UPDATE users SET ' . implode(', ', $updates) . ' WHERE id = ?',
+            $params
+        );
+        
+        return $this->successResponse(['message' => 'User updated successfully']);
+    }
+    
+    private function deleteUser($userId) {
+        $currentUser = $this->getCurrentUser();
+        
+        // Check if current user is admin
+        if ($currentUser['role'] !== 'admin') {
+            throw new Exception('Access denied. Admin privileges required.', 403);
+        }
+        
+        // Prevent self-deletion
+        if ($currentUser['id'] == $userId) {
+            throw new Exception('Cannot delete your own account', 400);
+        }
+        
+        // Check if target user exists
+        $stmt = $this->database->query(
+            'SELECT id, username FROM users WHERE id = ?',
+            [$userId]
+        );
+        
+        $targetUser = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$targetUser) {
+            throw new Exception('User not found', 404);
+        }
+        
+        // Delete user (this will cascade delete sessions due to foreign key constraints)
+        $this->database->query('DELETE FROM users WHERE id = ?', [$userId]);
+        
+        return $this->successResponse([
+            'message' => 'User deleted successfully',
+            'deleted_user' => $targetUser['username']
+        ]);
+    }
+
+    private function listUsers() {
+        $currentUser = $this->getCurrentUser();
+        
+        // Check if current user is admin
+        if ($currentUser['role'] !== 'admin') {
+            throw new Exception('Access denied. Admin privileges required.', 403);
+        }
+        
+        // Get all users with basic information
+        $stmt = $this->database->query(
+            'SELECT id, username, email, role, created_at, is_active FROM users ORDER BY created_at DESC'
+        );
+        
+        $users = [];
+        while ($user = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $users[] = [
+                'id' => (int)$user['id'],
+                'username' => $user['username'],
+                'email' => $user['email'],
+                'role' => $user['role'] ?? 'user',
+                'registered' => $user['created_at'],
+                'active' => (bool)$user['is_active'],
+                'avatar' => 'https://via.placeholder.com/40x40/007bff/ffffff?text=' . strtoupper(substr($user['username'], 0, 1))
+            ];
+        }
+        
+        return $this->successResponse($users);
+    }
     
     private function getCurrentUser() {
         $sessionToken = $this->getSessionToken();
@@ -295,7 +481,7 @@ class UserAPI {
         }
         
         $stmt = $this->database->query(
-            'SELECT u.id, u.username, u.email, u.created_at 
+            'SELECT u.id, u.username, u.email, u.role, u.created_at 
              FROM users u 
              JOIN sessions s ON u.id = s.user_id 
              WHERE s.session_token = ? AND s.expires_at > CURRENT_TIMESTAMP AND u.is_active = 1',
@@ -312,11 +498,17 @@ class UserAPI {
     }
     
     private function getSessionToken() {
+        // Check Authorization header first
         $headers = getallheaders();
         $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
         
         if (strpos($authHeader, 'Bearer ') === 0) {
             return substr($authHeader, 7);
+        }
+        
+        // Check cookies for session token
+        if (isset($_COOKIE['streamapp_session_token'])) {
+            return $_COOKIE['streamapp_session_token'];
         }
         
         return $_GET['token'] ?? $_POST['token'] ?? null;

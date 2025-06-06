@@ -10,7 +10,14 @@ class AdminPanel {
         this.logos = [];
         this.currentLogoId = null;
         
-        this.init();
+        // Check authentication before initializing
+        this.checkAdminAccess().then(hasAccess => {
+            if (hasAccess) {
+                this.init();
+            } else {
+                this.redirectToLogin();
+            }
+        });
     }
 
     init() {
@@ -220,8 +227,31 @@ class AdminPanel {
         `).join('');
     }
 
-    loadUsers() {
-        this.renderUsers(this.users);
+    async loadUsers() {
+        try {
+            const token = cookieManager.getPreference('session_token');
+            const response = await fetch(`${CONFIG.getApiBase()}/users/list`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                this.users = data.data;
+                this.renderUsers(this.users);
+            } else {
+                console.error('Failed to load users:', data.error);
+                // Fallback to localStorage data
+                this.users = JSON.parse(localStorage.getItem('streamArchive_users') || '[]');
+                this.renderUsers(this.users);
+            }
+        } catch (error) {
+            console.error('Error loading users:', error);
+            // Fallback to localStorage data
+            this.users = JSON.parse(localStorage.getItem('streamArchive_users') || '[]');
+            this.renderUsers(this.users);
+        }
     }
 
     renderUsers(users) {
@@ -288,11 +318,30 @@ class AdminPanel {
         }
     }
 
-    deleteUser(userId) {
+    async deleteUser(userId) {
         if (confirm('Möchten Sie diesen Benutzer wirklich löschen?')) {
-            this.users = this.users.filter(u => u.id !== userId);
-            this.loadUsers();
-            this.showToast('Benutzer wurde gelöscht', 'success');
+            try {
+                const token = cookieManager.getPreference('session_token');
+                const response = await fetch(`${CONFIG.getApiBase()}/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.loadUsers();
+                    this.showToast('Benutzer wurde gelöscht', 'success');
+                } else {
+                    this.showToast(data.error || 'Fehler beim Löschen des Benutzers', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                this.showToast('Fehler beim Löschen des Benutzers', 'error');
+            }
         }
     }
 
@@ -341,7 +390,7 @@ class AdminPanel {
         });
     }
 
-    saveUser() {
+    async saveUser() {
         const form = document.getElementById('userForm');
         const formData = new FormData(form);
         
@@ -349,7 +398,7 @@ class AdminPanel {
             username: formData.get('username'),
             email: formData.get('email'),
             role: formData.get('role'),
-            active: formData.get('active') === 'on'
+            is_active: formData.get('active') === 'on'
         };
         
         // Simple validation
@@ -358,22 +407,48 @@ class AdminPanel {
             return;
         }
         
-        // Mock save (in real app, this would be an API call)
-        const existingUser = this.users.find(u => u.email === userData.email);
-        if (existingUser) {
-            // Update existing user
-            Object.assign(existingUser, userData);
-        } else {
-            // Add new user
-            userData.id = Math.max(...this.users.map(u => u.id)) + 1;
-            userData.avatar = 'https://static-cdn.jtvnw.net/user-default-pictures-uv/cdd517fe-def4-11e9-948e-784f43822e80-profile_image-300x300.png';
-            userData.registered = new Date().toISOString().split('T')[0];
-            this.users.push(userData);
+        try {
+            const token = cookieManager.getPreference('session_token');
+            
+            // Check if we're editing an existing user
+            const title = document.getElementById('userModalTitle').textContent;
+            const isEditing = title === 'Benutzer bearbeiten';
+            
+            if (isEditing) {
+                // Find the user being edited
+                const existingUser = this.users.find(u => 
+                    u.username === document.getElementById('userName').defaultValue ||
+                    u.email === document.getElementById('userEmail').defaultValue
+                );
+                
+                if (existingUser) {
+                    const response = await fetch(`${CONFIG.getApiBase()}/users/${existingUser.id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(userData)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.loadUsers();
+                        document.getElementById('userModal').classList.remove('active');
+                        this.showToast('Benutzer wurde aktualisiert', 'success');
+                    } else {
+                        this.showToast(data.error || 'Fehler beim Aktualisieren des Benutzers', 'error');
+                    }
+                }
+            } else {
+                // For new users, we would need a separate registration endpoint
+                this.showToast('Neue Benutzer können über die Registrierung erstellt werden', 'info');
+            }
+        } catch (error) {
+            console.error('Error saving user:', error);
+            this.showToast('Fehler beim Speichern des Benutzers', 'error');
         }
-        
-        this.loadUsers();
-        document.getElementById('userModal').classList.remove('active');
-        this.showToast('Benutzer wurde gespeichert', 'success');
     }
 
     loadArchive() {
@@ -532,7 +607,7 @@ class AdminPanel {
         
         // Show modal
         const modal = document.getElementById('editStreamModal');
-        modal.style.display = 'flex';
+        modal.classList.add('active');
         
         // Close modal on overlay click
         modal.addEventListener('click', (e) => {
@@ -1225,12 +1300,12 @@ class AdminPanel {
             this.updateLogoPreview('');
         }
         
-        modal.style.display = 'flex';
+        modal.classList.add('active');
     }
 
     hideLogoModal() {
         const modal = document.getElementById('logoModal');
-        modal.style.display = 'none';
+        modal.classList.remove('active');
         this.currentLogoId = null;
     }
 
@@ -1639,6 +1714,48 @@ class AdminPanel {
                 }
             }
         }
+    }
+
+    async checkAdminAccess() {
+        const token = cookieManager.getPreference('session_token');
+        if (!token) {
+            return false;
+        }
+
+        try {
+            const response = await fetch(`${CONFIG.getApiBase()}/users/profile`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.data && data.data.user) {
+                    const user = data.data.user;
+                    // Check if user has admin role
+                    return user.role === 'admin';
+                }
+            }
+        } catch (error) {
+            console.error('Admin access check failed:', error);
+        }
+        
+        return false;
+    }
+
+    redirectToLogin() {
+        // Show unauthorized message
+        document.body.innerHTML = `
+            <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; font-family: Arial, sans-serif;">
+                <div style="text-align: center; padding: 2rem; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9;">
+                    <h2 style="color: #d32f2f; margin-bottom: 1rem;">🚫 Zugriff verweigert</h2>
+                    <p style="margin-bottom: 1.5rem; color: #666;">Sie haben keine Berechtigung, auf den Admin-Bereich zuzugreifen.</p>
+                    <p style="margin-bottom: 1.5rem; color: #666;">Nur Benutzer mit Administrator-Rechten können diese Seite aufrufen.</p>
+                    <a href="index.html" style="display: inline-block; padding: 0.75rem 1.5rem; background: #1976d2; color: white; text-decoration: none; border-radius: 4px; transition: background 0.3s;">← Zurück zur Startseite</a>
+                </div>
+            </div>
+        `;
     }
 }
 

@@ -974,6 +974,11 @@
     animation: fadeIn 0.3s ease-out;
 }
 
+/* Hide modals by default, show only when active */
+.modal {
+    display: none;
+}
+
 .modal.active, .modal-overlay {
     display: flex;
 }
