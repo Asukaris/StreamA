@@ -99,6 +99,14 @@ Thumbs.db
 logs
 *.log
 
+# Uploaded thumbnails
+thumbnails/*.png
+thumbnails/*.jpg
+thumbnails/*.jpeg
+thumbnails/*.gif
+thumbnails/*.webp
+thumbnails/thumb_*
+
 # Temporary files
 tmp/
 temp/
