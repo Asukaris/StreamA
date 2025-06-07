@@ -805,7 +805,7 @@ document.addEventListener('DOMContentLoaded', () => {
     new AnalyticsDashboard();
     
     // Load saved theme
-    const savedTheme = localStorage.getItem('theme') || 'light';
+    const savedTheme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
     
     const themeToggle = document.getElementById('themeToggle');

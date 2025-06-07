@@ -100,8 +100,8 @@ class HeaderComponent {
     initThemeToggle() {
         const themeToggle = document.getElementById('themeToggle');
         if (themeToggle) {
-            // Get current theme from cookieManager or default to light
-        const currentTheme = cookieManager.getPreference('theme') || 'light';
+            // Get current theme from cookieManager or default to dark
+        const currentTheme = cookieManager.getPreference('theme') || 'dark';
             document.documentElement.setAttribute('data-theme', currentTheme);
             this.updateThemeIcon(currentTheme);
 

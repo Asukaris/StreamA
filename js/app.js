@@ -440,7 +440,7 @@ class StreamArchiveApp {
         
         // Trigger theme reset if HeaderComponent exists
         if (window.headerComponent) {
-            window.headerComponent.setTheme('light');
+            window.headerComponent.setTheme('dark');
         }
         
         alert('Alle Cookies und gespeicherten Daten wurden gelöscht.');
