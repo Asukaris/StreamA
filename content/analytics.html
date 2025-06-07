@@ -1,0 +1,214 @@
+<!-- Page Header -->
+<div class="page-header">
+    <h1><i class="fas fa-chart-line"></i> Analytics Dashboard</h1>
+    <p>Detaillierte Statistiken und Insights für das Factor_KS Stream Archive</p>
+    
+    <!-- Time Range Selector -->
+    <div class="time-range-selector">
+        <button class="time-btn active" data-range="7d">7 Tage</button>
+        <button class="time-btn" data-range="30d">30 Tage</button>
+        <button class="time-btn" data-range="90d">90 Tage</button>
+        <button class="time-btn" data-range="1y">1 Jahr</button>
+        <button class="time-btn" data-range="all">Gesamt</button>
+    </div>
+</div>
+
+<!-- Key Metrics -->
+<div class="metrics-grid">
+    <div class="metric-card">
+        <div class="metric-icon">
+            <i class="fas fa-eye"></i>
+        </div>
+        <div class="metric-content">
+            <div class="metric-value" id="totalViews">0</div>
+            <div class="metric-label">Gesamte Views</div>
+            <div class="metric-change positive" id="viewsChange">+0%</div>
+        </div>
+    </div>
+    
+    <div class="metric-card">
+        <div class="metric-icon">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="metric-content">
+            <div class="metric-value" id="watchTime">0h</div>
+            <div class="metric-label">Watch Time</div>
+            <div class="metric-change positive" id="watchTimeChange">+0%</div>
+        </div>
+    </div>
+    
+    <div class="metric-card">
+        <div class="metric-icon">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="metric-content">
+            <div class="metric-value" id="uniqueViewers">0</div>
+            <div class="metric-label">Unique Viewers</div>
+            <div class="metric-change positive" id="viewersChange">+0%</div>
+        </div>
+    </div>
+    
+    <div class="metric-card">
+        <div class="metric-icon">
+            <i class="fas fa-video"></i>
+        </div>
+        <div class="metric-content">
+            <div class="metric-value" id="totalStreams">0</div>
+            <div class="metric-label">Streams</div>
+            <div class="metric-change positive" id="streamsChange">+0</div>
+        </div>
+    </div>
+    
+    <div class="metric-card">
+        <div class="metric-icon">
+            <i class="fas fa-comments"></i>
+        </div>
+        <div class="metric-content">
+            <div class="metric-value" id="totalComments">0</div>
+            <div class="metric-label">Kommentare</div>
+            <div class="metric-change positive" id="commentsChange">+0%</div>
+        </div>
+    </div>
+    
+    <div class="metric-card">
+        <div class="metric-icon">
+            <i class="fas fa-percentage"></i>
+        </div>
+        <div class="metric-content">
+            <div class="metric-value" id="avgCompletion">0%</div>
+            <div class="metric-label">Ø Completion Rate</div>
+            <div class="metric-change positive" id="completionChange">+0%</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="charts-section">
+    <!-- Views Over Time -->
+    <div class="chart-container">
+        <div class="chart-header">
+            <h3><i class="fas fa-chart-area"></i> Views über Zeit</h3>
+            <div class="chart-controls">
+                <button class="chart-type-btn active" data-type="line">Linie</button>
+                <button class="chart-type-btn" data-type="bar">Balken</button>
+            </div>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="viewsChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Top Streams -->
+    <div class="chart-container">
+        <div class="chart-header">
+            <h3><i class="fas fa-trophy"></i> Top Streams</h3>
+            <select id="topStreamsFilter" class="chart-filter">
+                <option value="views">Nach Views</option>
+                <option value="watchtime">Nach Watch Time</option>
+                <option value="comments">Nach Kommentaren</option>
+                <option value="completion">Nach Completion Rate</option>
+            </select>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="topStreamsChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Game Distribution -->
+    <div class="chart-container">
+        <div class="chart-header">
+            <h3><i class="fas fa-gamepad"></i> Spiele Verteilung</h3>
+            <div class="chart-legend" id="gamesLegend"></div>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="gamesChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Viewer Activity -->
+    <div class="chart-container">
+        <div class="chart-header">
+            <h3><i class="fas fa-clock"></i> Viewer Aktivität</h3>
+            <div class="chart-info">
+                <span class="info-text">Durchschnittliche Aktivität nach Tageszeit</span>
+            </div>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="activityChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Tables -->
+<div class="tables-section">
+    <!-- Stream Performance Table -->
+    <div class="table-container">
+        <div class="table-header">
+            <h3><i class="fas fa-table"></i> Stream Performance</h3>
+            <div class="table-controls">
+                <input type="text" id="streamSearch" placeholder="Stream suchen..." class="search-input">
+                <select id="streamSort" class="sort-select">
+                    <option value="date">Nach Datum</option>
+                    <option value="views">Nach Views</option>
+                    <option value="duration">Nach Dauer</option>
+                    <option value="completion">Nach Completion Rate</option>
+                </select>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table class="performance-table" id="streamsTable">
+                <thead>
+                    <tr>
+                        <th>Stream</th>
+                        <th>Datum</th>
+                        <th>Spiel</th>
+                        <th>Dauer</th>
+                        <th>Views</th>
+                        <th>Watch Time</th>
+                        <th>Completion Rate</th>
+                        <th>Kommentare</th>
+                        <th>Rating</th>
+                    </tr>
+                </thead>
+                <tbody id="streamsTableBody">
+                    <!-- Dynamic content -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Viewer Demographics -->
+    <div class="demographics-container">
+        <div class="demographics-header">
+            <h3><i class="fas fa-users"></i> Viewer Demographics</h3>
+            <div class="demographics-note">
+                <i class="fas fa-info-circle"></i>
+                <span>Anonymisierte Daten basierend auf freiwilligen Angaben</span>
+            </div>
+        </div>
+        
+        <div class="demographics-grid">
+            <!-- Device Types -->
+            <div class="demo-card">
+                <h4>Geräte</h4>
+                <div class="demo-chart">
+                    <canvas id="deviceChart"></canvas>
+                </div>
+                <div class="demo-stats" id="deviceStats">
+                    <!-- Dynamic content -->
+                </div>
+            </div>
+
+            <!-- Browser Distribution -->
+            <div class="demo-card">
+                <h4>Browser</h4>
+                <div class="demo-chart">
+                    <canvas id="browserChart"></canvas>
+                </div>
+                <div class="demo-stats" id="browserStats">
+                    <!-- Dynamic content -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

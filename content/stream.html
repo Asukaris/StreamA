@@ -1,0 +1,179 @@
+<!-- Back Navigation -->
+<div class="back-navigation">
+    <a href="app.html?page=streams" class="back-link">
+        <i class="fas fa-arrow-left"></i>
+        Zurück zu den Streams
+    </a>
+</div>
+
+<!-- Latest Stream Section -->
+<section class="latest-stream">
+    <div class="stream-player-container">
+        <!-- Video Player -->
+        <div class="player-wrapper">
+            <div class="player-container">
+                <video id="hlsPlayer" class="hls-player" preload="metadata">
+                    Dein Browser unterstützt das Video-Element nicht.
+                </video>
+                <!-- Loading Overlay -->
+                <div class="player-loading" id="playerLoading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Video wird geladen...</p>
+                </div>
+                
+                <!-- Error Overlay -->
+                <div class="player-error" id="playerError" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Fehler beim Laden</h3>
+                    <p>Das Video konnte nicht geladen werden.</p>
+                    <button class="btn btn-primary" onclick="location.reload()">Neu laden</button>
+                </div>
+            </div>
+            
+            <!-- Chapter Navigation -->
+            <div class="chapter-navigation" id="chapterNavigation">
+                <h4>Kapitel</h4>
+                <div class="chapter-list" id="chapterList">
+                    <!-- Chapters will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chat Section -->
+        <div class="chat-section">
+            <!-- Current Chapter Display -->
+            <div class="current-chapter-display" id="currentChapterDisplay" style="display: none;">
+                <div class="current-chapter-content">
+                    <div class="current-chapter-icon" id="currentChapterIcon">
+                        <img id="currentChapterLogo" class="chapter-game-logo" style="display: none;" alt="Game Logo">
+                        <i class="fas fa-play" id="currentChapterFallbackIcon"></i>
+                    </div>
+                    <div class="current-chapter-info">
+                        <div class="current-chapter-title" id="currentChapterTitle">Aktuelles Kapitel</div>
+                        <div class="current-chapter-game" id="currentChapterGame"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h3>Stream Chat</h3>
+                    <div class="chat-controls">
+                        <button id="chatSyncToggle" class="btn btn-sm" title="Chat-Synchronisation">
+                            <i class="fas fa-sync"></i>
+                        </button>
+                        <button id="chatSettingsBtn" class="btn btn-sm" title="Chat-Einstellungen">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                    </div>
+                </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <!-- Chat messages will be populated by JavaScript -->
+            </div>
+            
+            <div class="chat-sync-indicator" id="chatSyncIndicator">
+                <i class="fas fa-clock"></i>
+                <span>Chat synchronisiert</span>
+            </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stream Information -->
+<section class="stream-info-section">
+    <div class="stream-details">
+        <div class="stream-header">
+            <h1 id="streamTitle">Stream wird geladen...</h1>
+            <div class="stream-actions">
+                <button class="btn btn-secondary" id="favoriteBtn">
+                    <i class="far fa-heart"></i>
+                    Favorit
+                </button>
+                <button class="btn btn-secondary" id="shareBtn">
+                    <i class="fas fa-share"></i>
+                    Teilen
+                </button>
+            </div>
+        </div>
+        
+        <div class="stream-meta">
+            <div class="meta-item">
+                <i class="fas fa-gamepad"></i>
+                <span id="streamGame">-</span>
+            </div>
+            <div class="meta-item">
+                <i class="fas fa-calendar"></i>
+                <span id="streamDate">-</span>
+            </div>
+            <div class="meta-item">
+                <i class="fas fa-clock"></i>
+                <span id="streamDuration">-</span>
+            </div>
+            <div class="meta-item">
+                <i class="fas fa-eye"></i>
+                <span id="streamViews">-</span>
+            </div>
+        </div>
+        
+        <div class="stream-tags" id="streamTags">
+            <!-- Tags will be populated by JavaScript -->
+        </div>
+        
+        <div class="stream-description">
+            <h3>Beschreibung</h3>
+            <p id="streamDescriptionText">Beschreibung wird geladen...</p>
+        </div>
+    </div>
+</section>
+
+<!-- Comments Section -->
+<section class="comments-section">
+    <div class="comments-container">
+        <div class="comments-header">
+            <h3>Kommentare</h3>
+            <div class="comments-stats">
+                <span id="commentsCount">0 Kommentare</span>
+            </div>
+        </div>
+        
+        <!-- Comment Form -->
+        <div class="comment-form" id="commentForm">
+            <div class="comment-input-container">
+                <img src="https://static-cdn.jtvnw.net/jtv_user_pictures/6345d801-5d04-4fca-a819-b4bb7a70f03e-profile_image-300x300.png" 
+                     alt="User" class="comment-avatar">
+                <div class="comment-input-wrapper">
+                    <textarea id="commentText" placeholder="Schreibe einen Kommentar..." rows="3"></textarea>
+                    <div class="comment-actions">
+                        <div class="comment-formatting">
+                            <button type="button" class="format-btn" title="Fett">
+                                <i class="fas fa-bold"></i>
+                            </button>
+                            <button type="button" class="format-btn" title="Kursiv">
+                                <i class="fas fa-italic"></i>
+                            </button>
+                            <button type="button" class="format-btn" title="Link">
+                                <i class="fas fa-link"></i>
+                            </button>
+                        </div>
+                        <div class="comment-submit">
+                            <button type="button" id="cancelComment" class="btn btn-secondary" style="display: none;">Abbrechen</button>
+                            <button type="button" id="submitComment" class="btn btn-primary">Kommentieren</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Comments List -->
+        <div class="comments-list" id="commentsList">
+            <!-- Comments will be populated by JavaScript -->
+        </div>
+        
+        <!-- Load More Comments -->
+        <div class="load-more-comments" id="loadMoreComments" style="display: none;">
+            <button class="btn btn-secondary">Weitere Kommentare laden</button>
+        </div>
+    </div>
+</section>

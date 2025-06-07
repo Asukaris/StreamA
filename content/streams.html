@@ -1,0 +1,106 @@
+<!-- Page Header -->
+<div class="page-header">
+    <h1>Stream-Archiv</h1>
+    <p>Durchsuche alle archivierten Streams und finde deine Lieblingsinhalte</p>
+</div>
+
+<!-- Filters and Search -->
+<div class="stream-filters">
+    <div class="filter-row">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="streamSearch" placeholder="Streams durchsuchen...">
+        </div>
+        
+        <div class="filter-controls">
+            <select id="gameFilter" class="filter-select">
+                <option value="">Alle Spiele</option>
+                <option value="JDM: Japanese Drift Master">JDM: Japanese Drift Master</option>
+                <option value="Forza Horizon 5">Forza Horizon 5</option>
+                <option value="Gran Turismo 7">Gran Turismo 7</option>
+                <option value="Need for Speed">Need for Speed</option>
+            </select>
+            
+            <select id="sortFilter" class="filter-select">
+                <option value="newest">Neueste zuerst</option>
+                <option value="oldest">Älteste zuerst</option>
+                <option value="duration">Nach Dauer</option>
+                <option value="views">Nach Aufrufen</option>
+            </select>
+            
+            <button id="filterToggle" class="btn btn-secondary">
+                <i class="fas fa-filter"></i>
+                Filter
+            </button>
+        </div>
+    </div>
+    
+    <!-- Advanced Filters (Hidden by default) -->
+    <div id="advancedFilters" class="advanced-filters" style="display: none;">
+        <div class="filter-group">
+            <label>Datum:</label>
+            <input type="date" id="dateFrom" class="filter-input">
+            <span>bis</span>
+            <input type="date" id="dateTo" class="filter-input">
+        </div>
+        
+        <div class="filter-group">
+            <label>Dauer:</label>
+            <select id="durationFilter" class="filter-select">
+                <option value="">Alle Längen</option>
+                <option value="short">Kurz (< 1h)</option>
+                <option value="medium">Mittel (1-3h)</option>
+                <option value="long">Lang (> 3h)</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label>Tags:</label>
+            <div class="tag-filters">
+                <label class="tag-filter">
+                    <input type="checkbox" value="racing"> Racing
+                </label>
+                <label class="tag-filter">
+                    <input type="checkbox" value="drift"> Drift
+                </label>
+                <label class="tag-filter">
+                    <input type="checkbox" value="multiplayer"> Multiplayer
+                </label>
+                <label class="tag-filter">
+                    <input type="checkbox" value="tutorial"> Tutorial
+                </label>
+            </div>
+        </div>
+        
+        <div class="filter-actions">
+            <button id="applyFilters" class="btn btn-primary">Filter anwenden</button>
+            <button id="clearFilters" class="btn btn-secondary">Zurücksetzen</button>
+        </div>
+    </div>
+</div>
+
+<!-- Stream Grid -->
+<div class="streams-grid" id="streamsGrid">
+    <!-- Loading State -->
+    <div class="loading-state">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Streams werden geladen...</p>
+    </div>
+</div>
+
+<!-- Pagination -->
+<div class="pagination" id="pagination" style="display: none;">
+    <button id="prevPage" class="btn btn-secondary" disabled>
+        <i class="fas fa-chevron-left"></i>
+        Zurück
+    </button>
+    
+    <div class="page-info">
+        <span id="pageInfo">Seite 1 von 1</span>
+    </div>
+    
+    <button id="nextPage" class="btn btn-secondary" disabled>
+        Weiter
+        <i class="fas fa-chevron-right"></i>
+    </button>
+</div>

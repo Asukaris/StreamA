@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Archiv</title>
+    
+    <!-- Theme Script - Prevent FOUC -->
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    
+    <!-- Base CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/modal.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- HLS.js for Video Streaming -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+<body>
+    <!-- Cookie Consent Toast -->
+    <div id="cookieConsent" class="cookie-consent hidden">
+        <div class="cookie-content">
+            <p>Diese Website verwendet Cookies, um Ihren Stream-Fortschritt zu speichern und Ihre Erfahrung zu verbessern.</p>
+            <div class="cookie-buttons">
+                <button id="acceptCookies" class="btn btn-primary">Akzeptieren</button>
+                <button id="declineCookies" class="btn btn-secondary">Ablehnen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header wird dynamisch geladen -->
+    
+    <!-- Main Content Container -->
+    <main class="main-content">
+        <!-- Content wird dynamisch geladen -->
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Lade Inhalt...</p>
+        </div>
+    </main>
+    
+    <!-- Footer wird dynamisch geladen -->
+    
+    <!-- SPA Manager - Lädt automatisch alle erforderlichen Scripts -->
+    <script src="js/spa.js"></script>
+</body>
+</html>

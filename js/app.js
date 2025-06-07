@@ -36,13 +36,21 @@ class StreamArchiveApp {
     
     // Event Listeners
     initEventListeners() {
+        console.log('initEventListeners called');
+        
         // Login button
-        document.getElementById('loginBtn')?.addEventListener('click', () => {
+        const loginBtn = document.getElementById('loginBtn');
+        console.log('Login button found:', loginBtn);
+        loginBtn?.addEventListener('click', () => {
+            console.log('Login button clicked');
             this.handleLogin();
         });
         
         // Mobile login button
-        document.getElementById('mobileLoginBtn')?.addEventListener('click', () => {
+        const mobileLoginBtn = document.getElementById('mobileLoginBtn');
+        console.log('Mobile login button found:', mobileLoginBtn);
+        mobileLoginBtn?.addEventListener('click', () => {
+            console.log('Mobile login button clicked');
             this.handleLogin();
         });
         
@@ -70,6 +78,7 @@ class StreamArchiveApp {
     
     // Authentication
     async handleLogin() {
+        console.log('handleLogin called, isLoggedIn:', this.isLoggedIn);
         if (this.isLoggedIn) {
             this.logout();
         } else {
@@ -79,6 +88,7 @@ class StreamArchiveApp {
     }
     
     showLoginModal() {
+        console.log('showLoginModal called');
         // Create a simple login modal
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -117,14 +127,26 @@ class StreamArchiveApp {
             </div>
         `;
         
+        console.log('Modal element created:', modal);
         document.body.appendChild(modal);
+        console.log('Modal appended to body');
         
         // Show the modal
         modal.style.display = 'block';
+        console.log('Modal display set to block');
+        console.log('Modal computed style:', window.getComputedStyle(modal).display);
         
         // Event listeners for modal
-        modal.querySelector('.close').onclick = () => modal.remove();
-        modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+        modal.querySelector('.close').onclick = () => {
+            console.log('Close button clicked');
+            modal.remove();
+        };
+        modal.onclick = (e) => { 
+            if (e.target === modal) {
+                console.log('Modal background clicked');
+                modal.remove();
+            }
+        };
         
         modal.querySelector('#showRegister').onclick = (e) => {
             e.preventDefault();
@@ -299,11 +321,18 @@ class StreamArchiveApp {
     // Stream Management
     async loadStreams() {
         try {
-            const response = await fetch(`${this.apiBase}/streams?limit=10`);
+            console.log('Loading streams with API base:', this.apiBase);
+            const apiUrl = `${this.apiBase}/streams/`;
+            console.log('Full API URL:', apiUrl);
+            
+            const response = await fetch(apiUrl);
+            console.log('API response status:', response.status);
             const data = await response.json();
+            console.log('API response data:', data);
             
             if (data.success) {
                 this.streams = data.data.streams || [];
+                console.log('Loaded streams:', this.streams.length);
             } else {
                 console.error('Failed to load streams:', data.error);
                 this.streams = [];
@@ -419,9 +448,8 @@ class StreamArchiveApp {
 }
 
 // Initialize app when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    window.streamApp = new StreamArchiveApp();
-});
+// Make class available globally for SPA
+window.StreamArchiveApp = StreamArchiveApp;
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {

@@ -1,0 +1,295 @@
+<!-- Page Header -->
+<div class="page-header">
+    <h1><i class="fas fa-code"></i> API Dokumentation</h1>
+    <p>Entwickler-Dokumentation für das Factor_KS Stream Archive API</p>
+</div>
+
+<div class="api-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="api-sidebar">
+        <nav class="api-nav">
+            <h3>Inhaltsverzeichnis</h3>
+            <ul class="nav-sections">
+                <li><a href="#overview" class="nav-section active">Übersicht</a></li>
+                <li><a href="#authentication" class="nav-section">Authentifizierung</a></li>
+                <li><a href="#endpoints" class="nav-section">Endpoints</a>
+                    <ul class="nav-subsections">
+                        <li><a href="#streams" class="nav-subsection">Streams</a></li>
+                        <li><a href="#users" class="nav-subsection">Benutzer</a></li>
+                        <li><a href="#comments" class="nav-subsection">Kommentare</a></li>
+                        <li><a href="#chat" class="nav-subsection">Chat</a></li>
+                    </ul>
+                </li>
+                <li><a href="#examples" class="nav-section">Beispiele</a></li>
+                <li><a href="#errors" class="nav-section">Fehlerbehandlung</a></li>
+                <li><a href="#rate-limits" class="nav-section">Rate Limits</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- API Content -->
+    <div class="api-content">
+        <!-- Overview Section -->
+        <section id="overview" class="api-section">
+            <h2>Übersicht</h2>
+            <p>Das Factor_KS Stream Archive API ermöglicht es Entwicklern, auf Stream-Daten, Benutzerinformationen und Chat-Nachrichten zuzugreifen. Die API folgt REST-Prinzipien und gibt JSON-Antworten zurück.</p>
+            
+            <div class="info-box">
+                <h4><i class="fas fa-info-circle"></i> Base URL</h4>
+                <code>https://api.factor-ks-archive.com/v1</code>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <i class="fas fa-video"></i>
+                    <h4>Stream Management</h4>
+                    <p>Vollständiger Zugriff auf Stream-Metadaten, HLS-Links und Thumbnails</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-users"></i>
+                    <h4>Benutzerverwaltung</h4>
+                    <p>Benutzerprofile, Authentifizierung und Berechtigungen verwalten</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-comments"></i>
+                    <h4>Chat Integration</h4>
+                    <p>Synchronisierte Chat-Nachrichten mit Zeitstempeln und Emotes</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-chart-line"></i>
+                    <h4>Analytics</h4>
+                    <p>Detaillierte Statistiken über Views, Engagement und Performance</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Authentication Section -->
+        <section id="authentication" class="api-section">
+            <h2>Authentifizierung</h2>
+            <p>Das API verwendet OAuth 2.0 mit Twitch-Integration für die Authentifizierung. Alle Anfragen müssen einen gültigen Bearer Token enthalten.</p>
+            
+            <h3>Token erhalten</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">POST /auth/token</span>
+                    <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i></button>
+                </div>
+                <pre><code class="language-bash">curl -X POST https://api.factor-ks-archive.com/v1/auth/token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "client_id": "your_client_id",
+    "client_secret": "your_client_secret",
+    "grant_type": "client_credentials"
+  }'</code></pre>
+            </div>
+
+            <h3>Token verwenden</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Authorization Header</span>
+                    <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i></button>
+                </div>
+                <pre><code class="language-bash">Authorization: Bearer your_access_token</code></pre>
+            </div>
+        </section>
+
+        <!-- Endpoints Section -->
+        <section id="endpoints" class="api-section">
+            <h2>API Endpoints</h2>
+            
+            <!-- Streams Endpoints -->
+            <div id="streams" class="endpoint-group">
+                <h3><i class="fas fa-video"></i> Streams</h3>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="path">/streams</span>
+                        <span class="description">Alle Streams abrufen</span>
+                    </div>
+                    
+                    <div class="endpoint-content">
+                        <h4>Parameter</h4>
+                        <table class="params-table">
+                            <thead>
+                                <tr>
+                                    <th>Parameter</th>
+                                    <th>Typ</th>
+                                    <th>Beschreibung</th>
+                                    <th>Standard</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>page</code></td>
+                                    <td>integer</td>
+                                    <td>Seitennummer für Paginierung</td>
+                                    <td>1</td>
+                                </tr>
+                                <tr>
+                                    <td><code>limit</code></td>
+                                    <td>integer</td>
+                                    <td>Anzahl Streams pro Seite (max 100)</td>
+                                    <td>20</td>
+                                </tr>
+                                <tr>
+                                    <td><code>game</code></td>
+                                    <td>string</td>
+                                    <td>Filter nach Spiel</td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td><code>status</code></td>
+                                    <td>string</td>
+                                    <td>Filter nach Status (published, draft)</td>
+                                    <td>published</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <h4>Antwort</h4>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">200 OK</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i></button>
+                            </div>
+                            <pre><code class="language-json">{
+  "data": [
+    {
+      "id": "stream_123",
+      "title": "Epic Gaming Session",
+      "game": "Minecraft",
+      "duration": 7200,
+      "date": "2024-01-15T20:00:00Z",
+      "thumbnail": "https://cdn.factor-ks.com/thumbnails/stream_123.jpg",
+      "hls_url": "https://cdn.factor-ks.com/streams/stream_123/playlist.m3u8",
+      "view_count": 1250,
+      "status": "published"
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "total_pages": 42,
+    "total_items": 834,
+    "per_page": 20
+  }
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Examples Section -->
+        <section id="examples" class="api-section">
+            <h2>Beispiele</h2>
+            <p>Hier finden Sie praktische Beispiele für die Verwendung der API.</p>
+            
+            <h3>Stream-Liste abrufen</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">JavaScript</span>
+                    <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i></button>
+                </div>
+                <pre><code class="language-javascript">const response = await fetch('https://api.factor-ks-archive.com/v1/streams', {
+  headers: {
+    'Authorization': 'Bearer your_access_token',
+    'Content-Type': 'application/json'
+  }
+});
+
+const data = await response.json();
+console.log(data.data); // Array of streams</code></pre>
+            </div>
+        </section>
+
+        <!-- Error Handling Section -->
+        <section id="errors" class="api-section">
+            <h2>Fehlerbehandlung</h2>
+            <p>Die API verwendet standardmäßige HTTP-Statuscodes und gibt strukturierte Fehlermeldungen zurück.</p>
+            
+            <h3>HTTP Status Codes</h3>
+            <table class="status-table">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Bedeutung</th>
+                        <th>Beschreibung</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>200</code></td>
+                        <td>OK</td>
+                        <td>Anfrage erfolgreich</td>
+                    </tr>
+                    <tr>
+                        <td><code>400</code></td>
+                        <td>Bad Request</td>
+                        <td>Ungültige Anfrage</td>
+                    </tr>
+                    <tr>
+                        <td><code>401</code></td>
+                        <td>Unauthorized</td>
+                        <td>Authentifizierung erforderlich</td>
+                    </tr>
+                    <tr>
+                        <td><code>403</code></td>
+                        <td>Forbidden</td>
+                        <td>Keine Berechtigung</td>
+                    </tr>
+                    <tr>
+                        <td><code>404</code></td>
+                        <td>Not Found</td>
+                        <td>Ressource nicht gefunden</td>
+                    </tr>
+                    <tr>
+                        <td><code>429</code></td>
+                        <td>Too Many Requests</td>
+                        <td>Rate Limit überschritten</td>
+                    </tr>
+                    <tr>
+                        <td><code>500</code></td>
+                        <td>Internal Server Error</td>
+                        <td>Serverfehler</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Rate Limits Section -->
+        <section id="rate-limits" class="api-section">
+            <h2>Rate Limits</h2>
+            <p>Um die API-Performance zu gewährleisten, gelten folgende Rate Limits:</p>
+            
+            <div class="rate-limits-grid">
+                <div class="rate-limit-card">
+                    <h4>Öffentliche Endpoints</h4>
+                    <div class="rate-limit-value">1000 Anfragen/Stunde</div>
+                    <p>Für nicht-authentifizierte Anfragen</p>
+                </div>
+                <div class="rate-limit-card">
+                    <h4>Authentifizierte Benutzer</h4>
+                    <div class="rate-limit-value">5000 Anfragen/Stunde</div>
+                    <p>Für authentifizierte Benutzer</p>
+                </div>
+                <div class="rate-limit-card">
+                    <h4>Admin/Moderator</h4>
+                    <div class="rate-limit-value">10000 Anfragen/Stunde</div>
+                    <p>Für privilegierte Benutzer</p>
+                </div>
+            </div>
+
+            <h3>Rate Limit Headers</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Response Headers</span>
+                    <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i></button>
+                </div>
+                <pre><code class="language-http">X-RateLimit-Limit: 5000
+X-RateLimit-Remaining: 4999
+X-RateLimit-Reset: 1640995200</code></pre>
+            </div>
+        </section>
+    </div>
+</div>

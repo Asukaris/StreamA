@@ -1,6 +1,7 @@
 // Header Component Loader
 class HeaderComponent {
     constructor() {
+        console.log('HeaderComponent constructor called');
         this.currentPage = this.getCurrentPage();
         this.loadHeader();
     }
@@ -12,8 +13,17 @@ class HeaderComponent {
     }
 
     async loadHeader() {
+        // Check if header already exists
+        if (document.querySelector('.header') || document.querySelector('header')) {
+            console.log('Header already exists, skipping load');
+            return;
+        }
+        
         try {
             const response = await fetch('components/header.html');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const headerHTML = await response.text();
             
             // Insert header at the beginning of body (after cookie consent)
@@ -33,6 +43,9 @@ class HeaderComponent {
             
         } catch (error) {
             console.error('Error loading header:', error);
+            // Create a minimal header fallback
+            const fallbackHeader = '<header class="header"><nav class="navbar"><div class="nav-container"><div class="nav-logo"><a href="#">Stream Archiv</a></div></div></nav></header>';
+            document.body.insertAdjacentHTML('afterbegin', fallbackHeader);
         }
     }
 
@@ -119,7 +132,5 @@ class HeaderComponent {
     }
 }
 
-// Initialize header when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    new HeaderComponent();
-});
+// Make HeaderComponent globally accessible
+window.HeaderComponent = HeaderComponent;

@@ -649,10 +649,31 @@ class HLSPlayer {
     }
 }
 
-// Initialize player when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize player function
+function initializeMainPlayer() {
+    console.log('Attempting to initialize main player...');
     const videoElement = document.getElementById('mainPlayer');
+    console.log('Video element found:', videoElement);
+    console.log('Existing hlsPlayer:', window.hlsPlayer);
+    
+    // Check if player already exists and is properly initialized
+    if (window.hlsPlayer && window.hlsPlayer.video === videoElement) {
+        console.log('Player already initialized for this video element, skipping...');
+        return;
+    }
+    
     if (videoElement) {
+        console.log('Initializing main player...');
+        
+        // Clean up existing player if it exists but for different element
+        if (window.hlsPlayer) {
+            console.log('Cleaning up existing player...');
+            if (window.hlsPlayer.hls) {
+                window.hlsPlayer.hls.destroy();
+            }
+            window.hlsPlayer = null;
+        }
+        
         // Mock chapter data based on the provided JSON structure
         const chapters = [
             {
@@ -676,8 +697,18 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Load the stream
         window.hlsPlayer.loadStream('https://vid.asukaris.live/streams/_0005/master.m3u8', chapters);
+        
+        console.log('Main player initialized successfully');
     }
-});
+}
+
+// Initialize player when DOM is loaded
+document.addEventListener('DOMContentLoaded', initializeMainPlayer);
+
+// Also try to initialize immediately (for SPA dynamic loading)
+setTimeout(initializeMainPlayer, 100);
+setTimeout(initializeMainPlayer, 500);
+setTimeout(initializeMainPlayer, 1000);
 
 // Add CSS for chapter notification animation
 const style = document.createElement('style');

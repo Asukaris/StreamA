@@ -1,5 +1,9 @@
+/**
+ * Footer Component
+ */
 class FooterComponent {
     constructor() {
+        console.log('FooterComponent constructor called');
         this.init();
     }
 
@@ -9,6 +13,12 @@ class FooterComponent {
     }
 
     async loadFooter() {
+        // Check if footer already exists
+        if (document.querySelector('.footer') || document.querySelector('footer')) {
+            console.log('Footer already exists, skipping load');
+            return;
+        }
+        
         try {
             const response = await fetch('components/footer.html');
             if (!response.ok) {
@@ -26,6 +36,9 @@ class FooterComponent {
             }
         } catch (error) {
             console.error('Error loading footer:', error);
+            // Create a minimal footer fallback
+            const fallbackFooter = '<footer class="footer"><div class="container"><p>&copy; 2024 Stream Archiv. Alle Rechte vorbehalten.</p></div></footer>';
+            document.body.insertAdjacentHTML('beforeend', fallbackFooter);
         }
     }
 
@@ -59,7 +72,5 @@ class FooterComponent {
     }
 }
 
-// Initialize footer when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    new FooterComponent();
-});
+// Make FooterComponent globally accessible
+window.FooterComponent = FooterComponent;

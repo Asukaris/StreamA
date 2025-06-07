@@ -1,0 +1,478 @@
+<div class="admin-container">
+    <!-- Sidebar Navigation -->
+    <aside class="admin-sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-cog"></i> Admin Panel</h2>
+        </div>
+        <nav class="sidebar-nav">
+            <ul class="sidebar-menu">
+                <li class="menu-item active" data-tab="dashboard">
+                    <a href="#dashboard">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="menu-item" data-tab="users">
+                    <a href="#users">
+                        <i class="fas fa-users"></i>
+                        <span>Benutzerverwaltung</span>
+                    </a>
+                </li>
+                <li class="menu-item" data-tab="upload">
+                    <a href="#upload">
+                        <i class="fas fa-upload"></i>
+                        <span>Stream Upload</span>
+                    </a>
+                </li>
+                <li class="menu-item" data-tab="archive">
+                    <a href="#archive">
+                        <i class="fas fa-archive"></i>
+                        <span>Stream Archive</span>
+                    </a>
+                </li>
+                <li class="menu-item" data-tab="logos">
+                    <a href="#logos">
+                        <i class="fas fa-images"></i>
+                        <span>Logo-Verwaltung</span>
+                    </a>
+                </li>
+                <li class="menu-item" data-tab="data-management">
+                    <a href="#data-management">
+                        <i class="fas fa-database"></i>
+                        <span>Datenmanagement</span>
+                    </a>
+                </li>
+                <li class="menu-item" data-tab="settings">
+                    <a href="#settings">
+                        <i class="fas fa-cog"></i>
+                        <span>Einstellungen</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <img id="adminAvatar" src="https://static-cdn.jtvnw.net/jtv_user_pictures/6345d801-5d04-4fca-a819-b4bb7a70f03e-profile_image-300x300.png" alt="Admin" class="user-avatar">
+                <div class="user-details">
+                    <span id="adminName" class="user-name">Factor_KS</span>
+                    <span class="user-role">Administrator</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="admin-content">
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="content-header">
+                <h1>Dashboard</h1>
+                <p>Übersicht über dein Stream Archive</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalStreams">42</h3>
+                        <p>Gesamt Streams</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalViews">15.2K</h3>
+                        <p>Gesamt Aufrufe</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalUsers">1.8K</h3>
+                        <p>Registrierte Nutzer</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalComments">3.4K</h3>
+                        <p>Kommentare</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <h3>Neueste Streams</h3>
+                    <div class="recent-streams" id="recentStreams">
+                        <!-- Recent streams will be populated here -->
+                    </div>
+                </div>
+                <div class="dashboard-card">
+                    <h3>Systemstatus</h3>
+                    <div class="system-status">
+                        <div class="status-item">
+                            <span class="status-label">Server Status</span>
+                            <span class="status-value online">Online</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Speicherplatz</span>
+                            <span class="status-value">78% belegt</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Letzte Sicherung</span>
+                            <span class="status-value">vor 2 Stunden</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Tab -->
+        <div id="users" class="tab-content">
+            <div class="content-header">
+                <h1>Benutzerverwaltung</h1>
+                <p>Verwalte Benutzer, Rollen und Berechtigungen</p>
+            </div>
+            
+            <div class="users-controls">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="userSearch" placeholder="Benutzer suchen...">
+                </div>
+                <div class="filter-controls">
+                    <select id="roleFilter">
+                        <option value="">Alle Rollen</option>
+                        <option value="admin">Administrator</option>
+                        <option value="moderator">Moderator</option>
+                        <option value="user">Benutzer</option>
+                    </select>
+                    <button class="btn btn-primary" id="addUserBtn">
+                        <i class="fas fa-plus"></i>
+                        Benutzer hinzufügen
+                    </button>
+                </div>
+            </div>
+
+            <div class="users-table-container">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>Benutzer</th>
+                            <th>E-Mail</th>
+                            <th>Rolle</th>
+                            <th>Registriert</th>
+                            <th>Status</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <!-- Users will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Upload Tab -->
+        <div id="upload" class="tab-content">
+            <div class="content-header">
+                <h1>Stream Upload</h1>
+                <p>Lade neue Streams hoch und verwalte Stream-Daten</p>
+            </div>
+            
+            <form id="streamUploadForm" class="upload-form">
+                <div class="form-grid">
+                    <div class="form-section">
+                        <h3>Stream-Informationen</h3>
+                        <div class="form-group">
+                            <label for="streamTitle">Titel *</label>
+                            <input type="text" id="streamTitle" name="title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="streamDescription">Beschreibung</label>
+                            <textarea id="streamDescription" name="description" rows="4"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="streamGame">Spiel</label>
+                                <input type="text" id="streamGame" name="game">
+                            </div>
+                            <div class="form-group">
+                                <label for="streamDate">Stream-Datum *</label>
+                                <input type="datetime-local" id="streamDate" name="date" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="streamTags">Tags</label>
+                            <div class="tags-input">
+                                <input type="text" id="streamTags" placeholder="Tag eingeben und Enter drücken">
+                                <div class="tags-list" id="tagsList"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Dateien</h3>
+                        <div class="form-group">
+                            <label for="streamLink">Stream-Link (HLS) *</label>
+                            <input type="url" id="streamLink" name="link" required placeholder="https://example.com/stream.m3u8">
+                        </div>
+                        <div class="form-group">
+                            <label for="chatFile">Chat-JSON *</label>
+                            <div class="file-upload">
+                                <input type="file" id="chatFile" name="chatFile" accept=".json" required>
+                                <label for="chatFile" class="file-upload-label">
+                                    <i class="fas fa-upload"></i>
+                                    Chat-Datei auswählen
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="thumbnailFile">Thumbnail</label>
+                            <div class="file-upload">
+                                <input type="file" id="thumbnailFile" name="thumbnailFile" accept="image/*">
+                                <label for="thumbnailFile" class="file-upload-label">
+                                    <i class="fas fa-image"></i>
+                                    Thumbnail auswählen
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="videoFile">Video-Datei (optional)</label>
+                            <div class="file-upload">
+                                <input type="file" id="videoFile" name="videoFile" accept="video/*">
+                                <label for="videoFile" class="file-upload-label">
+                                    <i class="fas fa-video"></i>
+                                    Video-Datei auswählen
+                                </label>
+                            </div>
+                            <div class="upload-progress" id="videoUploadProgress" style="display: none;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="videoProgressFill"></div>
+                                </div>
+                                <span class="progress-text" id="videoProgressText">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="resetFormBtn">Zurücksetzen</button>
+                    <button type="submit" class="btn btn-primary" id="uploadStreamBtn">
+                        <i class="fas fa-upload"></i>
+                        Stream hochladen
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Archive Tab -->
+        <div id="archive" class="tab-content">
+            <div class="content-header">
+                <h1>Stream Archive</h1>
+                <p>Verwalte alle hochgeladenen Streams</p>
+            </div>
+            
+            <div class="archive-controls">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="archiveSearch" placeholder="Streams suchen...">
+                </div>
+                <div class="filter-controls">
+                    <select id="gameFilter">
+                        <option value="">Alle Spiele</option>
+                    </select>
+                    <select id="sortFilter">
+                        <option value="date_desc">Neueste zuerst</option>
+                        <option value="date_asc">Älteste zuerst</option>
+                        <option value="title_asc">Titel A-Z</option>
+                        <option value="title_desc">Titel Z-A</option>
+                        <option value="views_desc">Meiste Aufrufe</option>
+                    </select>
+                    <button class="btn btn-danger" id="bulkDeleteBtn" style="display: none;">
+                        <i class="fas fa-trash"></i>
+                        Ausgewählte löschen
+                    </button>
+                </div>
+            </div>
+
+            <div class="archive-grid" id="archiveGrid">
+                <!-- Archive items will be populated here -->
+            </div>
+
+            <div class="pagination" id="archivePagination">
+                <!-- Pagination will be populated here -->
+            </div>
+        </div>
+
+        <!-- Logos Tab -->
+        <div id="logos" class="tab-content">
+            <div class="content-header">
+                <h1>Logo-Verwaltung</h1>
+                <p>Verwalte Spiel-Logos und Thumbnails</p>
+            </div>
+            
+            <div class="logos-controls">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="logoSearch" placeholder="Logos suchen...">
+                </div>
+                <div class="filter-controls">
+                    <button class="btn btn-primary" id="uploadLogoBtn">
+                        <i class="fas fa-plus"></i>
+                        Logo hochladen
+                    </button>
+                </div>
+            </div>
+
+            <div class="logos-grid" id="logosGrid">
+                <!-- Logos will be populated here -->
+            </div>
+        </div>
+
+        <!-- Data Management Tab -->
+        <div id="data-management" class="tab-content">
+            <div class="content-header">
+                <h1>Datenmanagement</h1>
+                <p>Backup, Import und Export von Daten</p>
+            </div>
+            
+            <div class="data-management-grid">
+                <div class="data-card">
+                    <h3><i class="fas fa-download"></i> Backup erstellen</h3>
+                    <p>Erstelle ein vollständiges Backup aller Stream-Daten</p>
+                    <button class="btn btn-primary" id="createBackupBtn">
+                        <i class="fas fa-download"></i>
+                        Backup erstellen
+                    </button>
+                </div>
+                
+                <div class="data-card">
+                    <h3><i class="fas fa-upload"></i> Backup wiederherstellen</h3>
+                    <p>Stelle Daten aus einem Backup wieder her</p>
+                    <div class="file-upload">
+                        <input type="file" id="restoreBackupFile" accept=".json">
+                        <label for="restoreBackupFile" class="file-upload-label">
+                            <i class="fas fa-upload"></i>
+                            Backup-Datei auswählen
+                        </label>
+                    </div>
+                    <button class="btn btn-warning" id="restoreBackupBtn">
+                        <i class="fas fa-upload"></i>
+                        Backup wiederherstellen
+                    </button>
+                </div>
+                
+                <div class="data-card">
+                    <h3><i class="fas fa-file-export"></i> Daten exportieren</h3>
+                    <p>Exportiere Stream-Daten in verschiedene Formate</p>
+                    <select id="exportFormat">
+                        <option value="json">JSON</option>
+                        <option value="csv">CSV</option>
+                        <option value="xml">XML</option>
+                    </select>
+                    <button class="btn btn-secondary" id="exportDataBtn">
+                        <i class="fas fa-file-export"></i>
+                        Exportieren
+                    </button>
+                </div>
+                
+                <div class="data-card">
+                    <h3><i class="fas fa-trash-alt"></i> Daten bereinigen</h3>
+                    <p>Lösche verwaiste Dateien und bereinige die Datenbank</p>
+                    <button class="btn btn-danger" id="cleanupDataBtn">
+                        <i class="fas fa-trash-alt"></i>
+                        Daten bereinigen
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings" class="tab-content">
+            <div class="content-header">
+                <h1>Einstellungen</h1>
+                <p>Konfiguriere System-Einstellungen</p>
+            </div>
+            
+            <form id="settingsForm" class="settings-form">
+                <div class="settings-section">
+                    <h3>Allgemeine Einstellungen</h3>
+                    <div class="form-group">
+                        <label for="siteName">Website-Name</label>
+                        <input type="text" id="siteName" name="siteName" value="Factor_KS Stream Archive">
+                    </div>
+                    <div class="form-group">
+                        <label for="siteDescription">Website-Beschreibung</label>
+                        <textarea id="siteDescription" name="siteDescription" rows="3">Gaming Stream Archive von Factor_KS</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="maxFileSize">Maximale Dateigröße (MB)</label>
+                        <input type="number" id="maxFileSize" name="maxFileSize" value="500" min="1" max="2048">
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Stream-Einstellungen</h3>
+                    <div class="form-group">
+                        <label for="defaultQuality">Standard-Qualität</label>
+                        <select id="defaultQuality" name="defaultQuality">
+                            <option value="auto">Automatisch</option>
+                            <option value="1080p">1080p</option>
+                            <option value="720p">720p</option>
+                            <option value="480p">480p</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="autoplay" name="autoplay" checked>
+                            Autoplay aktivieren
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="showChat" name="showChat" checked>
+                            Chat standardmäßig anzeigen
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Sicherheits-Einstellungen</h3>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="requireLogin" name="requireLogin">
+                            Login für Stream-Ansicht erforderlich
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="moderateComments" name="moderateComments" checked>
+                            Kommentare moderieren
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="sessionTimeout">Session-Timeout (Minuten)</label>
+                        <input type="number" id="sessionTimeout" name="sessionTimeout" value="60" min="5" max="1440">
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="resetSettingsBtn">Zurücksetzen</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Einstellungen speichern
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

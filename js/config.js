@@ -17,14 +17,23 @@ const CONFIG = {
         const hostname = window.location.hostname;
         const protocol = window.location.protocol;
         const port = window.location.port;
+        const basePath = this.getBasePath();
+        
+        console.log('CONFIG DEBUG - hostname:', hostname);
+        console.log('CONFIG DEBUG - basePath:', basePath);
         
         // For local development
         if (hostname === 'localhost' || hostname === '127.0.0.1') {
-            return this.getBasePath() + 'api';
+            // Use the PHP server endpoint that actually works
+            const apiBase = 'http://localhost/projekt3/api';
+            console.log('CONFIG DEBUG - constructed apiBase:', apiBase);
+            return apiBase;
         }
         
         // For production servers - use relative path with base path
-        return this.getBasePath() + 'api';
+        const apiBase = basePath + 'api';
+        console.log('CONFIG DEBUG - constructed apiBase:', apiBase);
+        return apiBase;
     },
     
     // Alternative: Manual configuration for specific domains

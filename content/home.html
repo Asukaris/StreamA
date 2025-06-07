@@ -1,0 +1,60 @@
+<!-- Latest Stream Section -->
+<section class="latest-stream">
+    <div class="container">
+        <h1>Neuester Stream</h1>
+        
+        <div class="stream-player-container">
+            <div class="video-section">
+                <div class="video-player">
+                    <video id="mainPlayer" class="hls-player" preload="metadata">
+                        Ihr Browser unterstützt das Video-Element nicht.
+                    </video>
+                    <div class="player-overlay">
+                        <div class="quality-selector">
+                            <select id="qualitySelect">
+                                <option value="auto">Auto</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-section">
+                <div class="chat-container">
+                    <div class="chat-header">
+                        <h3>Stream Chat</h3>
+                    </div>
+                    <div id="chatMessages" class="chat-messages">
+                        <!-- Chat messages will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stream Info -->
+        <div class="stream-info">
+            <div class="info-container">
+                <h2 id="streamTitle">Pferdestärke lets GO</h2>
+                <div class="stream-meta">
+                    <span class="stream-number">#5</span>
+                    <span class="stream-date">04.06.2025</span>
+                    <span class="stream-duration">21 Sekunden</span>
+                    <span class="stream-game">JDM: Japanese Drift Master</span>
+                </div>
+                <p id="streamDescription" class="stream-description">
+                    Ein kurzer Test-Stream mit JDM: Japanese Drift Master
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Streams Grid -->
+<section class="recent-streams">
+    <div class="container">
+        <h2>Letzte Streams</h2>
+        <div class="streams-grid" id="recentStreamsGrid">
+            <!-- Stream cards will be populated here -->
+        </div>
+    </div>
+</section>
