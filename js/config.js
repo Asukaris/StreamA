@@ -22,10 +22,11 @@ const CONFIG = {
         console.log('CONFIG DEBUG - hostname:', hostname);
         console.log('CONFIG DEBUG - basePath:', basePath);
         
-        // For local development
+        // For local development and production - use dynamic path detection
         if (hostname === 'localhost' || hostname === '127.0.0.1') {
-            // Use the PHP server endpoint that actually works
-            const apiBase = 'http://localhost/projekt3/api';
+            // Use the current protocol, hostname, port and base path
+            const portPart = port ? ':' + port : '';
+            const apiBase = protocol + '//' + hostname + portPart + basePath + 'api';
             console.log('CONFIG DEBUG - constructed apiBase:', apiBase);
             return apiBase;
         }

@@ -22,24 +22,17 @@ class AdminPanel {
     }
 
     async init() {
-        await this.loadMockData();
         this.setupEventListeners();
-        this.setupTabNavigation();
-        this.loadDashboard();
-        this.loadUsers();
-        this.loadArchive();
-        this.loadSettings();
-        this.loadLogos();
+        this.setupTabNavigation(); // Re-enable tab navigation for clicks within admin page
+        // Dashboard loading is now handled by SPA routing - no need to load here
         this.setupUploadForm();
         this.setupModalFunctionality();
     }
 
     async loadMockData() {
-        // Load data from database APIs instead of localStorage
-        await this.loadUsersFromAPI();
-        await this.loadStreamsFromAPI();
-        await this.loadLogosFromAPI();
-        await this.loadSettingsFromAPI();
+        // Only load essential data during initialization
+        // Tab-specific data will be loaded when tabs are accessed
+        // This prevents unnecessary API calls and improves performance
     }
     
     async loadUsersFromAPI() {
@@ -476,28 +469,62 @@ class AdminPanel {
         const user = this.users.find(u => u.id === userId);
         if (!user) return;
 
-        const newRole = prompt(`Neue Rolle für ${user.username}:`, user.role);
-        if (newRole && newRole !== user.role) {
-            try {
-                const response = await fetch(`${this.apiBase}/users/${userId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ role: newRole })
-                });
-                
-                const data = await response.json();
-                if (data.success) {
-                    this.showToast('Benutzer erfolgreich aktualisiert', 'success');
-                    this.loadUsers();
-                } else {
-                    this.showToast('Fehler beim Aktualisieren des Benutzers: ' + data.error, 'error');
-                }
-            } catch (error) {
-                console.error('Error updating user:', error);
-                this.showToast('Fehler beim Aktualisieren des Benutzers', 'error');
+        // Populate modal with user data
+        document.getElementById('editUsername').value = user.username || '';
+        document.getElementById('editEmail').value = user.email || '';
+        document.getElementById('editRole').value = user.role || 'user';
+        document.getElementById('editStatus').value = user.status || 'active';
+        document.getElementById('editEmailVerified').checked = user.email_verified || false;
+        
+        // Store current user ID for form submission
+        this.currentEditUserId = userId;
+        
+        // Show modal
+        document.getElementById('editUserModal').style.display = 'block';
+        
+        // Setup form submission handler
+        const form = document.getElementById('editUserForm');
+        form.onsubmit = (e) => this.handleEditUserSubmit(e);
+    }
+    
+    closeEditUserModal() {
+        document.getElementById('editUserModal').style.display = 'none';
+        this.currentEditUserId = null;
+    }
+    
+    async handleEditUserSubmit(e) {
+        e.preventDefault();
+        
+        if (!this.currentEditUserId) return;
+        
+        const formData = new FormData(e.target);
+        const userData = {
+            email: formData.get('email'),
+            role: formData.get('role'),
+            status: formData.get('status'),
+            email_verified: formData.has('email_verified')
+        };
+        
+        try {
+            const response = await fetch(`${this.apiBase}/users/${this.currentEditUserId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                this.showToast('Benutzer erfolgreich aktualisiert', 'success');
+                this.closeEditUserModal();
+                this.loadUsers();
+            } else {
+                this.showToast('Fehler beim Aktualisieren des Benutzers: ' + data.error, 'error');
             }
+        } catch (error) {
+            console.error('Error updating user:', error);
+            this.showToast('Fehler beim Aktualisieren des Benutzers', 'error');
         }
     }
 
@@ -911,27 +938,68 @@ class AdminPanel {
         }
     }
 
-    loadDashboard() {
+    async loadDashboard() {
+        console.log('---- Dashboard: Starting loadDashboard()');
+        // Load necessary data for dashboard
+        console.log('---- Dashboard: Loading users from API...');
+        await this.loadUsersFromAPI();
+        console.log('---- Dashboard: Users loaded, count:', this.users.length);
+        
+        console.log('---- Dashboard: Loading streams from API...');
+        await this.loadStreamsFromAPI();
+        console.log('---- Dashboard: Streams loaded, count:', this.streams.length);
+        
+        console.log('---- Dashboard: Updating dashboard stats...');
         this.updateDashboardStats();
+        
+        console.log('---- Dashboard: Loading recent activity...');
         this.loadRecentActivity();
+        console.log('---- Dashboard: loadDashboard() completed');
     }
 
     updateDashboardStats() {
+        console.log('---- Dashboard: updateDashboardStats() called');
         // Update stats cards
         const totalUsersEl = document.getElementById('totalUsers');
         const totalStreamsEl = document.getElementById('totalStreams');
         const activeStreamsEl = document.getElementById('activeStreams');
         const storageUsedEl = document.getElementById('storageUsed');
         
-        if (totalUsersEl) totalUsersEl.textContent = this.users.length;
-        if (totalStreamsEl) totalStreamsEl.textContent = this.streams.length;
+        console.log('---- Dashboard: DOM elements found:', {
+            totalUsersEl: !!totalUsersEl,
+            totalStreamsEl: !!totalStreamsEl,
+            activeStreamsEl: !!activeStreamsEl,
+            storageUsedEl: !!storageUsedEl
+        });
+        
+        console.log('---- Dashboard: Data to display:', {
+            usersCount: this.users.length,
+            streamsCount: this.streams.length
+        });
+        
+        if (totalUsersEl) {
+            totalUsersEl.textContent = this.users.length;
+            console.log('---- Dashboard: Updated totalUsers to:', this.users.length);
+        }
+        if (totalStreamsEl) {
+            totalStreamsEl.textContent = this.streams.length;
+            console.log('---- Dashboard: Updated totalStreams to:', this.streams.length);
+        }
         
         // Calculate other stats
         const activeStreams = Array.isArray(this.streams) ? this.streams.filter(s => s.is_live).length : 0;
-        if (activeStreamsEl) activeStreamsEl.textContent = activeStreams;
+        if (activeStreamsEl) {
+            activeStreamsEl.textContent = activeStreams;
+            console.log('---- Dashboard: Updated activeStreams to:', activeStreams);
+        }
         
         // Storage usage (placeholder)
-        if (storageUsedEl) storageUsedEl.textContent = '0 GB';
+        if (storageUsedEl) {
+            storageUsedEl.textContent = '0 GB';
+            console.log('---- Dashboard: Updated storageUsed to: 0 GB');
+        }
+        
+        console.log('---- Dashboard: updateDashboardStats() completed');
     }
 
     loadRecentActivity() {
@@ -961,7 +1029,10 @@ class AdminPanel {
         `).join('');
     }
 
-    loadSettings() {
+    async loadSettings() {
+        // Load settings data first
+        await this.loadSettingsFromAPI();
+        
         // Populate settings form
         const form = document.getElementById('settingsForm');
         if (!form) return;
@@ -1028,11 +1099,10 @@ class AdminPanel {
         }
     }
 
-    loadLogos() {
-        // Reload logos from API
-        this.loadLogosFromAPI().then(() => {
-            this.renderLogos();
-        });
+    async loadLogos() {
+        // Load logos from API
+        await this.loadLogosFromAPI();
+        this.renderLogos();
     }
 
     renderLogos() {
@@ -1664,7 +1734,5 @@ class AdminPanel {
     }
 }
 
-// Initialize admin panel when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    window.adminPanel = new AdminPanel();
-});
+// Export AdminPanel as AdminManager for SPA compatibility
+window.AdminManager = AdminPanel;

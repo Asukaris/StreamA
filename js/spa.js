@@ -2,6 +2,8 @@
  * Single Page Application (SPA) Manager
  * Handles automatic JS loading, consistent header/footer, and dynamic content loading
  */
+console.log('[DEBUG] spa.js file loaded and executing');
+
 class SPAManager {
     constructor() {
         console.log('SPAManager constructor called');
@@ -27,7 +29,15 @@ class SPAManager {
             'api': { content: 'api.html', js: ['js/app.js', 'js/api.js'], css: ['css/api.css'] },
             'privacy': { content: 'privacy.html', js: ['js/app.js'], css: ['css/legal.css'] },
             'imprint': { content: 'imprint.html', js: ['js/app.js'], css: ['css/legal.css'] },
-            'admin': { content: 'admin.html', js: ['js/app.js', 'js/admin.js'], css: ['css/admin.css'] }
+            'admin': { content: 'admin.html', js: ['js/app.js', 'js/admin.js'], css: ['css/admin.css'], adminTab: 'dashboard' },
+            // Admin sub-pages - all use the same admin.html content but with different tabs
+            'dashboard': { content: 'admin.html', js: ['js/app.js', 'js/admin.js'], css: ['css/admin.css'], adminTab: 'dashboard' },
+            'users': { content: 'admin.html', js: ['js/app.js', 'js/admin.js'], css: ['css/admin.css'], adminTab: 'users' },
+            'upload': { content: 'admin.html', js: ['js/app.js', 'js/admin.js'], css: ['css/admin.css'], adminTab: 'upload' },
+            'archive': { content: 'admin.html', js: ['js/app.js', 'js/admin.js'], css: ['css/admin.css'], adminTab: 'archive' },
+            'logos': { content: 'admin.html', js: ['js/app.js', 'js/admin.js'], css: ['css/admin.css'], adminTab: 'logos' },
+            'data-management': { content: 'admin.html', js: ['js/app.js', 'js/admin.js'], css: ['css/admin.css'], adminTab: 'data-management' },
+            'settings': { content: 'admin.html', js: ['js/app.js', 'js/admin.js'], css: ['css/admin.css'], adminTab: 'settings' }
         };
         
         console.log('Routes defined:', this.routes);
@@ -89,11 +99,13 @@ class SPAManager {
         // Check if script is already loaded in DOM
         const existingScript = document.querySelector(`script[src="${src}"]`);
         if (existingScript) {
+            console.log(`Script already exists in DOM: ${src}`);
             return Promise.resolve();
         }
         
         // Also check instance cache for this session
         if (this.loadedScripts.has(src)) {
+            console.log(`Script already in cache: ${src}`);
             return Promise.resolve();
         }
         
@@ -104,6 +116,12 @@ class SPAManager {
             script.src = src;
             script.onload = () => {
                 console.log(`Successfully loaded script: ${src}`);
+                if (src.includes('streams.js')) {
+                    console.log('[DEBUG] streams.js loaded, StreamsManager available:', typeof window.StreamsManager);
+                }
+                if (src.includes('stream.js')) {
+                    console.log('[DEBUG] stream.js loaded, StreamPage available:', typeof window.StreamPage);
+                }
                 this.loadedScripts.add(src);
                 resolve();
             };
@@ -230,7 +248,11 @@ class SPAManager {
         const hash = window.location.hash.replace('#', '');
         console.log('Hash from URL:', hash);
         if (hash) {
-            return hash;
+            // Extract page name from hash (before any query parameters)
+            const hashParts = hash.split('?');
+            const pageName = hashParts[0];
+            console.log('Extracted page name from hash:', pageName);
+            return pageName;
         }
         
         // Check for query parameter
@@ -250,9 +272,25 @@ class SPAManager {
         const page = targetPage || this.getCurrentPageFromURL();
         console.log('handlePageLoad called for page:', page, 'current page:', this.currentPage);
         
+        // Check if both current and target pages are admin-related
+        const adminPages = ['admin', 'users', 'upload', 'archive', 'logos', 'data-management', 'settings'];
+        const isCurrentAdmin = adminPages.includes(this.currentPage);
+        const isTargetAdmin = adminPages.includes(page);
+        
         if (this.currentPage === page) {
             console.log('Already on this page, skipping');
             return; // Already on this page
+        }
+        
+        // If switching between admin tabs, just activate the tab without reloading
+        if (isCurrentAdmin && isTargetAdmin) {
+            console.log('Switching between admin tabs, activating tab without reload');
+            this.currentPage = page;
+            const route = this.routes[page];
+            if (route && route.adminTab) {
+                this.activateAdminTab(route.adminTab);
+            }
+            return;
         }
         
         // Load page-specific resources
@@ -361,17 +399,76 @@ class SPAManager {
                 }
                 break;
             case 'stream':
-                // Initialize HLS player for stream page
-                if (window.HLSPlayer && typeof window.initializeMainPlayer === 'function') {
-                    console.log('Initializing HLS player for stream page');
-                    // Add small delay to ensure DOM is ready
-                    setTimeout(() => {
-                        window.initializeMainPlayer();
-                    }, 100);
-                }
+                // Initialize StreamPage for individual stream page
+                console.log('[DEBUG] Stream case reached, StreamPage available:', typeof window.StreamPage);
+                
+                // Wait for StreamPage class to be available first
+                let streamPageRetries = 0;
+                const maxStreamPageRetries = 50; // 5 seconds max
+                
+                const waitForStreamPage = () => {
+                    if (window.StreamPage) {
+                        console.log('[DEBUG] StreamPage class available, initializing for stream page');
+                        // Wait for HLSPlayer to be available before initializing StreamPage
+                        let playerRetries = 0;
+                        const maxPlayerRetries = 50; // 5 seconds max
+                        
+                        const waitForPlayer = () => {
+                            if (window.HLSPlayer) {
+                                console.log('[DEBUG] HLSPlayer available, initializing StreamPage');
+                                if (!window.streamPageInstance) {
+                                    console.log('[DEBUG] Creating new StreamPage instance');
+                                    window.streamPageInstance = new StreamPage();
+                                } else {
+                                    console.log('[DEBUG] StreamPage already exists, reinitializing');
+                                    window.streamPageInstance.init();
+                                }
+                            } else {
+                                playerRetries++;
+                                if (playerRetries < maxPlayerRetries) {
+                                    console.log(`[DEBUG] HLSPlayer not yet available, retrying in 100ms (${playerRetries}/${maxPlayerRetries})`);
+                                    setTimeout(waitForPlayer, 100);
+                                } else {
+                                    console.error('[DEBUG] HLSPlayer failed to load after maximum retries');
+                                }
+                            }
+                        };
+                        // Add small delay to ensure DOM is ready, then wait for player
+                        setTimeout(waitForPlayer, 100);
+                    } else {
+                        streamPageRetries++;
+                        if (streamPageRetries < maxStreamPageRetries) {
+                            console.log(`[DEBUG] StreamPage class not yet available, retrying in 100ms (${streamPageRetries}/${maxStreamPageRetries})`);
+                            setTimeout(waitForStreamPage, 100);
+                        } else {
+                            console.error('[DEBUG] StreamPage class failed to load after maximum retries. Check if stream.js is loading properly.');
+                        }
+                    }
+                };
+                
+                // Start waiting for StreamPage class
+                waitForStreamPage();
                 break;
             case 'streams':
-                // StreamArchiveApp handles streams functionality
+                // Initialize StreamsManager for streams page
+                console.log('[DEBUG] Streams case reached, StreamsManager available:', typeof window.StreamsManager);
+                if (window.StreamsManager) {
+                    console.log('[DEBUG] Initializing StreamsManager for streams page');
+                    // Add small delay to ensure DOM is ready
+                    setTimeout(() => {
+                        console.log('[DEBUG] StreamsManager timeout reached, existing manager:', !!window.streamsManager);
+                        if (!window.streamsManager) {
+                            console.log('[DEBUG] Creating new StreamsManager instance');
+                            window.streamsManager = new StreamsManager();
+                        } else {
+                            console.log('[DEBUG] StreamsManager already exists, reinitializing...');
+                            // Reinitialize the existing manager to refresh the streams
+                            window.streamsManager.init();
+                        }
+                    }, 100);
+                } else {
+                    console.error('[DEBUG] StreamsManager class not available!');
+                }
                 break;
             case 'analytics':
                 if (window.AnalyticsManager) {
@@ -379,8 +476,33 @@ class SPAManager {
                 }
                 break;
             case 'admin':
+            case 'users':
+            case 'upload':
+            case 'archive':
+            case 'logos':
+            case 'data-management':
+            case 'settings':
                 if (window.AdminManager) {
-                    new AdminManager();
+                    // Only create new AdminManager if one doesn't exist
+                    if (!window.adminManagerInstance) {
+                        const adminManager = new AdminManager();
+                        window.adminManagerInstance = adminManager;
+                        // Also assign to adminPanel for onclick compatibility
+                        window.adminPanel = adminManager;
+                    }
+                    // If it's an admin sub-page, activate the specific tab
+                    const route = this.routes[page];
+                    if (route && route.adminTab) {
+                        // If admin panel already exists, activate tab immediately
+                        if (window.adminManagerInstance) {
+                            this.activateAdminTab(route.adminTab);
+                        } else {
+                            // Wait for admin panel to initialize, then activate the tab
+                            setTimeout(() => {
+                                this.activateAdminTab(route.adminTab);
+                            }, 200);
+                        }
+                    }
                 }
                 break;
             case 'api':
@@ -398,6 +520,88 @@ class SPAManager {
             window.appInstance = new StreamArchiveApp();
         } else {
             console.log('StreamArchiveApp not initialized - StreamArchiveApp:', !!window.StreamArchiveApp, 'appInstance:', !!window.appInstance);
+        }
+    }
+
+    activateAdminTab(tabId) {
+        console.log('---- SPA: Activating admin tab:', tabId);
+        
+        // Remove active class from all menu items and tab contents
+        const menuItems = document.querySelectorAll('.menu-item');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        console.log('---- SPA: Found menu items:', menuItems.length, 'tab contents:', tabContents.length);
+        
+        menuItems.forEach(item => item.classList.remove('active'));
+        tabContents.forEach(content => content.classList.remove('active'));
+        
+        // Add active class to the correct menu item and tab content
+        const menuItem = document.querySelector(`[data-tab="${tabId}"]`);
+        const tabContent = document.getElementById(tabId);
+        
+        console.log('---- SPA: Target elements found:', {
+            menuItem: !!menuItem,
+            tabContent: !!tabContent
+        });
+        
+        if (menuItem) {
+            menuItem.classList.add('active');
+        }
+        if (tabContent) {
+            tabContent.classList.add('active');
+        }
+        
+        // Trigger the admin panel's tab loading logic
+        console.log('---- SPA: adminManagerInstance exists:', !!window.adminManagerInstance);
+        if (window.adminManagerInstance) {
+            console.log('---- SPA: Current tab:', window.adminManagerInstance.currentTab, 'Target tab:', tabId);
+        }
+        
+        if (window.adminManagerInstance) {
+            window.adminManagerInstance.currentTab = tabId;
+            
+            // Load tab-specific data
+            switch(tabId) {
+                case 'dashboard':
+                    console.log('---- SPA: Checking if loadDashboard function exists:', typeof window.adminManagerInstance.loadDashboard);
+                    if (typeof window.adminManagerInstance.loadDashboard === 'function') {
+                        console.log('---- SPA: Calling loadDashboard()');
+                        window.adminManagerInstance.loadDashboard();
+                    } else {
+                        console.log('---- SPA: loadDashboard function not found!');
+                    }
+                    break;
+                case 'users':
+                    if (typeof window.adminManagerInstance.loadUsers === 'function') {
+                        window.adminManagerInstance.loadUsers();
+                    }
+                    break;
+                case 'archive':
+                    if (typeof window.adminManagerInstance.loadArchive === 'function') {
+                        window.adminManagerInstance.loadArchive();
+                    }
+                    break;
+                case 'upload':
+                    if (typeof window.adminManagerInstance.loadUpload === 'function') {
+                        window.adminManagerInstance.loadUpload();
+                    }
+                    break;
+                case 'logos':
+                    if (typeof window.adminManagerInstance.loadLogos === 'function') {
+                        window.adminManagerInstance.loadLogos();
+                    }
+                    break;
+                case 'data-management':
+                    if (typeof window.adminManagerInstance.loadDataManagement === 'function') {
+                        window.adminManagerInstance.loadDataManagement();
+                    }
+                    break;
+                case 'settings':
+                    if (typeof window.adminManagerInstance.loadSettings === 'function') {
+                        window.adminManagerInstance.loadSettings();
+                    }
+                    break;
+            }
         }
     }
     

@@ -16,12 +16,26 @@ class StreamPage {
     }
     
     getStreamIdFromUrl() {
+        // First try to get ID from URL search parameters
         const urlParams = new URLSearchParams(window.location.search);
         this.streamId = urlParams.get('id');
         
+        // If not found in search params, try to get from hash
         if (!this.streamId) {
-            // Redirect to streams page if no ID provided
-            window.location.href = 'streams.html';
+            const hash = window.location.hash.replace('#', '');
+            if (hash.includes('?')) {
+                const hashParams = new URLSearchParams(hash.split('?')[1]);
+                this.streamId = hashParams.get('id');
+            }
+        }
+        
+        if (!this.streamId) {
+            // Use SPA navigation if available, otherwise redirect
+            if (window.SPAManager) {
+                window.location.hash = 'streams';
+            } else {
+                window.location.href = 'streams.html';
+            }
             return;
         }
     }
@@ -509,6 +523,9 @@ class StreamPage {
 }
 
 // Initialize stream page when DOM is loaded
+// Make StreamPage class available globally
+window.StreamPage = StreamPage;
+
 document.addEventListener('DOMContentLoaded', () => {
     window.streamPage = new StreamPage();
     

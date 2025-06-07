@@ -1,6 +1,9 @@
-// Streams Page JavaScript
+// StreamsManager class for handling the streams page functionality
+console.log('[STREAMS] streams.js file loaded and executing');
+
 class StreamsManager {
     constructor() {
+        console.log('[STREAMS] StreamsManager constructor called');
         this.streams = [];
         this.filteredStreams = [];
         this.currentPage = 1;
@@ -15,13 +18,16 @@ class StreamsManager {
             tags: []
         };
         
+        console.log('[STREAMS] Starting initialization');
         this.init();
     }
     
     async init() {
+        console.log('[STREAMS] Init method called');
         await this.loadMockStreams();
         this.setupEventListeners();
         this.renderStreams();
+        console.log('[STREAMS] Initialization completed');
     }
     
     setupEventListeners() {
@@ -155,21 +161,51 @@ class StreamsManager {
     
     async loadMockStreams() {
         try {
+            console.log('[STREAMS] Starting to load streams from API');
             // Load streams from API
             const response = await fetch(`${CONFIG.getApiBase()}/streams`);
+            console.log('[STREAMS] API response status:', response.status);
             if (response.ok) {
                 const data = await response.json();
+                console.log('[STREAMS] API response data:', data);
                 this.streams = data.data?.streams || [];
+                console.log('[STREAMS] Loaded streams count:', this.streams.length);
+                console.log('[STREAMS] First stream data:', this.streams[0]);
             } else {
-                console.error('Failed to load streams:', response.statusText);
+                console.error('[STREAMS] Failed to load streams:', response.statusText);
                 this.streams = [];
             }
         } catch (error) {
-            console.error('Error loading streams:', error);
-            this.streams = [];
+            console.error('[STREAMS] Error loading streams:', error);
+            console.log('[STREAMS] Using mock data as fallback');
+            // Use mock data as fallback
+            this.streams = [
+                {
+                    id: 1,
+                    title: "Test Stream 1",
+                    description: "Ein Test-Stream für die Entwicklung",
+                    game: "Test Game",
+                    duration: 3600,
+                    created_at: "2024-01-15T10:00:00Z",
+                    thumbnail: "https://via.placeholder.com/320x180",
+                    tags: ["test", "development"]
+                },
+                {
+                    id: 2,
+                    title: "Test Stream 2",
+                    description: "Noch ein Test-Stream",
+                    game: "Another Game",
+                    duration: 7200,
+                    created_at: "2024-01-16T14:30:00Z",
+                    thumbnail: "https://via.placeholder.com/320x180",
+                    tags: ["test", "gaming"]
+                }
+            ];
+            console.log('[STREAMS] Mock data loaded, streams count:', this.streams.length);
         }
         
         this.filteredStreams = [...this.streams];
+        console.log('[STREAMS] Filtered streams count:', this.filteredStreams.length);
     }
     
     applyFilters() {
@@ -295,11 +331,21 @@ class StreamsManager {
     }
     
     renderStreams() {
+        console.log('[STREAMS] Starting renderStreams function');
         const grid = document.getElementById('streamsGrid');
         const pagination = document.getElementById('pagination');
         const emptyState = document.getElementById('emptyState');
         
-        if (!grid) return;
+        console.log('[STREAMS] DOM elements found:', {
+            grid: !!grid,
+            pagination: !!pagination,
+            emptyState: !!emptyState
+        });
+        
+        if (!grid) {
+            console.error('[STREAMS] streamsGrid element not found!');
+            return;
+        }
         
         // Calculate pagination
         const startIndex = (this.currentPage - 1) * this.streamsPerPage;
@@ -307,26 +353,41 @@ class StreamsManager {
         const paginatedStreams = this.filteredStreams.slice(startIndex, endIndex);
         const totalPages = Math.ceil(this.filteredStreams.length / this.streamsPerPage);
         
+        console.log('[STREAMS] Pagination info:', {
+            filteredStreamsCount: this.filteredStreams.length,
+            currentPage: this.currentPage,
+            streamsPerPage: this.streamsPerPage,
+            paginatedStreamsCount: paginatedStreams.length,
+            totalPages: totalPages
+        });
+        
         // Show/hide empty state
         if (this.filteredStreams.length === 0) {
+            console.log('[STREAMS] No streams to display, showing empty state');
             grid.style.display = 'none';
-            pagination.style.display = 'none';
-            emptyState.style.display = 'block';
+            if (pagination) pagination.style.display = 'none';
+            if (emptyState) emptyState.style.display = 'block';
             return;
         } else {
+            console.log('[STREAMS] Displaying streams grid');
             grid.style.display = 'grid';
-            pagination.style.display = 'flex';
-            emptyState.style.display = 'none';
+            if (pagination) pagination.style.display = 'flex';
+            if (emptyState) emptyState.style.display = 'none';
         }
         
         // Render stream cards
-        grid.innerHTML = paginatedStreams.map(stream => this.createStreamCard(stream)).join('');
+        console.log('[STREAMS] Creating stream cards for', paginatedStreams.length, 'streams');
+        const cardsHTML = paginatedStreams.map(stream => this.createStreamCard(stream)).join('');
+        console.log('[STREAMS] Generated HTML length:', cardsHTML.length);
+        grid.innerHTML = cardsHTML;
+        console.log('[STREAMS] Grid innerHTML updated');
         
         // Update pagination
         this.updatePagination(totalPages);
         
         // Add click listeners to stream cards
         this.addStreamCardListeners();
+        console.log('[STREAMS] renderStreams function completed');
     }
     
     createStreamCard(stream) {
@@ -450,8 +511,14 @@ class StreamsManager {
     }
     
     openStream(streamId) {
-        // Navigate to individual stream page
-        window.location.href = `stream.html?id=${streamId}`;
+        // Navigate to individual stream page using SPA navigation
+        if (window.SPAManager) {
+            // Use SPA navigation with hash-based routing
+            window.location.hash = `stream?id=${streamId}`;
+        } else {
+            // Fallback to direct navigation
+            window.location.href = `stream.html?id=${streamId}`;
+        }
     }
     
     toggleFavorite(button) {
@@ -554,7 +621,15 @@ class StreamsManager {
     }
 }
 
-// Initialize streams manager when DOM is loaded
+// Make StreamsManager available globally
+window.StreamsManager = StreamsManager;
+console.log('[STREAMS] StreamsManager class assigned to window object');
+
+// Initialize streams manager when DOM is loaded (for direct page access)
+// SPA navigation will initialize via spa.js initializePageFunctionality
 document.addEventListener('DOMContentLoaded', () => {
-    window.streamsManager = new StreamsManager();
+    // Only initialize if not already initialized by SPA
+    if (!window.streamsManager) {
+        window.streamsManager = new StreamsManager();
+    }
 });

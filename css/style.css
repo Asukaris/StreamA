@@ -254,6 +254,11 @@ body {
     margin-bottom: 2rem;
 }
 
+.player-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
 .video-section {
     position: relative;
 }

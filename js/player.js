@@ -702,13 +702,19 @@ function initializeMainPlayer() {
     }
 }
 
-// Initialize player when DOM is loaded
-document.addEventListener('DOMContentLoaded', initializeMainPlayer);
-
-// Also try to initialize immediately (for SPA dynamic loading)
-setTimeout(initializeMainPlayer, 100);
-setTimeout(initializeMainPlayer, 500);
-setTimeout(initializeMainPlayer, 1000);
+// Initialize player when DOM is loaded (only for home page)
+// Note: Stream page uses StreamPage class to manage its own player
+// Don't initialize on app.html (SPA) as it has its own page management
+if (!window.location.pathname.includes('app.html') && 
+    (window.location.pathname.includes('index.html') || window.location.pathname.endsWith('/') || 
+     (window.location.hash.startsWith('#home') || window.location.hash === ''))) {
+    document.addEventListener('DOMContentLoaded', initializeMainPlayer);
+    
+    // Also try to initialize immediately (for SPA dynamic loading)
+    setTimeout(initializeMainPlayer, 100);
+    setTimeout(initializeMainPlayer, 500);
+    setTimeout(initializeMainPlayer, 1000);
+}
 
 // Add CSS for chapter notification animation
 const style = document.createElement('style');
