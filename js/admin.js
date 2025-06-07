@@ -501,7 +501,7 @@ class AdminPanel {
         archiveTableBody.innerHTML = this.streams.map(stream => `
             <tr data-stream-id="${stream.id}">
                 <td>
-                     <img src="${stream.thumbnail_url || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjYwIiB2aWV3Qm94PSIwIDAgMTAwIDYwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iNjAiIGZpbGw9IiNmMGYwZjAiLz48dGV4dCB4PSI1MCIgeT0iMzUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Tm8gSW1hZ2U8L3RleHQ+PC9zdmc+'}" alt="${stream.title}" class="archive-thumbnail">
+                     <img src="${stream.thumbnail_url ? (window.CONFIG ? window.CONFIG.getBasePath() + stream.thumbnail_url : stream.thumbnail_url) : (window.CONFIG ? window.CONFIG.getBasePath() + 'css/placeholder-thumbnail.svg' : 'css/placeholder-thumbnail.svg')}" alt="${stream.title}" class="archive-thumbnail">
                  </td>
                 <td>
                     <div class="stream-title">${stream.title}</div>
@@ -558,7 +558,7 @@ class AdminPanel {
         streamsList.innerHTML = streams.map(stream => `
             <div class="stream-item" data-stream-id="${stream.id}">
                 <div class="stream-thumbnail">
-                    <img src="${stream.thumbnail_url || '/images/default-thumbnail.jpg'}" alt="${stream.title}" onerror="this.src='/images/default-thumbnail.jpg'">
+                    <img src="${stream.thumbnail_url ? (window.CONFIG ? window.CONFIG.getBasePath() + stream.thumbnail_url : stream.thumbnail_url) : (window.CONFIG ? window.CONFIG.getBasePath() + 'css/placeholder-thumbnail.svg' : 'css/placeholder-thumbnail.svg')}" alt="${stream.title}" onerror="this.src='${window.CONFIG ? window.CONFIG.getBasePath() + 'css/placeholder-thumbnail.svg' : 'css/placeholder-thumbnail.svg'}'">
                 </div>
                 <div class="stream-info">
                     <h4>${stream.title}</h4>
@@ -613,11 +613,12 @@ class AdminPanel {
 
         // Set current thumbnail
         const thumbnailImg = document.getElementById('currentThumbnail');
+        const basePath = window.CONFIG ? window.CONFIG.getBasePath() : '/';
         if (stream.thumbnail_url) {
-            thumbnailImg.src = stream.thumbnail_url;
+            thumbnailImg.src = basePath + stream.thumbnail_url;
             thumbnailImg.style.display = 'block';
         } else {
-            thumbnailImg.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiNmMGYwZjAiLz48dGV4dCB4PSIxMDAiIHk9IjY1IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiPktlaW4gQmlsZDwvdGV4dD48L3N2Zz4=';
+            thumbnailImg.src = basePath + 'css/placeholder-thumbnail.svg';
             thumbnailImg.style.display = 'block';
         }
 

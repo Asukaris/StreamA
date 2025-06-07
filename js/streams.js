@@ -18,8 +18,8 @@ class StreamsManager {
         this.init();
     }
     
-    init() {
-        this.loadMockStreams();
+    async init() {
+        await this.loadMockStreams();
         this.setupEventListeners();
         this.renderStreams();
     }
@@ -153,9 +153,22 @@ class StreamsManager {
         }
     }
     
-    loadMockStreams() {
-        // Load streams from localStorage or initialize empty array
-        this.streams = JSON.parse(localStorage.getItem('streamArchive_streams') || '[]');
+    async loadMockStreams() {
+        try {
+            // Load streams from API
+            const response = await fetch(`${CONFIG.getApiBase()}/streams`);
+            if (response.ok) {
+                const data = await response.json();
+                this.streams = data.data?.streams || [];
+            } else {
+                console.error('Failed to load streams:', response.statusText);
+                this.streams = [];
+            }
+        } catch (error) {
+            console.error('Error loading streams:', error);
+            this.streams = [];
+        }
+        
         this.filteredStreams = [...this.streams];
     }
     
@@ -164,11 +177,12 @@ class StreamsManager {
             // Search filter
             if (this.filters.search) {
                 const searchTerm = this.filters.search.toLowerCase();
+                const tags = Array.isArray(stream.tags) ? stream.tags : (stream.tags ? stream.tags.split(',') : []);
                 const matchesSearch = 
-                    stream.title.toLowerCase().includes(searchTerm) ||
-                    stream.description.toLowerCase().includes(searchTerm) ||
-                    stream.game.toLowerCase().includes(searchTerm) ||
-                    stream.tags.some(tag => tag.toLowerCase().includes(searchTerm));
+                    (stream.title || '').toLowerCase().includes(searchTerm) ||
+                    (stream.description || '').toLowerCase().includes(searchTerm) ||
+                    (stream.game || '').toLowerCase().includes(searchTerm) ||
+                    tags.some(tag => tag.toLowerCase().includes(searchTerm));
                 
                 if (!matchesSearch) return false;
             }
@@ -180,12 +194,12 @@ class StreamsManager {
             
             // Date filters
             if (this.filters.dateFrom) {
-                const streamDate = new Date(stream.createdAt).toISOString().split('T')[0];
+                const streamDate = new Date(stream.created_at || stream.createdAt).toISOString().split('T')[0];
                 if (streamDate < this.filters.dateFrom) return false;
             }
             
             if (this.filters.dateTo) {
-                const streamDate = new Date(stream.createdAt).toISOString().split('T')[0];
+                const streamDate = new Date(stream.created_at || stream.createdAt).toISOString().split('T')[0];
                 if (streamDate > this.filters.dateTo) return false;
             }
             
@@ -207,8 +221,9 @@ class StreamsManager {
             
             // Tags filter
             if (this.filters.tags.length > 0) {
+                const tags = Array.isArray(stream.tags) ? stream.tags : (stream.tags ? stream.tags.split(',') : []);
                 const hasMatchingTag = this.filters.tags.some(tag => 
-                    stream.tags.includes(tag)
+                    tags.includes(tag)
                 );
                 if (!hasMatchingTag) return false;
             }
@@ -229,16 +244,16 @@ class StreamsManager {
     sortStreams() {
         switch (this.filters.sort) {
             case 'newest':
-                this.filteredStreams.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                this.filteredStreams.sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt));
                 break;
             case 'oldest':
-                this.filteredStreams.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                this.filteredStreams.sort((a, b) => new Date(a.created_at || a.createdAt) - new Date(b.created_at || b.createdAt));
                 break;
             case 'duration':
-                this.filteredStreams.sort((a, b) => b.duration - a.duration);
+                this.filteredStreams.sort((a, b) => (b.duration || 0) - (a.duration || 0));
                 break;
             case 'views':
-                this.filteredStreams.sort((a, b) => b.viewCount - a.viewCount);
+                this.filteredStreams.sort((a, b) => (b.view_count || b.viewCount || 0) - (a.view_count || a.viewCount || 0));
                 break;
         }
     }
@@ -315,53 +330,67 @@ class StreamsManager {
     }
     
     createStreamCard(stream) {
-        const duration = this.formatDuration(stream.duration);
-        const date = this.formatDate(stream.createdAt);
-        const progressPercent = Math.round(stream.progress * 100);
+        const duration = this.formatDuration(stream.duration || 0);
+        const date = this.formatDate(stream.created_at || stream.createdAt);
+        const progressPercent = Math.round((stream.progress || 0) * 100);
+        
+        // Use thumbnail_url from database with base path or fallback to placeholder
+        const basePath = window.CONFIG ? window.CONFIG.getBasePath() : '/';
+        const thumbnailUrl = stream.thumbnail_url ? `${basePath}${stream.thumbnail_url}` : `${basePath}css/placeholder-thumbnail.svg`;
         
         return `
             <div class="stream-card" data-stream-id="${stream.id}">
                 <div class="stream-thumbnail">
-                    <img src="${stream.thumbnail}" alt="${stream.title}" loading="lazy">
-                    <div class="stream-duration">${duration}</div>
+                    <img src="${thumbnailUrl}" alt="${stream.title}" loading="lazy" onerror="this.src='${basePath}css/placeholder-thumbnail.svg'">
+                    <div class="stream-duration">
+                        <i class="fas fa-clock"></i>
+                        ${duration}
+                    </div>
+                    ${stream.is_live ? '<div class="stream-live-badge"><i class="fas fa-circle"></i> LIVE</div>' : ''}
                 </div>
                 
                 <div class="stream-info">
-                    <h3 class="stream-title">${stream.title}</h3>
-                    <div class="stream-game">${stream.game}</div>
-                    
-                    <div class="stream-meta">
-                        <div class="stream-date">
-                            <i class="fas fa-calendar"></i>
-                            ${date}
-                        </div>
-                        <div class="stream-views">
-                            <i class="fas fa-eye"></i>
-                            ${stream.viewCount}
-                        </div>
-                    </div>
-                    
-                    <div class="stream-tags">
-                        ${stream.tags.map(tag => `<span class="stream-tag">${tag}</span>`).join('')}
+                    <div class="stream-header">
+                        <h3 class="stream-title">${stream.title}</h3>
                     </div>
                     
                     <div class="stream-description">
-                        ${stream.description}
+                        ${stream.description || 'Keine Beschreibung verfügbar'}
                     </div>
                     
-                    <div class="stream-actions">
-                        <div class="stream-progress-container">
-                            <div class="stream-progress" title="${progressPercent}% angesehen">
-                                <div class="stream-progress-bar" style="width: ${progressPercent}%"></div>
+                    <div class="stream-footer">
+                        <div class="stream-meta">
+                            <div class="stream-date">
+                                <i class="fas fa-calendar-alt"></i>
+                                ${date}
                             </div>
-                            <span class="stream-progress-text">${progressPercent}%</span>
+                            <div class="stream-views">
+                                <i class="fas fa-eye"></i>
+                                ${this.formatViews(stream.viewer_count || 0)}
+                            </div>
                         </div>
-                        <button class="stream-action-btn" title="Zu Favoriten hinzufügen">
-                            <i class="fas fa-heart"></i>
-                        </button>
-                        <button class="stream-action-btn" title="Teilen">
-                            <i class="fas fa-share"></i>
-                        </button>
+                        
+                        <div class="stream-actions">
+                            <button class="stream-btn primary play-btn" title="Stream ansehen">
+                                <i class="fas fa-play"></i>
+                                Ansehen
+                            </button>
+                            <button class="stream-btn favorite-btn" title="Zu Favoriten hinzufügen">
+                                <i class="far fa-heart"></i>
+                            </button>
+                            <button class="stream-btn share-btn" title="Teilen">
+                                <i class="fas fa-share-alt"></i>
+                            </button>
+                        </div>
+                        
+                        ${progressPercent > 0 ? `
+                            <div class="stream-progress">
+                                <div class="stream-progress-bar">
+                                    <div class="stream-progress-fill" style="width: ${progressPercent}%"></div>
+                                </div>
+                                <div class="stream-progress-text">${progressPercent}% angesehen</div>
+                            </div>
+                        ` : ''}
                     </div>
                 </div>
             </div>
@@ -492,10 +521,12 @@ class StreamsManager {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
     
-    formatDuration(seconds) {
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        const secs = seconds % 60;
+    formatDuration(milliseconds) {
+        // Convert milliseconds to seconds
+        const totalSeconds = Math.floor(milliseconds / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const secs = totalSeconds % 60;
         
         if (hours > 0) {
             return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -511,6 +542,15 @@ class StreamsManager {
             month: 'short',
             day: 'numeric'
         });
+    }
+    
+    formatViews(views) {
+        if (views >= 1000000) {
+            return (views / 1000000).toFixed(1) + 'M';
+        } else if (views >= 1000) {
+            return (views / 1000).toFixed(1) + 'K';
+        }
+        return views.toString();
     }
 }
 

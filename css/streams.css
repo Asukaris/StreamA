@@ -1,3 +1,13 @@
+/* Additional CSS variables for streams page */
+:root {
+    --accent-color-alpha: rgba(145, 70, 255, 0.1);
+    --accent-color-dark: #772ce8;
+    --accent-color-rgb: 145, 70, 255;
+    --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.15);
+    --shadow-heavy: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
 /* Streams Page Styles */
 
 /* Page Header */
@@ -189,29 +199,31 @@
 
 .stream-card {
     background: var(--bg-secondary);
-    border-radius: 10px;
+    border-radius: 16px;
     overflow: hidden;
     border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     position: relative;
-    height: 320px;
+    height: auto;
+    min-height: 380px;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .stream-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transform: translateY(-6px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
     border-color: var(--accent-color);
 }
 
 .stream-thumbnail {
     position: relative;
     width: 100%;
-    height: 140px;
+    height: 180px;
     overflow: hidden;
-    background: var(--bg-tertiary);
+    background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
     flex-shrink: 0;
 }
 
@@ -219,23 +231,33 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.3s ease;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .stream-card:hover .stream-thumbnail img {
-    transform: scale(1.05);
+    transform: scale(1.08);
 }
 
 .stream-duration {
     position: absolute;
-    bottom: 0.5rem;
-    right: 0.5rem;
-    background: rgba(0, 0, 0, 0.8);
+    bottom: 0.75rem;
+    right: 0.75rem;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
     color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
+    padding: 0.4rem 0.7rem;
+    border-radius: 8px;
     font-size: 0.8rem;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.stream-duration i {
+    font-size: 0.7rem;
+    opacity: 0.9;
 }
 
 .stream-live-badge {
@@ -252,36 +274,70 @@
 }
 
 .stream-info {
-    padding: 0.75rem;
+    padding: 1rem;
     flex: 1;
     display: flex;
     flex-direction: column;
+    gap: 0.75rem;
+}
+
+.stream-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 .stream-title {
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 1.1rem;
+    font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 0.4rem;
-    line-height: 1.2;
+    line-height: 1.3;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    margin: 0;
 }
 
 .stream-game {
     color: var(--accent-color);
     font-size: 0.85rem;
-    font-weight: 500;
-    margin-bottom: 0.4rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--accent-color-alpha);
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    width: fit-content;
+}
+
+.stream-game i {
+    font-size: 0.8rem;
+}
+
+.stream-description {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+}
+
+.stream-footer {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
 .stream-meta {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.5rem;
     font-size: 0.8rem;
     color: var(--text-secondary);
 }
@@ -289,13 +345,14 @@
 .stream-date {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.4rem;
 }
 
 .stream-views {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.4rem;
+    font-weight: 500;
 }
 
 .stream-tags {
@@ -308,10 +365,138 @@
 .stream-tag {
     background: var(--bg-tertiary);
     color: var(--text-secondary);
-    padding: 0.2rem 0.4rem;
-    border-radius: 10px;
-    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
     font-weight: 500;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+
+.stream-tag:hover {
+    background: var(--accent-color-alpha);
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.stream-live-badge {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    background: linear-gradient(135deg, #ff4757, #ff3838);
+    color: white;
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4);
+    animation: pulse 2s infinite;
+}
+
+.stream-live-badge .live-dot {
+    width: 6px;
+    height: 6px;
+    background: white;
+    border-radius: 50%;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
+}
+
+.stream-progress {
+    margin-top: 0.5rem;
+}
+
+.stream-progress-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--bg-tertiary);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 0.3rem;
+}
+
+.stream-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-color), #4ecdc4);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+.stream-progress-text {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.stream-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.stream-actions-left {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.stream-actions-right {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.stream-btn {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.stream-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-color: var(--accent-color);
+    transform: translateY(-1px);
+}
+
+.stream-btn.primary {
+    background: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
+.stream-btn.primary:hover {
+    background: var(--accent-color-dark);
+    border-color: var(--accent-color-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(var(--accent-color-rgb), 0.3);
+}
+
+.stream-btn i {
+    font-size: 0.8rem;
 }
 
 .stream-description {

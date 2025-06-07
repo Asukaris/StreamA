@@ -15,8 +15,8 @@ class StreamsAPI {
     private $db;
     private $thumbnailHandler;
     
-    public function __construct($database) {
-        $this->database = $database;
+    public function __construct() {
+        $this->db = new Database();
         $this->thumbnailHandler = new ThumbnailHandler();
     }
     
@@ -28,37 +28,45 @@ class StreamsAPI {
             switch ($method) {
                 case 'GET':
                     if ($path === '' || $path === '/') {
-                        return $this->getStreams();
+                        echo $this->getStreams();
+                        return;
                     } elseif (preg_match('/^\/([0-9]+)$/', $path, $matches)) {
-                        return $this->getStream($matches[1]);
+                        echo $this->getStream($matches[1]);
+                        return;
                     } elseif ($path === '/favorites') {
-                        return $this->getFavorites();
+                        echo $this->getFavorites();
+                        return;
                     }
                     break;
                 case 'POST':
                     if ($path === '' || $path === '/') {
-                        return $this->createStream();
+                        echo $this->createStream();
+                        return;
                     } elseif (preg_match('/^\/([0-9]+)\/favorite$/', $path, $matches)) {
-                        return $this->addFavorite($matches[1]);
+                        echo $this->addFavorite($matches[1]);
+                        return;
                     }
                     break;
                 case 'PUT':
                     if (preg_match('/^\/([0-9]+)$/', $path, $matches)) {
-                        return $this->updateStream($matches[1]);
+                        echo $this->updateStream($matches[1]);
+                        return;
                     }
                     break;
                 case 'DELETE':
                     if (preg_match('/^\/([0-9]+)$/', $path, $matches)) {
-                        return $this->deleteStream($matches[1]);
+                        echo $this->deleteStream($matches[1]);
+                        return;
                     } elseif (preg_match('/^\/([0-9]+)\/favorite$/', $path, $matches)) {
-                        return $this->removeFavorite($matches[1]);
+                        echo $this->removeFavorite($matches[1]);
+                        return;
                     }
                     break;
             }
             
             throw new Exception('Endpoint not found', 404);
         } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage(), $e->getCode() ?: 500);
+            echo $this->errorResponse($e->getMessage(), $e->getCode() ?: 500);
         }
     }
     
@@ -87,7 +95,7 @@ class StreamsAPI {
         $params[] = $limit;
         $params[] = $offset;
         
-        $stmt = $this->database->query($sql, $params);
+        $stmt = $this->db->query($sql, $params);
         $streams = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // Get total count
@@ -106,7 +114,7 @@ class StreamsAPI {
             $countParams[] = $searchTerm;
         }
         
-        $countStmt = $this->database->query($countSql, $countParams);
+        $countStmt = $this->db->query($countSql, $countParams);
         $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
         
         return $this->successResponse([
@@ -121,7 +129,7 @@ class StreamsAPI {
     }
     
     private function getStream($id) {
-        $stmt = $this->database->query(
+        $stmt = $this->db->query(
             'SELECT * FROM streams WHERE id = ?',
             [$id]
         );
@@ -168,16 +176,16 @@ class StreamsAPI {
             throw new Exception('Title cannot be empty', 400);
         }
         
-        $stmt = $this->database->query(
+        $stmt = $this->db->query(
             'INSERT INTO streams (title, description, stream_url, thumbnail_url, category, game, tags, duration, is_live, viewer_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [$title, $description, $streamUrl, $thumbnailUrl, $category, $game, $tags, $duration, $isLive, $viewerCount]
         );
         
-        $streamId = $this->database->lastInsertId();
+        $streamId = $this->db->lastInsertId();
         
         // Save chat data if provided
         if ($chatData) {
-            $this->database->query(
+            $this->db->query(
                 'INSERT INTO chat_data (stream_id, json_content) VALUES (?, ?)',
                 [$streamId, $chatData]
             );
@@ -198,7 +206,7 @@ class StreamsAPI {
         }
         
         // Check if stream exists
-        $stmt = $this->database->query('SELECT id FROM streams WHERE id = ?', [$id]);
+        $stmt = $this->db->query('SELECT id FROM streams WHERE id = ?', [$id]);
         if (!$stmt->fetch()) {
             throw new Exception('Stream not found', 404);
         }
@@ -228,7 +236,7 @@ class StreamsAPI {
         if (isset($input['thumbnail_url'])) {
             // Get current thumbnail to delete it later
             $currentThumbnail = null;
-            $stmt = $this->database->query('SELECT thumbnail_url FROM streams WHERE id = ?', [$id]);
+            $stmt = $this->db->query('SELECT thumbnail_url FROM streams WHERE id = ?', [$id]);
             $stream = $stmt->fetch();
             if ($stream) {
                 $currentThumbnail = $stream['thumbnail_url'];
@@ -280,7 +288,7 @@ class StreamsAPI {
         $updates[] = 'updated_at = CURRENT_TIMESTAMP';
         $params[] = $id;
         
-        $this->database->query(
+        $this->db->query(
             'UPDATE streams SET ' . implode(', ', $updates) . ' WHERE id = ?',
             $params
         );
@@ -292,11 +300,11 @@ class StreamsAPI {
         $user = $this->getCurrentUser();
         
         // Get thumbnail URL before deleting the stream
-        $stmt = $this->database->query('SELECT thumbnail_url FROM streams WHERE id = ?', [$id]);
+        $stmt = $this->db->query('SELECT thumbnail_url FROM streams WHERE id = ?', [$id]);
         $stream = $stmt->fetch();
         
         // Delete the stream from database
-        $stmt = $this->database->query('DELETE FROM streams WHERE id = ?', [$id]);
+        $stmt = $this->db->query('DELETE FROM streams WHERE id = ?', [$id]);
         
         // Delete thumbnail file if it exists
         if ($stream && !empty($stream['thumbnail_url'])) {
@@ -309,7 +317,7 @@ class StreamsAPI {
     private function getFavorites() {
         $user = $this->getCurrentUser();
         
-        $stmt = $this->database->query(
+        $stmt = $this->db->query(
             'SELECT s.* FROM streams s 
              JOIN favorites f ON s.id = f.stream_id 
              WHERE f.user_id = ? 
@@ -326,13 +334,13 @@ class StreamsAPI {
         $user = $this->getCurrentUser();
         
         // Check if stream exists
-        $stmt = $this->database->query('SELECT id FROM streams WHERE id = ?', [$streamId]);
+        $stmt = $this->db->query('SELECT id FROM streams WHERE id = ?', [$streamId]);
         if (!$stmt->fetch()) {
             throw new Exception('Stream not found', 404);
         }
         
         try {
-            $this->database->query(
+            $this->db->query(
                 'INSERT INTO favorites (user_id, stream_id) VALUES (?, ?)',
                 [$user['id'], $streamId]
             );
@@ -349,7 +357,7 @@ class StreamsAPI {
     private function removeFavorite($streamId) {
         $user = $this->getCurrentUser();
         
-        $this->database->query(
+        $this->db->query(
             'DELETE FROM favorites WHERE user_id = ? AND stream_id = ?',
             [$user['id'], $streamId]
         );
@@ -364,7 +372,7 @@ class StreamsAPI {
             throw new Exception('No session token provided', 401);
         }
         
-        $stmt = $this->database->query(
+        $stmt = $this->db->query(
             'SELECT u.id, u.username, u.email 
              FROM users u 
              JOIN sessions s ON u.id = s.user_id 
@@ -403,6 +411,6 @@ class StreamsAPI {
 }
 
 // Handle the request
-$streamsAPI = new StreamsAPI($database);
-echo $streamsAPI->handleRequest();
+$streamsAPI = new StreamsAPI();
+$streamsAPI->handleRequest();
 ?>
