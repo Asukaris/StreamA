@@ -78,12 +78,34 @@ class Database {
                 stream_url VARCHAR(500),
                 thumbnail_url VARCHAR(500),
                 category VARCHAR(100),
+                game TEXT,
+                tags TEXT,
+                duration INTEGER DEFAULT 0,
                 is_live BOOLEAN DEFAULT 0,
                 viewer_count INTEGER DEFAULT 0,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         ");
+        
+        // Add new columns if they don't exist (for existing databases)
+        try {
+            $this->db->exec("ALTER TABLE streams ADD COLUMN game TEXT");
+        } catch (PDOException $e) {
+            // Column already exists
+        }
+        
+        try {
+            $this->db->exec("ALTER TABLE streams ADD COLUMN tags TEXT");
+        } catch (PDOException $e) {
+            // Column already exists
+        }
+        
+        try {
+            $this->db->exec("ALTER TABLE streams ADD COLUMN duration INTEGER DEFAULT 0");
+        } catch (PDOException $e) {
+            // Column already exists
+        }
         
         // Favorites table
         $this->db->exec("
@@ -98,17 +120,39 @@ class Database {
             )
         ");
         
-        // Chat messages table
+        // Chat data table - stores raw JSON content for each stream
         $this->db->exec("
-            CREATE TABLE IF NOT EXISTS chat_messages (
+            CREATE TABLE IF NOT EXISTS chat_data (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER,
-                username VARCHAR(50),
-                message TEXT NOT NULL,
-                stream_id INTEGER,
+                stream_id INTEGER UNIQUE,
+                json_content TEXT NOT NULL,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (stream_id) REFERENCES streams(id) ON DELETE CASCADE
+            )
+        ");
+        
+        // Game logos table
+        $this->db->exec("
+            CREATE TABLE IF NOT EXISTS game_logos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                game_name VARCHAR(255) NOT NULL,
+                logo_url VARCHAR(500),
+                aliases TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ");
+        
+        // Analytics data table
+        $this->db->exec("
+            CREATE TABLE IF NOT EXISTS analytics_data (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                metric_name VARCHAR(100) NOT NULL,
+                metric_value TEXT,
+                date_recorded DATE DEFAULT (date('now')),
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(metric_name, date_recorded)
             )
         ");
     }

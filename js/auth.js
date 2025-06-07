@@ -47,15 +47,15 @@ class AuthManager {
     }
 
     getAuthToken() {
-        return cookieManager.getPreference('authToken');
+        return cookieManager.getPreference('session_token');
     }
 
     setAuthToken(token) {
-        cookieManager.setPreference('authToken', token);
+        cookieManager.setPreference('session_token', token);
     }
 
     clearAuthToken() {
-        cookieManager.deletePreference('authToken');
+        cookieManager.deletePreference('session_token');
     }
 
     getUserData() {

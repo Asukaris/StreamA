@@ -9,12 +9,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once 'database.php';
+require_once 'thumbnail_handler.php';
 
 class StreamsAPI {
     private $db;
+    private $thumbnailHandler;
     
     public function __construct($database) {
         $this->database = $database;
+        $this->thumbnailHandler = new ThumbnailHandler();
     }
     
     public function handleRequest() {
@@ -143,21 +146,42 @@ class StreamsAPI {
         $title = trim($input['title']);
         $description = trim($input['description'] ?? '');
         $streamUrl = trim($input['stream_url'] ?? '');
-        $thumbnailUrl = trim($input['thumbnail_url'] ?? '');
         $category = trim($input['category'] ?? '');
+        $game = trim($input['game'] ?? '');
+        $tags = trim($input['tags'] ?? '');
+        $duration = max((int)($input['duration'] ?? 0), 0);
         $isLive = (bool)($input['is_live'] ?? false);
         $viewerCount = max((int)($input['viewer_count'] ?? 0), 0);
+        $chatData = $input['chatData'] ?? null;
+        
+        // Process thumbnail if provided
+        $thumbnailUrl = '';
+        if (!empty($input['thumbnail_url'])) {
+            try {
+                $thumbnailUrl = $this->thumbnailHandler->saveBase64Image($input['thumbnail_url']);
+            } catch (Exception $e) {
+                throw new Exception('Failed to save thumbnail: ' . $e->getMessage(), 400);
+            }
+        }
         
         if (empty($title)) {
             throw new Exception('Title cannot be empty', 400);
         }
         
         $stmt = $this->database->query(
-            'INSERT INTO streams (title, description, stream_url, thumbnail_url, category, is_live, viewer_count) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [$title, $description, $streamUrl, $thumbnailUrl, $category, $isLive, $viewerCount]
+            'INSERT INTO streams (title, description, stream_url, thumbnail_url, category, game, tags, duration, is_live, viewer_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [$title, $description, $streamUrl, $thumbnailUrl, $category, $game, $tags, $duration, $isLive, $viewerCount]
         );
         
         $streamId = $this->database->lastInsertId();
+        
+        // Save chat data if provided
+        if ($chatData) {
+            $this->database->query(
+                'INSERT INTO chat_data (stream_id, json_content) VALUES (?, ?)',
+                [$streamId, $chatData]
+            );
+        }
         
         return $this->successResponse([
             'message' => 'Stream created successfully',
@@ -202,13 +226,41 @@ class StreamsAPI {
         }
         
         if (isset($input['thumbnail_url'])) {
-            $updates[] = 'thumbnail_url = ?';
-            $params[] = trim($input['thumbnail_url']);
+            // Get current thumbnail to delete it later
+            $currentThumbnail = null;
+            $stmt = $this->database->query('SELECT thumbnail_url FROM streams WHERE id = ?', [$id]);
+            $stream = $stmt->fetch();
+            if ($stream) {
+                $currentThumbnail = $stream['thumbnail_url'];
+            }
+            
+            try {
+                $newThumbnailUrl = $this->thumbnailHandler->saveBase64Image($input['thumbnail_url']);
+                $updates[] = 'thumbnail_url = ?';
+                $params[] = $newThumbnailUrl;
+                
+                // Delete old thumbnail if it exists and is different
+                if ($currentThumbnail && $currentThumbnail !== $newThumbnailUrl) {
+                    $this->thumbnailHandler->deleteThumbnail($currentThumbnail);
+                }
+            } catch (Exception $e) {
+                throw new Exception('Failed to save thumbnail: ' . $e->getMessage(), 400);
+            }
         }
         
-        if (isset($input['category'])) {
-            $updates[] = 'category = ?';
-            $params[] = trim($input['category']);
+        if (isset($input['game'])) {
+            $updates[] = 'game = ?';
+            $params[] = trim($input['game']);
+        }
+        
+        if (isset($input['tags'])) {
+            $updates[] = 'tags = ?';
+            $params[] = trim($input['tags']);
+        }
+        
+        if (isset($input['duration'])) {
+            $updates[] = 'duration = ?';
+            $params[] = max((int)$input['duration'], 0);
         }
         
         if (isset($input['is_live'])) {
@@ -239,7 +291,17 @@ class StreamsAPI {
     private function deleteStream($id) {
         $user = $this->getCurrentUser();
         
+        // Get thumbnail URL before deleting the stream
+        $stmt = $this->database->query('SELECT thumbnail_url FROM streams WHERE id = ?', [$id]);
+        $stream = $stmt->fetch();
+        
+        // Delete the stream from database
         $stmt = $this->database->query('DELETE FROM streams WHERE id = ?', [$id]);
+        
+        // Delete thumbnail file if it exists
+        if ($stream && !empty($stream['thumbnail_url'])) {
+            $this->thumbnailHandler->deleteThumbnail($stream['thumbnail_url']);
+        }
         
         return $this->successResponse(['message' => 'Stream deleted successfully']);
     }

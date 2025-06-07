@@ -11,6 +11,8 @@ RewriteRule ^(.*)$ $1 [R=200,L]
 
 # API Routes
 RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^chat_data/?(.*)$ chat_data.php/$1 [QSA,L]
+RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^users/?(.*)$ users.php/$1 [QSA,L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^settings/?(.*)$ settings.php/$1 [QSA,L]
@@ -18,6 +20,10 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^streams/?(.*)$ streams.php/$1 [QSA,L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^chat/?(.*)$ chat.php/$1 [QSA,L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^logos/?(.*)$ logos.php/$1 [QSA,L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^analytics/?(.*)$ analytics.php/$1 [QSA,L]
 
 # Allow access to diagnostic and test scripts
 RewriteCond %{REQUEST_URI} !server_check\.php$ [NC]

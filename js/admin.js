@@ -9,6 +9,7 @@ class AdminPanel {
         this.tags = [];
         this.logos = [];
         this.currentLogoId = null;
+        this.apiBase = window.CONFIG ? window.CONFIG.getApiBase() : '/api';
         
         // Check authentication before initializing
         this.checkAdminAccess().then(hasAccess => {
@@ -20,8 +21,8 @@ class AdminPanel {
         });
     }
 
-    init() {
-        this.loadMockData();
+    async init() {
+        await this.loadMockData();
         this.setupEventListeners();
         this.setupTabNavigation();
         this.loadDashboard();
@@ -30,82 +31,137 @@ class AdminPanel {
         this.loadSettings();
         this.loadLogos();
         this.setupUploadForm();
+        this.setupModalFunctionality();
     }
 
-    loadMockData() {
-        // Load data from localStorage or initialize empty arrays
-        this.users = JSON.parse(localStorage.getItem('streamArchive_users') || '[]');
-        this.streams = JSON.parse(localStorage.getItem('streamArchive_streams') || '[]');
-        
-        // Load logos from localStorage or initialize with default logos
-        this.logos = JSON.parse(localStorage.getItem('streamArchive_logos') || JSON.stringify([
-            {
-                id: 1,
-                gameName: 'Minecraft',
-                logoUrl: 'https://www.minecraft.net/etc.clientlibs/minecraft/clientlibs/main/resources/favicon-96x96.png',
-                aliases: ['MC', 'Minecraft Java', 'Minecraft Bedrock']
-            },
-            {
-                id: 2,
-                gameName: 'Fortnite',
-                logoUrl: 'https://cdn2.unrealengine.com/Fortnite%2Ffn-game-icon-285x285-285x285-0b364143e0c9.png',
-                aliases: ['Fortnite Battle Royale']
-            },
-            {
-                id: 3,
-                gameName: 'Valorant',
-                logoUrl: 'https://images.contentstack.io/v3/assets/bltb6530b271fddd0b1/blt5c6a35b51b0e8c7e/5eb26f5e31bb7e28d2444b7e/V_LOGOMARK_1920x1080_Red.png',
-                aliases: ['Valorant Riot']
-            },
-            {
-                id: 4,
-                gameName: 'League of Legends',
-                logoUrl: 'https://universe-meeps.leagueoflegends.com/v1/assets/images/factions/demacia-crest.png',
-                aliases: ['LoL', 'League']
-            },
-            {
-                id: 5,
-                gameName: 'World of Warcraft',
-                logoUrl: 'https://bnetcmsus-a.akamaihd.net/cms/gallery/LKXYBFP8ZZ6D1509472919930.png',
-                aliases: ['WoW', 'World of Warcraft Classic']
-            },
-            {
-                id: 6,
-                gameName: 'Overwatch',
-                logoUrl: 'https://d15f34w2p8l1cc.cloudfront.net/overwatch/images/logos/overwatch-share-icon.jpg',
-                aliases: ['Overwatch 2', 'OW', 'OW2']
-            },
-            {
-                id: 7,
-                gameName: 'Counter-Strike',
-                logoUrl: 'https://cdn.cloudflare.steamstatic.com/steam/apps/730/header.jpg',
-                aliases: ['CS', 'CS:GO', 'Counter-Strike 2', 'CS2']
-            },
-            {
-                id: 8,
-                gameName: 'Dota 2',
-                logoUrl: 'https://cdn.cloudflare.steamstatic.com/steam/apps/570/header.jpg',
-                aliases: ['Dota']
-            },
-            {
-                id: 9,
-                gameName: 'Apex Legends',
-                logoUrl: 'https://media.contentapi.ea.com/content/dam/apex-legends/images/2019/01/apex-legends-meta-image.jpg',
-                aliases: ['Apex']
+    async loadMockData() {
+        // Load data from database APIs instead of localStorage
+        await this.loadUsersFromAPI();
+        await this.loadStreamsFromAPI();
+        await this.loadLogosFromAPI();
+        await this.loadSettingsFromAPI();
+    }
+    
+    async loadUsersFromAPI() {
+        try {
+            const response = await fetch(`${this.apiBase}/users/list`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: this.getAuthHeaders()
+            });
+            const data = await response.json();
+            if (data.success) {
+                this.users = data.data || [];
+            } else {
+                console.error('Failed to load users:', data.error);
+                this.users = [];
             }
-        ]));
-        
+        } catch (error) {
+            console.error('Error loading users:', error);
+            this.users = [];
+        }
+    }
+    
+    async loadStreamsFromAPI() {
+        try {
+            console.log('Loading streams from API...');
+            const response = await fetch(`${this.apiBase}/streams`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: this.getAuthHeaders()
+            });
+            console.log('API Response status:', response.status);
+            const data = await response.json();
+            console.log('API Response data:', data);
+            if (data.success) {
+                this.streams = data.data.streams || [];
+                console.log('Loaded streams:', this.streams.length);
+            } else {
+                console.error('Failed to load streams:', data.error);
+                this.streams = [];
+            }
+        } catch (error) {
+            console.error('Failed to load streams:', error);
+            this.streams = [];
+        }
+    }
+    
+    async loadLogosFromAPI() {
+        try {
+            const response = await fetch(`${this.apiBase}/logos`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: this.getAuthHeaders()
+            });
+            const data = await response.json();
+            if (data.success) {
+                this.logos = data.data || [];
+            } else {
+                console.error('Failed to load logos:', data.error);
+                // Initialize default logos if none exist
+                await this.initDefaultLogos();
+            }
+        } catch (error) {
+            console.error('Failed to load logos:', error);
+            await this.initDefaultLogos();
+        }
+    }
+    
+    async loadSettingsFromAPI() {
+        try {
+            const response = await fetch(`${this.apiBase}/settings/all`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: this.getAuthHeaders()
+            });
+            const data = await response.json();
+            if (data.success) {
+                // Convert settings array to object
+                this.settings = {};
+                if (data.data && Array.isArray(data.data)) {
+                    data.data.forEach(setting => {
+                        this.settings[setting.setting_key] = setting.setting_value;
+                    });
+                }
+                // Set defaults for missing settings
+                this.setDefaultSettings();
+            } else {
+                console.error('Failed to load settings:', data.error);
+                this.setDefaultSettings();
+            }
+        } catch (error) {
+            console.error('Failed to load settings:', error);
+            this.setDefaultSettings();
+        }
+    }
+    
+    async initDefaultLogos() {
+        try {
+            const response = await fetch(`${this.apiBase}/logos/init-defaults`, {
+                method: 'POST'
+            });
+            const data = await response.json();
+            if (data.success) {
+                await this.loadLogosFromAPI();
+            }
+        } catch (error) {
+            console.error('Failed to initialize default logos:', error);
+            this.logos = [];
+        }
+    }
+    
+    setDefaultSettings() {
         // Default settings
-        this.settings = JSON.parse(localStorage.getItem('streamArchive_settings') || JSON.stringify({
-            siteName: 'Factor_KS Stream Archive',
-            siteDescription: 'Dein Archiv für alle Factor_KS Streams mit synchronisiertem Chat und HLS-Video-Streaming.',
-            maxFileSize: 500,
-            autoHLS: true,
-            hlsQualities: ['360p', '720p', '1080p'],
-            allowComments: true,
-            requireLogin: false,
-            moderateComments: false
-        }));
+        this.settings = {
+            siteName: this.settings.siteName || 'Factor_KS Stream Archive',
+            siteDescription: this.settings.siteDescription || 'Dein Archiv für alle Factor_KS Streams mit synchronisiertem Chat und HLS-Video-Streaming.',
+            maxFileSize: this.settings.maxFileSize || 500,
+            autoHLS: this.settings.autoHLS !== undefined ? this.settings.autoHLS : true,
+            hlsQualities: this.settings.hlsQualities || ['360p', '720p', '1080p'],
+            allowComments: this.settings.allowComments !== undefined ? this.settings.allowComments : true,
+            requireLogin: this.settings.requireLogin !== undefined ? this.settings.requireLogin : false,
+            moderateComments: this.settings.moderateComments !== undefined ? this.settings.moderateComments : false
+        };
     }
 
     setupEventListeners() {
@@ -125,160 +181,197 @@ class AdminPanel {
             });
         }
 
-        // Archive search
-        const archiveSearch = document.getElementById('archiveSearch');
-        if (archiveSearch) {
-            archiveSearch.addEventListener('input', (e) => {
+        // Stream search
+        const streamSearch = document.getElementById('streamSearch');
+        if (streamSearch) {
+            streamSearch.addEventListener('input', (e) => {
                 this.filterStreams(e.target.value);
             });
         }
 
-        // Archive filters
-        const archiveGameFilter = document.getElementById('archiveGameFilter');
-        const archiveStatusFilter = document.getElementById('archiveStatusFilter');
-        if (archiveGameFilter) {
-            archiveGameFilter.addEventListener('change', () => this.filterStreams());
-        }
-        if (archiveStatusFilter) {
-            archiveStatusFilter.addEventListener('change', () => this.filterStreams());
-        }
-
-        // Add user button
-        const addUserBtn = document.getElementById('addUserBtn');
-        if (addUserBtn) {
-            addUserBtn.addEventListener('click', () => this.showUserModal());
-        }
-
-        // Logo management events
-        const addLogoBtn = document.getElementById('addLogoBtn');
-        if (addLogoBtn) {
-            addLogoBtn.addEventListener('click', () => this.showLogoModal());
-        }
-
-        const logoSearch = document.getElementById('logoSearch');
-        if (logoSearch) {
-            logoSearch.addEventListener('input', (e) => {
-                this.filterLogos(e.target.value);
+        // Game filter
+        const gameFilter = document.getElementById('gameFilter');
+        if (gameFilter) {
+            gameFilter.addEventListener('change', (e) => {
+                this.filterStreamsByGame(e.target.value);
             });
         }
 
-        // Modal events
-        this.setupModalEvents();
-        this.setupLogoModalEvents();
+        // Settings form
+        const settingsForm = document.getElementById('settingsForm');
+        if (settingsForm) {
+            settingsForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveSettings();
+            });
+        }
 
-        // Settings events
-        this.setupSettingsEvents();
+        // Logo management
+        const logoForm = document.getElementById('logoForm');
+        if (logoForm) {
+            logoForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveLogo();
+            });
+        }
+
+        // Export/Import buttons
+        const exportBtn = document.getElementById('exportData');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => {
+                this.exportData();
+            });
+        }
+
+        const importBtn = document.getElementById('importData');
+        if (importBtn) {
+            importBtn.addEventListener('click', () => {
+                document.getElementById('importFile').click();
+            });
+        }
+
+        const importFile = document.getElementById('importFile');
+        if (importFile) {
+            importFile.addEventListener('change', (e) => {
+                this.importData(e.target.files[0]);
+            });
+        }
+
+        // Clear data button
+        const clearDataBtn = document.getElementById('clearAllData');
+        if (clearDataBtn) {
+            clearDataBtn.addEventListener('click', () => {
+                this.clearAllData();
+            });
+        }
     }
 
     setupTabNavigation() {
         const menuItems = document.querySelectorAll('.menu-item');
-        menuItems.forEach(item => {
-            item.addEventListener('click', (e) => {
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        menuItems.forEach(menuItem => {
+            menuItem.addEventListener('click', (e) => {
                 e.preventDefault();
-                const tab = item.dataset.tab;
-                this.switchTab(tab);
-            });
-        });
-    }
-
-    switchTab(tab) {
-        // Update active menu item
-        document.querySelectorAll('.menu-item').forEach(item => {
-            item.classList.remove('active');
-        });
-        document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-
-        // Update active tab content
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.remove('active');
-        });
-        document.getElementById(tab).classList.add('active');
-
-        this.currentTab = tab;
-    }
-
-    loadDashboard() {
-        // Update stats
-        document.getElementById('totalStreams').textContent = this.streams.length;
-        document.getElementById('totalViews').textContent = this.formatNumber(this.streams.reduce((sum, stream) => sum + stream.views, 0));
-        document.getElementById('totalUsers').textContent = this.formatNumber(this.users.length * 450); // Mock multiplier
-        document.getElementById('totalComments').textContent = this.formatNumber(this.streams.length * 80); // Mock multiplier
-
-        // Load recent streams
-        this.loadRecentStreams();
-    }
-
-    loadRecentStreams() {
-        const container = document.getElementById('recentStreams');
-        if (!container) return;
-
-        const recentStreams = this.streams
-            .sort((a, b) => new Date(b.date) - new Date(a.date))
-            .slice(0, 5);
-
-        container.innerHTML = recentStreams.map(stream => `
-            <div class="recent-stream">
-                <img src="${stream.thumbnail}" alt="${stream.title}" class="recent-stream-thumb">
-                <div class="recent-stream-info">
-                    <h4 class="recent-stream-title">${stream.title}</h4>
-                    <p class="recent-stream-meta">${stream.game} • ${this.formatDate(stream.date)} • ${this.formatViews(stream.views)} Aufrufe</p>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    async loadUsers() {
-        try {
-            const token = cookieManager.getPreference('session_token');
-            const response = await fetch(`${CONFIG.getApiBase()}/users/list`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
+                const tabId = menuItem.getAttribute('data-tab');
+                
+                // Remove active class from all menu items and contents
+                menuItems.forEach(item => item.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked menu item and corresponding content
+                menuItem.classList.add('active');
+                const tabContent = document.getElementById(tabId);
+                if (tabContent) {
+                    tabContent.classList.add('active');
+                }
+                
+                this.currentTab = tabId;
+                
+                // Load tab-specific data
+                switch(tabId) {
+                    case 'dashboard':
+                        this.loadDashboard();
+                        break;
+                    case 'users':
+                        this.loadUsers();
+                        break;
+                    case 'archive':
+                        this.loadArchive();
+                        break;
+                    case 'settings':
+                        this.loadSettings();
+                        break;
+                    case 'logos':
+                        this.loadLogos();
+                        break;
                 }
             });
-            const data = await response.json();
-            
-            if (data.success) {
-                this.users = data.data;
-                this.renderUsers(this.users);
-            } else {
-                console.error('Failed to load users:', data.error);
-                // Fallback to localStorage data
-                this.users = JSON.parse(localStorage.getItem('streamArchive_users') || '[]');
-                this.renderUsers(this.users);
+        });
+    }
+
+    async checkAdminAccess() {
+        try {
+            // Get session token from cookies
+            const sessionToken = cookieManager.getPreference('session_token');
+            if (!sessionToken) {
+                console.log('No session token found');
+                return false;
             }
+            
+            const response = await fetch(`${this.apiBase}/users/profile`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Authorization': `Bearer ${sessionToken}`
+                }
+            });
+            
+            if (!response.ok) {
+                console.log('Response not ok:', response.status);
+                return false;
+            }
+            
+            const data = await response.json();
+            console.log('Profile data:', data);
+            return data.success && data.data && data.data.user && data.data.user.role === 'admin';
         } catch (error) {
-            console.error('Error loading users:', error);
-            // Fallback to localStorage data
-            this.users = JSON.parse(localStorage.getItem('streamArchive_users') || '[]');
-            this.renderUsers(this.users);
+            console.error('Error checking admin access:', error);
+            return false;
         }
     }
 
-    renderUsers(users) {
-        const tbody = document.getElementById('usersTableBody');
-        if (!tbody) return;
+    getAuthHeaders() {
+        const sessionToken = cookieManager.getPreference('session_token');
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        if (sessionToken) {
+            headers['Authorization'] = `Bearer ${sessionToken}`;
+        }
+        
+        return headers;
+    }
 
-        tbody.innerHTML = users.map(user => `
-            <tr>
+    redirectToLogin() {
+        alert('Sie haben keine Berechtigung für den Admin-Bereich. Bitte melden Sie sich als Administrator an.');
+        window.location.href = '/index.html';
+    }
+
+    loadUsers() {
+        // Reload users from API
+        this.loadUsersFromAPI().then(() => {
+            this.renderUsers();
+        });
+    }
+
+    renderUsers() {
+        const usersTableBody = document.getElementById('usersTableBody');
+        if (!usersTableBody) return;
+
+        if (this.users.length === 0) {
+            usersTableBody.innerHTML = '<tr><td colspan="6" class="no-data">Keine Benutzer gefunden.</td></tr>';
+            return;
+        }
+
+        usersTableBody.innerHTML = this.users.map(user => `
+            <tr data-user-id="${user.id}">
                 <td>
-                    <div class="table-user">
-                        <img src="${user.avatar}" alt="${user.username}" class="table-user-avatar">
-                        <div class="table-user-info">
-                            <p class="table-user-name">${user.username}</p>
-                            <p class="table-user-username">@${user.username}</p>
-                        </div>
+                    <div class="user-info">
+                        <strong>${user.username}</strong>
                     </div>
                 </td>
                 <td>${user.email}</td>
-                <td><span class="role-badge ${user.role}">${this.getRoleDisplayName(user.role)}</span></td>
-                <td>${this.formatDate(user.registered)}</td>
-                <td><span class="status-badge ${user.active ? 'active' : 'inactive'}">${user.active ? 'Aktiv' : 'Inaktiv'}</span></td>
+                <td><span class="role-badge ${user.role}">${user.role}</span></td>
+                <td>${this.formatDate(user.created_at)}</td>
+                <td><span class="status-badge active">Aktiv</span></td>
                 <td>
-                    <div class="action-buttons">
-                        <button class="action-btn edit" onclick="adminPanel.editUser(${user.id})" title="Bearbeiten">
+                    <div class="user-actions">
+                        <button class="btn btn-sm" onclick="adminPanel.editUser(${user.id})">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="action-btn delete" onclick="adminPanel.deleteUser(${user.id})" title="Löschen">
+                        <button class="btn btn-sm btn-danger" onclick="adminPanel.deleteUser(${user.id})">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -287,56 +380,100 @@ class AdminPanel {
         `).join('');
     }
 
-    filterUsers(searchTerm = '') {
-        const roleFilter = document.getElementById('roleFilter').value;
+    filterUsers(searchTerm) {
+        const filteredUsers = this.users.filter(user => 
+            user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            user.email.toLowerCase().includes(searchTerm.toLowerCase())
+        );
         
-        let filteredUsers = this.users;
-        
-        if (searchTerm) {
-            filteredUsers = filteredUsers.filter(user => 
-                user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                user.email.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-        }
-        
-        if (roleFilter) {
-            filteredUsers = filteredUsers.filter(user => user.role === roleFilter);
-        }
-        
-        this.renderUsers(filteredUsers);
+        this.renderFilteredUsers(filteredUsers);
     }
 
     filterUsersByRole(role) {
-        const searchTerm = document.getElementById('userSearch').value;
-        this.filterUsers(searchTerm);
+        if (role === 'all') {
+            this.renderUsers();
+            return;
+        }
+        
+        const filteredUsers = this.users.filter(user => user.role === role);
+        this.renderFilteredUsers(filteredUsers);
     }
 
-    editUser(userId) {
+    renderFilteredUsers(users) {
+        const usersTableBody = document.getElementById('usersTableBody');
+        if (!usersTableBody) return;
+
+        if (users.length === 0) {
+            usersTableBody.innerHTML = '<tr><td colspan="6" class="no-data">Keine Benutzer gefunden.</td></tr>';
+            return;
+        }
+
+        usersTableBody.innerHTML = users.map(user => `
+            <tr data-user-id="${user.id}">
+                <td>
+                    <div class="user-info">
+                        <strong>${user.username}</strong>
+                    </div>
+                </td>
+                <td>${user.email}</td>
+                <td><span class="role-badge ${user.role}">${user.role}</span></td>
+                <td>${this.formatDate(user.created_at)}</td>
+                <td><span class="status-badge active">Aktiv</span></td>
+                <td>
+                    <div class="user-actions">
+                        <button class="btn btn-sm" onclick="adminPanel.editUser(${user.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="adminPanel.deleteUser(${user.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async editUser(userId) {
         const user = this.users.find(u => u.id === userId);
-        if (user) {
-            this.showUserModal(user);
+        if (!user) return;
+
+        const newRole = prompt(`Neue Rolle für ${user.username}:`, user.role);
+        if (newRole && newRole !== user.role) {
+            try {
+                const response = await fetch(`${this.apiBase}/users/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ role: newRole })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    this.showToast('Benutzer erfolgreich aktualisiert', 'success');
+                    this.loadUsers();
+                } else {
+                    this.showToast('Fehler beim Aktualisieren des Benutzers: ' + data.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error updating user:', error);
+                this.showToast('Fehler beim Aktualisieren des Benutzers', 'error');
+            }
         }
     }
 
     async deleteUser(userId) {
         if (confirm('Möchten Sie diesen Benutzer wirklich löschen?')) {
             try {
-                const token = cookieManager.getPreference('session_token');
-                const response = await fetch(`${CONFIG.getApiBase()}/users/${userId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
+                const response = await fetch(`${this.apiBase}/users/${userId}`, {
+                    method: 'DELETE'
                 });
                 
                 const data = await response.json();
-                
                 if (data.success) {
+                    this.showToast('Benutzer erfolgreich gelöscht', 'success');
                     this.loadUsers();
-                    this.showToast('Benutzer wurde gelöscht', 'success');
                 } else {
-                    this.showToast(data.error || 'Fehler beim Löschen des Benutzers', 'error');
+                    this.showToast('Fehler beim Löschen des Benutzers: ' + data.error, 'error');
                 }
             } catch (error) {
                 console.error('Error deleting user:', error);
@@ -345,1297 +482,740 @@ class AdminPanel {
         }
     }
 
-    showUserModal(user = null) {
-        const modal = document.getElementById('userModal');
-        const title = document.getElementById('userModalTitle');
-        const form = document.getElementById('userForm');
-        
-        if (user) {
-            title.textContent = 'Benutzer bearbeiten';
-            document.getElementById('userName').value = user.username;
-            document.getElementById('userEmail').value = user.email;
-            document.getElementById('userRole').value = user.role;
-            document.getElementById('userActive').checked = user.active;
-        } else {
-            title.textContent = 'Neuen Benutzer hinzufügen';
-            form.reset();
+    loadArchive() {
+        // Reload streams from API
+        this.loadStreamsFromAPI().then(() => {
+            this.renderStreams();
+        });
+    }
+
+    renderStreams() {
+        const archiveTableBody = document.getElementById('archiveTableBody');
+        if (!archiveTableBody) return;
+
+        if (this.streams.length === 0) {
+            archiveTableBody.innerHTML = '<tr><td colspan="8" class="no-data">Keine Streams gefunden.</td></tr>';
+            return;
         }
-        
-        modal.classList.add('active');
+
+        archiveTableBody.innerHTML = this.streams.map(stream => `
+            <tr data-stream-id="${stream.id}">
+                <td>
+                     <img src="${stream.thumbnail_url || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjYwIiB2aWV3Qm94PSIwIDAgMTAwIDYwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iNjAiIGZpbGw9IiNmMGYwZjAiLz48dGV4dCB4PSI1MCIgeT0iMzUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Tm8gSW1hZ2U8L3RleHQ+PC9zdmc+'}" alt="${stream.title}" class="archive-thumbnail">
+                 </td>
+                <td>
+                    <div class="stream-title">${stream.title}</div>
+                    <div class="stream-description">${stream.description || 'Keine Beschreibung verfügbar'}</div>
+                </td>
+                <td>${stream.game || stream.category || 'Unbekannt'}</td>
+                <td>${this.formatDate(stream.created_at)}</td>
+                <td>${this.formatDuration(stream.duration || 0)}</td>
+                <td>-</td>
+                <td>
+                    ${stream.is_live ? '<span class="status-badge live">LIVE</span>' : '<span class="status-badge published">Veröffentlicht</span>'}
+                </td>
+                <td>
+                    <button class="btn btn-sm" onclick="adminPanel.editStream(${stream.id})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="adminPanel.deleteStream(${stream.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+             </tr>
+         `).join('');
     }
 
-    setupModalEvents() {
-        const modal = document.getElementById('userModal');
-        const closeBtn = modal.querySelector('.modal-close');
-        const cancelBtn = document.getElementById('cancelUser');
-        const saveBtn = document.getElementById('saveUser');
+    filterStreams(searchTerm) {
+        const filteredStreams = this.streams.filter(stream => 
+            stream.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (stream.description && stream.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (stream.category && stream.category.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
         
-        closeBtn.addEventListener('click', () => {
-            modal.classList.remove('active');
-        });
-        
-        cancelBtn.addEventListener('click', () => {
-            modal.classList.remove('active');
-        });
-        
-        saveBtn.addEventListener('click', () => {
-            this.saveUser();
-        });
-        
-        // Close modal when clicking outside
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.classList.remove('active');
-            }
-        });
+        this.renderFilteredStreams(filteredStreams);
     }
 
-    async saveUser() {
-        const form = document.getElementById('userForm');
-        const formData = new FormData(form);
-        
-        const userData = {
-            username: formData.get('username'),
-            email: formData.get('email'),
-            role: formData.get('role'),
-            is_active: formData.get('active') === 'on'
-        };
-        
-        // Simple validation
-        if (!userData.username || !userData.email) {
-            this.showToast('Bitte füllen Sie alle Pflichtfelder aus', 'error');
+    filterStreamsByGame(game) {
+        if (game === 'all') {
+            this.renderStreams();
             return;
         }
         
-        try {
-            const token = cookieManager.getPreference('session_token');
-            
-            // Check if we're editing an existing user
-            const title = document.getElementById('userModalTitle').textContent;
-            const isEditing = title === 'Benutzer bearbeiten';
-            
-            if (isEditing) {
-                // Find the user being edited
-                const existingUser = this.users.find(u => 
-                    u.username === document.getElementById('userName').defaultValue ||
-                    u.email === document.getElementById('userEmail').defaultValue
-                );
-                
-                if (existingUser) {
-                    const response = await fetch(`${CONFIG.getApiBase()}/users/${existingUser.id}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(userData)
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        this.loadUsers();
-                        document.getElementById('userModal').classList.remove('active');
-                        this.showToast('Benutzer wurde aktualisiert', 'success');
-                    } else {
-                        this.showToast(data.error || 'Fehler beim Aktualisieren des Benutzers', 'error');
-                    }
-                }
-            } else {
-                // For new users, we would need a separate registration endpoint
-                this.showToast('Neue Benutzer können über die Registrierung erstellt werden', 'info');
-            }
-        } catch (error) {
-            console.error('Error saving user:', error);
-            this.showToast('Fehler beim Speichern des Benutzers', 'error');
-        }
+        const filteredStreams = this.streams.filter(stream => stream.category === game);
+        this.renderFilteredStreams(filteredStreams);
     }
 
-    loadArchive() {
-        // Populate game filter
-        const gameFilter = document.getElementById('archiveGameFilter');
-        if (gameFilter) {
-            const games = [...new Set(this.streams.map(s => s.game))];
-            gameFilter.innerHTML = '<option value="">Alle Spiele</option>' + 
-                games.map(game => `<option value="${game}">${game}</option>`).join('');
+    renderFilteredStreams(streams) {
+        const streamsList = document.getElementById('streamsList');
+        if (!streamsList) return;
+
+        if (streams.length === 0) {
+            streamsList.innerHTML = '<p class="no-data">Keine Streams gefunden.</p>';
+            return;
         }
-        
-        this.renderStreams(this.streams);
-    }
 
-    renderStreams(streams) {
-        const tbody = document.getElementById('archiveTableBody');
-        if (!tbody) return;
-
-        tbody.innerHTML = streams.map(stream => `
-            <tr>
-                <td>
-                    <img src="${stream.thumbnail}" alt="${stream.title}" class="archive-thumbnail">
-                </td>
-                <td>
-                    <strong>${stream.title}</strong>
-                    <br>
-                    <small class="text-secondary">${stream.description.substring(0, 50)}...</small>
-                </td>
-                <td>${stream.game}</td>
-                <td>${this.formatDate(stream.date)}</td>
-                <td>${this.formatDuration(stream.duration)}</td>
-                <td>${this.formatViews(stream.views)}</td>
-                <td><span class="status-badge ${stream.status}">${this.getStatusDisplayName(stream.status)}</span></td>
-                <td>
-                    <div class="action-buttons">
-                        <a href="stream.html?id=${stream.id}" class="action-btn view" title="Ansehen">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                        <button class="action-btn edit" onclick="adminPanel.editStream(${stream.id})" title="Bearbeiten">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="action-btn delete" onclick="adminPanel.deleteStream(${stream.id})" title="Löschen">
-                            <i class="fas fa-trash"></i>
-                        </button>
+        streamsList.innerHTML = streams.map(stream => `
+            <div class="stream-item" data-stream-id="${stream.id}">
+                <div class="stream-thumbnail">
+                    <img src="${stream.thumbnail_url || '/images/default-thumbnail.jpg'}" alt="${stream.title}" onerror="this.src='/images/default-thumbnail.jpg'">
+                </div>
+                <div class="stream-info">
+                    <h4>${stream.title}</h4>
+                    <p>${stream.description || 'Keine Beschreibung verfügbar'}</p>
+                    <div class="stream-meta">
+                        <span class="game">${stream.category || 'Unbekannt'}</span>
+                        <span class="date">${this.formatDate(stream.created_at)}</span>
+                        ${stream.is_live ? '<span class="live-badge">LIVE</span>' : ''}
                     </div>
-                </td>
-            </tr>
+                </div>
+                <div class="stream-actions">
+                    <button class="btn btn-sm" onclick="adminPanel.editStream(${stream.id})">
+                        <i class="fas fa-edit"></i> Bearbeiten
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="adminPanel.deleteStream(${stream.id})">
+                        <i class="fas fa-trash"></i> Löschen
+                    </button>
+                </div>
+            </div>
         `).join('');
     }
 
-    filterStreams(searchTerm = '') {
-        const gameFilter = document.getElementById('archiveGameFilter').value;
-        const statusFilter = document.getElementById('archiveStatusFilter').value;
-        
-        let filteredStreams = this.streams;
-        
-        if (searchTerm) {
-            filteredStreams = filteredStreams.filter(stream => 
-                stream.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                stream.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                stream.game.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-        }
-        
-        if (gameFilter) {
-            filteredStreams = filteredStreams.filter(stream => stream.game === gameFilter);
-        }
-        
-        if (statusFilter) {
-            filteredStreams = filteredStreams.filter(stream => stream.status === statusFilter);
-        }
-        
-        this.renderStreams(filteredStreams);
-    }
-
-    editStream(streamId) {
-        const stream = this.streams.find(s => s.id.toString() === streamId.toString());
+    async editStream(streamId) {
+        const stream = this.streams.find(s => s.id === streamId);
         if (!stream) {
             this.showToast('Stream nicht gefunden', 'error');
             return;
         }
+
+        // Store current stream ID for form submission
+        this.currentEditStreamId = streamId;
+
+        // Populate modal with stream data
+        document.getElementById('editTitle').value = stream.title || '';
+        document.getElementById('editDescription').value = stream.description || '';
+        document.getElementById('editGame').value = stream.game || '';
+        document.getElementById('editStreamUrl').value = stream.stream_url || '';
         
-        this.openEditModal(stream);
-    }
-    
-    openEditModal(stream) {
-        // Create modal HTML
-        const modalHTML = `
-            <div class="modal-overlay" id="editStreamModal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Stream bearbeiten</h3>
-                        <button class="modal-close" onclick="adminPanel.closeEditModal()">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="editStreamForm">
-                            <div class="form-group">
-                                <label for="editTitle">Titel *</label>
-                                <input type="text" id="editTitle" value="${stream.title}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="editDescription">Beschreibung</label>
-                                <textarea id="editDescription" rows="3">${stream.description || ''}</textarea>
-                            </div>
-                            <div class="form-group">
-                                <label for="editGame">Spiel/Kategorie</label>
-                                <input type="text" id="editGame" value="${stream.game || ''}">
-                            </div>
-                            <div class="form-group">
-                                <label for="editDate">Datum *</label>
-                                <input type="date" id="editDate" value="${stream.date}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="editLink">Stream-Link *</label>
-                                <input type="url" id="editLink" value="${stream.link}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="editThumbnail">Thumbnail</label>
-                                <div class="thumbnail-edit-section">
-                                    ${stream.thumbnail ? `<div class="current-thumbnail">
-                                        <img src="${stream.thumbnail}" alt="Current thumbnail" style="max-width: 200px; max-height: 120px; border-radius: 4px; margin-bottom: 10px;">
-                                        <p><small>Aktuelles Thumbnail</small></p>
-                                    </div>` : ''}
-                                    <div class="file-upload">
-                                        <input type="file" id="editThumbnailFile" accept="image/*">
-                                        <label for="editThumbnailFile" class="file-upload-label">
-                                            <i class="fas fa-upload"></i>
-                                            Neues Thumbnail hochladen
-                                        </label>
-                                    </div>
-                                    <small class="form-help">Unterstützte Formate: JPG, PNG, GIF (max. 5MB)</small>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="editStatus">Status</label>
-                                <select id="editStatus">
-                                    <option value="published" ${stream.status === 'published' ? 'selected' : ''}>Veröffentlicht</option>
-                                    <option value="draft" ${stream.status === 'draft' ? 'selected' : ''}>Entwurf</option>
-                                    <option value="private" ${stream.status === 'private' ? 'selected' : ''}>Privat</option>
-                                </select>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" onclick="adminPanel.closeEditModal()">Abbrechen</button>
-                        <button type="button" class="btn btn-primary" onclick="adminPanel.saveStreamEdit('${stream.id}')">Speichern</button>
-                    </div>
-                </div>
-            </div>
-        `;
+        // Check chat data status
+        this.checkChatDataStatus(streamId);
         
-        // Add modal to page
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        // Populate tags
+        this.editTags = [];
+        if (stream.tags) {
+            try {
+                this.editTags = typeof stream.tags === 'string' ? JSON.parse(stream.tags) : stream.tags;
+            } catch (e) {
+                this.editTags = stream.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+            }
+        }
+        this.updateEditTagsDisplay();
+
+        // Set current thumbnail
+        const thumbnailImg = document.getElementById('currentThumbnail');
+        if (stream.thumbnail_url) {
+            thumbnailImg.src = stream.thumbnail_url;
+            thumbnailImg.style.display = 'block';
+        } else {
+            thumbnailImg.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiNmMGYwZjAiLz48dGV4dCB4PSIxMDAiIHk9IjY1IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiPktlaW4gQmlsZDwvdGV4dD48L3N2Zz4=';
+            thumbnailImg.style.display = 'block';
+        }
+
+        // Reset file inputs
+        document.getElementById('editThumbnailFile').value = '';
+        document.getElementById('editChatFile').value = '';
+        const fileLabel = document.querySelector('label[for="editThumbnailFile"]');
+        fileLabel.classList.remove('file-selected');
+        const fileName = fileLabel.querySelector('.file-name');
+        if (fileName) fileName.remove();
+
+        // Setup file inputs
+        this.setupEditFileInput();
+        this.setupEditChatFileInput();
+
+        // Setup form submission
+        this.setupEditFormSubmission();
         
+        // Setup tags input
+        this.setupEditTagsInput();
+
         // Show modal
-        const modal = document.getElementById('editStreamModal');
-        modal.classList.add('active');
+        document.getElementById('editStreamModal').style.display = 'block';
+    }
+
+    setupEditFileInput() {
+        const fileInput = document.getElementById('editThumbnailFile');
+        const label = document.querySelector('label[for="editThumbnailFile"]');
+        const thumbnailImg = document.getElementById('currentThumbnail');
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                // Update label
+                const fileName = file.name;
+                let fileNameSpan = label.querySelector('.file-name');
+                if (!fileNameSpan) {
+                    fileNameSpan = document.createElement('span');
+                    fileNameSpan.className = 'file-name';
+                    label.appendChild(fileNameSpan);
+                }
+                fileNameSpan.textContent = fileName;
+                label.classList.add('file-selected');
+            } else {
+                const fileNameSpan = label.querySelector('.file-name');
+                if (fileNameSpan) fileNameSpan.remove();
+                label.classList.remove('file-selected');
+            }
+        });
+    }
+
+    setupEditFormSubmission() {
+        const form = document.getElementById('editStreamForm');
         
-        // Close modal on overlay click
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
+        // Remove existing event listeners
+        const newForm = form.cloneNode(true);
+        form.parentNode.replaceChild(newForm, form);
+        
+        newForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.handleEditFormSubmission();
+        });
+    }
+
+    async handleEditFormSubmission() {
+        const submitBtn = document.querySelector('#editStreamForm button[type="submit"]');
+        submitBtn.classList.add('loading');
+        submitBtn.disabled = true;
+
+        try {
+            const formData = new FormData(document.getElementById('editStreamForm'));
+            
+            // Process thumbnail file if uploaded
+            let thumbnailUrl = null;
+            const thumbnailFile = formData.get('thumbnailFile');
+            if (thumbnailFile && thumbnailFile.size > 0) {
+                try {
+                    thumbnailUrl = await this.convertFileToBase64(thumbnailFile);
+                } catch (error) {
+                    console.error('Error converting thumbnail to base64:', error);
+                    this.showToast('Fehler beim Verarbeiten des Thumbnails', 'error');
+                    return;
+                }
+            }
+            
+            // Process chat JSON file if uploaded
+            let duration = null;
+            let chatContent = null;
+            const chatFile = formData.get('chatFile');
+            if (chatFile && chatFile.size > 0) {
+                try {
+                    const chatText = await chatFile.text();
+                    const chatData = JSON.parse(chatText);
+                    duration = this.extractDurationFromChat(chatData);
+                    chatContent = chatText;
+                } catch (error) {
+                    console.error('Error processing chat file:', error);
+                    this.showToast('Fehler beim Verarbeiten der Chat-Datei', 'error');
+                    return;
+                }
+            }
+
+            // Prepare update data
+            const updateData = {
+                title: formData.get('title'),
+                description: formData.get('description'),
+                game: formData.get('game'),
+                stream_url: formData.get('stream_url'),
+                tags: JSON.stringify(this.editTags)
+            };
+
+            // Only include thumbnail_url if a new one was uploaded
+            if (thumbnailUrl) {
+                updateData.thumbnail_url = thumbnailUrl;
+            }
+            
+            // Only include duration if extracted from chat
+            if (duration !== null) {
+                updateData.duration = duration;
+            }
+
+            // Send update request
+            const response = await fetch(`${this.apiBase}/streams/${this.currentEditStreamId}`, {
+                method: 'PUT',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': cookieManager.getPreference('session_token') ? `Bearer ${cookieManager.getPreference('session_token')}` : ''
+                },
+                body: JSON.stringify(updateData)
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                // Save chat data if provided
+                if (chatContent) {
+                    try {
+                        const chatResponse = await fetch(`${this.apiBase}/chat_data/${this.currentEditStreamId}`, {
+                            method: 'POST',
+                            credentials: 'include',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': cookieManager.getPreference('session_token') ? `Bearer ${cookieManager.getPreference('session_token')}` : ''
+                            },
+                            body: JSON.stringify({ chatData: chatContent })
+                        });
+                        
+                        const chatData = await chatResponse.json();
+                        if (!chatData.success) {
+                            console.error('Failed to save chat data:', chatData.error);
+                            this.showToast('Stream aktualisiert, aber Chat-Daten konnten nicht gespeichert werden', 'warning');
+                        }
+                    } catch (error) {
+                        console.error('Error saving chat data:', error);
+                        this.showToast('Stream aktualisiert, aber Chat-Daten konnten nicht gespeichert werden', 'warning');
+                    }
+                }
+                
+                this.showToast('Stream erfolgreich aktualisiert', 'success');
+                this.closeEditModal();
+                this.loadArchive();
+            } else {
+                this.showToast('Fehler beim Aktualisieren: ' + (data.error || 'Unbekannter Fehler'), 'error');
+            }
+        } catch (error) {
+            console.error('Error updating stream:', error);
+            this.showToast('Fehler beim Aktualisieren des Streams', 'error');
+        } finally {
+            submitBtn.classList.remove('loading');
+            submitBtn.disabled = false;
+        }
+    }
+
+    closeEditModal() {
+        document.getElementById('editStreamModal').style.display = 'none';
+        this.currentEditStreamId = null;
+    }
+
+    setupModalFunctionality() {
+        // Setup close button for edit modal
+        const closeBtn = document.querySelector('#editStreamModal .close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                this.closeEditModal();
+            });
+        }
+
+        // Setup click outside modal to close
+        const modal = document.getElementById('editStreamModal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.closeEditModal();
+                }
+            });
+        }
+
+        // Setup escape key to close modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal && modal.style.display === 'block') {
                 this.closeEditModal();
             }
         });
     }
-    
-    closeEditModal() {
-        const modal = document.getElementById('editStreamModal');
-        if (modal) {
-            modal.remove();
-        }
-    }
-    
-    async saveStreamEdit(streamId) {
-        const form = document.getElementById('editStreamForm');
-        const formData = new FormData(form);
-        
-        // Validation
-        const title = document.getElementById('editTitle').value.trim();
-        const date = document.getElementById('editDate').value;
-        const link = document.getElementById('editLink').value.trim();
-        
-        if (!title || !date || !link) {
-            this.showToast('Bitte füllen Sie alle Pflichtfelder aus', 'error');
-            return;
-        }
-        
-        // Find and update stream
-        const streamIndex = this.streams.findIndex(s => s.id.toString() === streamId.toString());
-        if (streamIndex === -1) {
-            this.showToast('Stream nicht gefunden', 'error');
-            return;
-        }
-        
-        // Handle thumbnail upload
-        let thumbnailUrl = this.streams[streamIndex].thumbnail;
-        const thumbnailFile = document.getElementById('editThumbnailFile').files[0];
-        
-        if (thumbnailFile) {
-            // Validate file size (max 5MB)
-            if (thumbnailFile.size > 5 * 1024 * 1024) {
-                this.showToast('Thumbnail-Datei ist zu groß (max. 5MB)', 'error');
-                return;
-            }
-            
-            // Validate file type
-            if (!thumbnailFile.type.startsWith('image/')) {
-                this.showToast('Bitte wählen Sie eine gültige Bilddatei', 'error');
-                return;
-            }
-            
-            try {
-                thumbnailUrl = await this.convertFileToBase64(thumbnailFile);
-            } catch (error) {
-                this.showToast('Fehler beim Verarbeiten des Thumbnails', 'error');
-                return;
-            }
-        }
-        
-        // Update stream data
-        this.streams[streamIndex] = {
-            ...this.streams[streamIndex],
-            title: title,
-            description: document.getElementById('editDescription').value.trim(),
-            game: document.getElementById('editGame').value.trim(),
-            date: date,
-            duration: this.streams[streamIndex].duration,
-            link: link,
-            thumbnail: thumbnailUrl,
-            status: document.getElementById('editStatus').value
-        };
-        
-        // Save to localStorage
-        localStorage.setItem('streamArchive_streams', JSON.stringify(this.streams));
-        
-        // Refresh displays
-        this.loadArchive();
-        this.loadDashboard();
-        
-        // Close modal and show success
-        this.closeEditModal();
-        this.showToast('Stream wurde erfolgreich aktualisiert!', 'success');
-    }
 
-    deleteStream(streamId) {
+    async deleteStream(streamId) {
         console.log('Attempting to delete stream with ID:', streamId, 'Type:', typeof streamId);
         console.log('Available stream IDs:', this.streams.map(s => ({ id: s.id, type: typeof s.id })));
         
         if (confirm('Möchten Sie diesen Stream wirklich löschen?')) {
-            const initialCount = this.streams.length;
-            
-            // Convert both IDs to strings for comparison to handle type mismatches
-            this.streams = this.streams.filter(s => s.id.toString() !== streamId.toString());
-            
-            const finalCount = this.streams.length;
-            console.log('Streams before deletion:', initialCount, 'after deletion:', finalCount);
-            
-            if (initialCount === finalCount) {
-                this.showToast('Stream konnte nicht gefunden werden', 'error');
-                return;
+            try {
+                const response = await fetch(`${this.apiBase}/streams/${streamId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    this.showToast('Stream erfolgreich gelöscht', 'success');
+                    this.loadArchive();
+                } else {
+                    this.showToast('Fehler beim Löschen des Streams: ' + data.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting stream:', error);
+                this.showToast('Fehler beim Löschen des Streams', 'error');
+            }
+        }
+    }
+
+    loadDashboard() {
+        this.updateDashboardStats();
+        this.loadRecentActivity();
+    }
+
+    updateDashboardStats() {
+        // Update stats cards
+        const totalUsersEl = document.getElementById('totalUsers');
+        const totalStreamsEl = document.getElementById('totalStreams');
+        const activeStreamsEl = document.getElementById('activeStreams');
+        const storageUsedEl = document.getElementById('storageUsed');
+        
+        if (totalUsersEl) totalUsersEl.textContent = this.users.length;
+        if (totalStreamsEl) totalStreamsEl.textContent = this.streams.length;
+        
+        // Calculate other stats
+        const activeStreams = Array.isArray(this.streams) ? this.streams.filter(s => s.is_live).length : 0;
+        if (activeStreamsEl) activeStreamsEl.textContent = activeStreams;
+        
+        // Storage usage (placeholder)
+        if (storageUsedEl) storageUsedEl.textContent = '0 GB';
+    }
+
+    loadRecentActivity() {
+        const recentActivity = document.getElementById('recentActivity');
+        if (!recentActivity) return;
+
+        // Get recent streams (last 5)
+        const recentStreams = this.streams
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+            .slice(0, 5);
+
+        if (recentStreams.length === 0) {
+            recentActivity.innerHTML = '<p class="no-data">Keine kürzlichen Aktivitäten.</p>';
+            return;
+        }
+
+        recentActivity.innerHTML = recentStreams.map(stream => `
+            <div class="activity-item">
+                <div class="activity-icon">
+                    <i class="fas fa-video"></i>
+                </div>
+                <div class="activity-content">
+                    <p><strong>${stream.title}</strong> wurde hinzugefügt</p>
+                    <small>${this.formatDate(stream.created_at)}</small>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    loadSettings() {
+        // Populate settings form
+        const form = document.getElementById('settingsForm');
+        if (!form) return;
+
+        // Set form values from this.settings
+        Object.keys(this.settings).forEach(key => {
+            const input = form.querySelector(`[name="${key}"]`);
+            if (input) {
+                if (input.type === 'checkbox') {
+                    input.checked = this.settings[key];
+                } else if (input.type === 'number') {
+                    input.value = this.settings[key] || 0;
+                } else {
+                    input.value = this.settings[key] || '';
+                }
+            }
+        });
+    }
+
+    async saveSettings() {
+        const form = document.getElementById('settingsForm');
+        if (!form) return;
+
+        const formData = new FormData(form);
+        const settings = {};
+        
+        for (let [key, value] of formData.entries()) {
+            // Handle checkboxes
+            const input = form.querySelector(`[name="${key}"]`);
+            if (input && input.type === 'checkbox') {
+                settings[key] = input.checked;
+            } else if (input && input.type === 'number') {
+                settings[key] = parseInt(value) || 0;
+            } else {
+                settings[key] = value;
+            }
+        }
+
+        try {
+            // Save each setting individually
+            for (const [key, value] of Object.entries(settings)) {
+                const response = await fetch(`${this.apiBase}/settings`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        setting_key: key,
+                        setting_value: value
+                    })
+                });
+                
+                const data = await response.json();
+                if (!data.success) {
+                    throw new Error(`Failed to save setting ${key}: ${data.error}`);
+                }
             }
             
-            // Save to localStorage
-            localStorage.setItem('streamArchive_streams', JSON.stringify(this.streams));
+            this.settings = { ...this.settings, ...settings };
+            this.showToast('Einstellungen erfolgreich gespeichert', 'success');
+        } catch (error) {
+            console.error('Error saving settings:', error);
+            this.showToast('Fehler beim Speichern der Einstellungen: ' + error.message, 'error');
+        }
+    }
+
+    loadLogos() {
+        // Reload logos from API
+        this.loadLogosFromAPI().then(() => {
+            this.renderLogos();
+        });
+    }
+
+    renderLogos() {
+        const logosList = document.getElementById('logosList');
+        if (!logosList) return;
+
+        if (this.logos.length === 0) {
+            logosList.innerHTML = '<p class="no-data">Keine Logos gefunden.</p>';
+            return;
+        }
+
+        logosList.innerHTML = this.logos.map(logo => `
+            <div class="logo-item" data-logo-id="${logo.id}">
+                <div class="logo-preview">
+                    <img src="${logo.logo_url}" alt="${logo.game_name}" onerror="this.src='/images/default-logo.png'">
+                </div>
+                <div class="logo-info">
+                    <h4>${logo.game_name}</h4>
+                    <p>Aliase: ${logo.aliases ? logo.aliases.join(', ') : 'Keine'}</p>
+                    <small>Erstellt: ${this.formatDate(logo.created_at)}</small>
+                </div>
+                <div class="logo-actions">
+                    <button class="btn btn-sm" onclick="adminPanel.editLogo(${logo.id})">
+                        <i class="fas fa-edit"></i> Bearbeiten
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="adminPanel.deleteLogo(${logo.id})">
+                        <i class="fas fa-trash"></i> Löschen
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async saveLogo() {
+        const form = document.getElementById('logoForm');
+        if (!form) return;
+
+        const formData = new FormData(form);
+        const logoData = {
+            gameName: formData.get('gameName'),
+            logoUrl: formData.get('logoUrl'),
+            aliases: formData.get('aliases') ? formData.get('aliases').split(',').map(a => a.trim()) : []
+        };
+
+        try {
+            const url = this.currentLogoId 
+                ? `${this.apiBase}/logos/${this.currentLogoId}`
+                : `${this.apiBase}/logos`;
             
-            this.loadArchive();
-            this.loadDashboard(); // Update stats
-            this.showToast('Stream wurde erfolgreich gelöscht', 'success');
+            const method = this.currentLogoId ? 'PUT' : 'POST';
+            
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(logoData)
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                this.showToast('Logo erfolgreich gespeichert', 'success');
+                this.loadLogos();
+                form.reset();
+                this.currentLogoId = null;
+            } else {
+                this.showToast('Fehler beim Speichern des Logos: ' + data.error, 'error');
+            }
+        } catch (error) {
+            console.error('Error saving logo:', error);
+            this.showToast('Fehler beim Speichern des Logos', 'error');
+        }
+    }
+
+    editLogo(logoId) {
+        const logo = this.logos.find(l => l.id === logoId);
+        if (!logo) return;
+
+        const form = document.getElementById('logoForm');
+        if (!form) return;
+
+        form.querySelector('[name="gameName"]').value = logo.game_name;
+        form.querySelector('[name="logoUrl"]').value = logo.logo_url;
+        form.querySelector('[name="aliases"]').value = logo.aliases ? logo.aliases.join(', ') : '';
+        
+        this.currentLogoId = logoId;
+    }
+
+    async deleteLogo(logoId) {
+        if (confirm('Möchten Sie dieses Logo wirklich löschen?')) {
+            try {
+                const response = await fetch(`${this.apiBase}/logos/${logoId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    this.showToast('Logo erfolgreich gelöscht', 'success');
+                    this.loadLogos();
+                } else {
+                    this.showToast('Fehler beim Löschen des Logos: ' + data.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting logo:', error);
+                this.showToast('Fehler beim Löschen des Logos', 'error');
+            }
         }
     }
 
     setupUploadForm() {
-        const form = document.getElementById('streamUploadForm');
-        const tagsInput = document.getElementById('streamTags');
-        const releaseType = document.getElementById('releaseType');
-        const scheduleGroup = document.getElementById('scheduleGroup');
-        const resetBtn = document.getElementById('resetForm');
+        const uploadForm = document.getElementById('streamUploadForm');
+        if (!uploadForm) return;
+
+        // Setup file input labels
+        this.setupFileInputs();
         
-        // Tags input
-        if (tagsInput) {
-            tagsInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    this.addTag(e.target.value.trim());
-                    e.target.value = '';
+        // Setup tags input
+        this.setupTagsInput();
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(uploadForm);
+            
+            // Process thumbnail file if uploaded
+            let thumbnailUrl = '';
+            const thumbnailFile = formData.get('thumbnailFile');
+            if (thumbnailFile && thumbnailFile.size > 0) {
+                try {
+                    thumbnailUrl = await this.convertFileToBase64(thumbnailFile);
+                } catch (error) {
+                    console.error('Error converting thumbnail to base64:', error);
+                    this.showToast('Fehler beim Verarbeiten des Thumbnails', 'error');
+                    return;
                 }
-            });
-        }
-        
-        // Release type change
-        if (releaseType) {
-            releaseType.addEventListener('change', (e) => {
-                if (e.target.value === 'scheduled') {
-                    scheduleGroup.style.display = 'block';
+            }
+            
+            // Process chat JSON file to extract duration and store raw content
+            let duration = 0;
+            let chatContent = null;
+            const chatFile = formData.get('chatFile');
+            if (chatFile && chatFile.size > 0) {
+                try {
+                    const chatText = await chatFile.text();
+                    const chatData = JSON.parse(chatText);
+                    duration = this.extractDurationFromChat(chatData);
+                    chatContent = chatText; // Store raw JSON content
+                } catch (error) {
+                    console.error('Error processing chat file:', error);
+                    this.showToast('Fehler beim Verarbeiten der Chat-Datei', 'error');
+                    return;
+                }
+            }
+            
+            // Convert FormData to JSON object
+            const streamData = {
+                title: formData.get('title'),
+                description: formData.get('description'),
+                stream_url: formData.get('stream_url'),
+                thumbnail_url: thumbnailUrl,
+                category: formData.get('category'),
+                is_live: formData.get('is_live') === 'on',
+                viewer_count: parseInt(formData.get('viewer_count')) || 0,
+                tags: this.tags.join(','),
+                duration: duration,
+                chatData: chatContent
+            };
+            
+            try {
+                const response = await fetch(`${this.apiBase}/streams`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': cookieManager.getPreference('session_token') ? `Bearer ${cookieManager.getPreference('session_token')}` : ''
+                    },
+                    body: JSON.stringify(streamData)
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    this.showToast('Stream erfolgreich hochgeladen', 'success');
+                    uploadForm.reset();
+                    this.tags = []; // Clear tags
+                    this.updateTagsDisplay();
+                    this.loadArchive();
                 } else {
-                    scheduleGroup.style.display = 'none';
+                    this.showToast('Fehler beim Hochladen: ' + data.error, 'error');
                 }
-            });
-        }
-        
-        // File upload handlers
-        this.setupFileUploads();
-        
-        // Form submission
-        if (form) {
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.handleStreamUpload();
-            });
-        }
-        
-        // Reset form
-        if (resetBtn) {
-            resetBtn.addEventListener('click', () => {
-                form.reset();
-                this.tags = [];
-                this.updateTagsList();
-                this.resetFileUploads();
-            });
-        }
+            } catch (error) {
+                console.error('Upload error:', error);
+                this.showToast('Fehler beim Hochladen', 'error');
+            }
+        });
     }
 
-    addTag(tag) {
-        if (tag && !this.tags.includes(tag)) {
-            this.tags.push(tag);
-            this.updateTagsList();
-        }
-    }
-
-    removeTag(tag) {
-        this.tags = this.tags.filter(t => t !== tag);
-        this.updateTagsList();
-    }
-
-    updateTagsList() {
-        const tagsList = document.getElementById('tagsList');
-        if (!tagsList) return;
-        
-        tagsList.innerHTML = this.tags.map(tag => `
-            <span class="tag">
-                ${tag}
-                <button type="button" class="tag-remove" onclick="adminPanel.removeTag('${tag}')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </span>
-        `).join('');
-    }
-
-    setupFileUploads() {
+    setupFileInputs() {
         const fileInputs = ['chatFile', 'thumbnailFile', 'videoFile'];
         
         fileInputs.forEach(inputId => {
             const input = document.getElementById(inputId);
-            if (input) {
+            const label = document.querySelector(`label[for="${inputId}"]`);
+            
+            if (input && label) {
                 input.addEventListener('change', (e) => {
-                    this.handleFileSelect(e.target);
+                    const file = e.target.files[0];
+                    if (file) {
+                        const fileName = file.name;
+                        const icon = label.querySelector('i');
+                        const text = label.querySelector('.file-name') || document.createElement('span');
+                        text.className = 'file-name';
+                        text.textContent = fileName;
+                        
+                        if (!label.querySelector('.file-name')) {
+                            label.appendChild(text);
+                        }
+                        
+                        label.classList.add('file-selected');
+                    } else {
+                        const text = label.querySelector('.file-name');
+                        if (text) {
+                            text.remove();
+                        }
+                        label.classList.remove('file-selected');
+                    }
                 });
             }
         });
     }
 
-    handleFileSelect(input) {
-        const file = input.files[0];
-        const label = input.nextElementSibling;
-        const upload = input.closest('.file-upload');
+    setupTagsInput() {
+        const tagsInput = document.getElementById('streamTags');
+        const tagsList = document.getElementById('tagsList');
         
-        if (file) {
-            label.innerHTML = `<i class="fas fa-check"></i> ${file.name}`;
-            upload.classList.add('has-file');
-            
-            // Simulate upload progress for video files
-            if (input.id === 'videoFile') {
-                this.simulateUploadProgress();
-            }
-        } else {
-            this.resetFileUpload(input);
-        }
-    }
-
-    resetFileUploads() {
-        const fileInputs = ['chatFile', 'thumbnailFile', 'videoFile'];
-        fileInputs.forEach(inputId => {
-            const input = document.getElementById(inputId);
-            if (input) {
-                this.resetFileUpload(input);
-            }
-        });
-    }
-
-    resetFileUpload(input) {
-        const label = input.nextElementSibling;
-        const upload = input.closest('.file-upload');
-        const originalText = {
-            'chatFile': '<i class="fas fa-upload"></i> Chat-Datei auswählen',
-            'thumbnailFile': '<i class="fas fa-image"></i> Thumbnail auswählen',
-            'videoFile': '<i class="fas fa-video"></i> Video-Datei auswählen'
-        };
+        if (!tagsInput || !tagsList) return;
         
-        label.innerHTML = originalText[input.id] || '<i class="fas fa-upload"></i> Datei auswählen';
-        upload.classList.remove('has-file');
-        input.value = '';
-    }
-    
-    updateExistingStreamDurations() {
-        let updatedCount = 0;
-        
-        this.streams.forEach((stream, index) => {
-            if (stream.chatData) {
-                let extractedDuration = stream.duration; // Keep current duration as fallback
-                
-                // Try to extract duration from various possible fields in chat JSON
-                if (stream.chatData.video && stream.chatData.video.lengthSeconds) {
-                    extractedDuration = parseInt(stream.chatData.video.lengthSeconds);
-                    console.log(`Stream "${stream.title}": Duration extracted from video.lengthSeconds:`, extractedDuration);
-                } else if (stream.chatData.video && stream.chatData.video.duration) {
-                    extractedDuration = parseInt(stream.chatData.video.duration);
-                    console.log(`Stream "${stream.title}": Duration extracted from video.duration:`, extractedDuration);
-                } else if (stream.chatData.lengthSeconds) {
-                    extractedDuration = parseInt(stream.chatData.lengthSeconds);
-                    console.log(`Stream "${stream.title}": Duration extracted from lengthSeconds:`, extractedDuration);
-                } else if (stream.chatData.duration) {
-                    extractedDuration = parseInt(stream.chatData.duration);
-                    console.log(`Stream "${stream.title}": Duration extracted from duration:`, extractedDuration);
-                } else if (stream.chatData.video && stream.chatData.video.lengthMilliseconds) {
-                    extractedDuration = Math.floor(parseInt(stream.chatData.video.lengthMilliseconds) / 1000);
-                    console.log(`Stream "${stream.title}": Duration extracted from video.lengthMilliseconds:`, extractedDuration);
-                } else if (stream.chatData.lengthMilliseconds) {
-                    extractedDuration = Math.floor(parseInt(stream.chatData.lengthMilliseconds) / 1000);
-                    console.log(`Stream "${stream.title}": Duration extracted from lengthMilliseconds:`, extractedDuration);
-                } else if (stream.chatData.comments && stream.chatData.comments.length > 0) {
-                    // Try to find the last comment's timestamp as duration estimate
-                    const lastComment = stream.chatData.comments[stream.chatData.comments.length - 1];
-                    if (lastComment.content_offset_seconds) {
-                        extractedDuration = Math.ceil(parseFloat(lastComment.content_offset_seconds));
-                        console.log(`Stream "${stream.title}": Duration estimated from last comment offset:`, extractedDuration);
-                    } else if (lastComment.offset) {
-                        extractedDuration = Math.ceil(parseFloat(lastComment.offset));
-                        console.log(`Stream "${stream.title}": Duration estimated from last comment offset:`, extractedDuration);
-                    }
-                }
-                
-                // Update duration if it's different from current
-                if (extractedDuration !== stream.duration && extractedDuration > 0) {
-                    console.log(`Updating stream "${stream.title}" duration from ${stream.duration}s to ${extractedDuration}s`);
-                    this.streams[index].duration = extractedDuration;
-                    updatedCount++;
+        tagsInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const tag = tagsInput.value.trim();
+                if (tag && !this.tags.includes(tag)) {
+                    this.tags.push(tag);
+                    this.updateTagsDisplay();
+                    tagsInput.value = '';
                 }
             }
         });
-        
-        if (updatedCount > 0) {
-            // Save updated streams to localStorage
-            localStorage.setItem('streamArchive_streams', JSON.stringify(this.streams));
-            console.log(`Updated duration for ${updatedCount} streams from their chat data`);
-            this.showToast(`${updatedCount} Stream(s) wurden mit Dauer aus Chat-Daten aktualisiert`, 'success');
-            
-            // Reload displays to show updated durations
-            this.loadArchive();
-            this.loadDashboard();
-        } else {
-            console.log('No streams needed duration updates from chat data');
-        }
-    }
-
-    simulateUploadProgress() {
-        const progressContainer = document.getElementById('videoUploadProgress');
-        const progressFill = progressContainer.querySelector('.progress-fill');
-        const progressText = progressContainer.querySelector('.progress-text');
-        
-        progressContainer.style.display = 'block';
-        
-        let progress = 0;
-        const interval = setInterval(() => {
-            progress += Math.random() * 15;
-            if (progress >= 100) {
-                progress = 100;
-                clearInterval(interval);
-                setTimeout(() => {
-                    progressContainer.style.display = 'none';
-                    progressFill.style.width = '0%';
-                    progressText.textContent = '0%';
-                }, 1000);
-            }
-            
-            progressFill.style.width = progress + '%';
-            progressText.textContent = Math.round(progress) + '%';
-        }, 200);
-    }
-
-    handleStreamUpload() {
-        const formData = new FormData(document.getElementById('streamUploadForm'));
-        
-        // Basic validation
-        const title = formData.get('title');
-        const date = formData.get('date');
-        const link = formData.get('link');
-        const chatFile = formData.get('chatFile');
-        
-        if (!title || !date || !link || !chatFile.name) {
-            this.showToast('Bitte füllen Sie alle Pflichtfelder aus', 'error');
-            return;
-        }
-        
-        // Process files
-        this.showToast('Stream wird hochgeladen...', 'info');
-        
-        const thumbnailFile = formData.get('thumbnailFile');
-        
-        // Process thumbnail first if provided
-        if (thumbnailFile && thumbnailFile.name) {
-            this.processThumbnail(thumbnailFile, (thumbnailData) => {
-                this.processStreamWithThumbnail(formData, chatFile, thumbnailData);
-            });
-        } else {
-            this.processStreamWithThumbnail(formData, chatFile, 'https://via.placeholder.com/320x180');
-        }
-    }
-    
-    processThumbnail(thumbnailFile, callback) {
-        // Validate file type
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-        if (!allowedTypes.includes(thumbnailFile.type)) {
-            this.showToast('Bitte wählen Sie eine gültige Bilddatei (JPEG, PNG, GIF, WebP)', 'error');
-            return;
-        }
-        
-        // Validate file size (max 5MB)
-        const maxSize = 5 * 1024 * 1024; // 5MB
-        if (thumbnailFile.size > maxSize) {
-            this.showToast('Das Thumbnail ist zu groß. Maximale Größe: 5MB', 'error');
-            return;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            // Create image to resize if needed
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                
-                // Set target dimensions (16:9 aspect ratio)
-                const targetWidth = 320;
-                const targetHeight = 180;
-                
-                canvas.width = targetWidth;
-                canvas.height = targetHeight;
-                
-                // Draw and resize image
-                ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
-                
-                // Convert to base64
-                const thumbnailData = canvas.toDataURL('image/jpeg', 0.8);
-                callback(thumbnailData);
-            };
-            img.src = e.target.result;
-        };
-        
-        reader.onerror = () => {
-            this.showToast('Fehler beim Lesen der Thumbnail-Datei', 'error');
-        };
-        
-        reader.readAsDataURL(thumbnailFile);
-    }
-    
-    processStreamWithThumbnail(formData, chatFile, thumbnailData) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const chatData = JSON.parse(e.target.result);
-                console.log('Parsed chat data:', chatData);
-                console.log('Chat comments count:', chatData.comments ? chatData.comments.length : 'No comments array');
-                
-                // Extract duration from chat JSON structure
-                let extractedDuration = parseInt(formData.get('duration')) || 3600;
-                
-                // Try to extract duration from various possible fields in chat JSON
-                if (chatData.video && chatData.video.lengthSeconds) {
-                    extractedDuration = parseInt(chatData.video.lengthSeconds);
-                    console.log('Duration extracted from video.lengthSeconds:', extractedDuration);
-                } else if (chatData.video && chatData.video.duration) {
-                    extractedDuration = parseInt(chatData.video.duration);
-                    console.log('Duration extracted from video.duration:', extractedDuration);
-                } else if (chatData.lengthSeconds) {
-                    extractedDuration = parseInt(chatData.lengthSeconds);
-                    console.log('Duration extracted from lengthSeconds:', extractedDuration);
-                } else if (chatData.duration) {
-                    extractedDuration = parseInt(chatData.duration);
-                    console.log('Duration extracted from duration:', extractedDuration);
-                } else if (chatData.video && chatData.video.lengthMilliseconds) {
-                    extractedDuration = Math.floor(parseInt(chatData.video.lengthMilliseconds) / 1000);
-                    console.log('Duration extracted from video.lengthMilliseconds:', extractedDuration);
-                } else if (chatData.lengthMilliseconds) {
-                    extractedDuration = Math.floor(parseInt(chatData.lengthMilliseconds) / 1000);
-                    console.log('Duration extracted from lengthMilliseconds:', extractedDuration);
-                } else if (chatData.comments && chatData.comments.length > 0) {
-                    // Try to find the last comment's timestamp as duration estimate
-                    const lastComment = chatData.comments[chatData.comments.length - 1];
-                    if (lastComment.content_offset_seconds) {
-                        extractedDuration = Math.ceil(parseFloat(lastComment.content_offset_seconds));
-                        console.log('Duration estimated from last comment offset:', extractedDuration);
-                    } else if (lastComment.offset) {
-                        extractedDuration = Math.ceil(parseFloat(lastComment.offset));
-                        console.log('Duration estimated from last comment offset:', extractedDuration);
-                    }
-                }
-                
-                // Create new stream object with chat data
-                const newStream = {
-                    id: Date.now().toString(),
-                    title: formData.get('title'),
-                    description: formData.get('description') || '',
-                    game: formData.get('game') || '',
-                    date: formData.get('date'),
-                    duration: extractedDuration,
-                    views: 0,
-                    streamer: {
-                        name: 'Current User',
-                        avatar: 'https://via.placeholder.com/40'
-                    },
-                    thumbnail: thumbnailData,
-                    link: formData.get('link'),
-                    tags: this.tags || [],
-                    status: 'published',
-                    chatData: chatData // Store the parsed chat data
-                };
-                
-                this.streams.push(newStream);
-                
-                // Save to localStorage
-                localStorage.setItem('streamArchive_streams', JSON.stringify(this.streams));
-                
-                this.loadArchive();
-                this.loadDashboard();
-                
-                // Reset form
-                document.getElementById('streamUploadForm').reset();
-                this.tags = [];
-                this.updateTagsList();
-                this.resetFileUploads();
-                
-                // Update existing streams with duration from their chat data
-                this.updateExistingStreamDurations();
-                
-                this.showToast('Stream wurde erfolgreich hochgeladen!', 'success');
-            } catch (error) {
-                console.error('Error parsing chat file:', error);
-                this.showToast('Fehler beim Verarbeiten der Chat-Datei. Bitte überprüfen Sie das JSON-Format.', 'error');
-            }
-        };
-        
-        reader.onerror = () => {
-            this.showToast('Fehler beim Lesen der Chat-Datei', 'error');
-        };
-        
-        reader.readAsText(chatFile);
-    }
-
-    loadSettings() {
-        // Populate settings form
-        document.getElementById('siteName').value = this.settings.siteName;
-        document.getElementById('siteDescription').value = this.settings.siteDescription;
-        document.getElementById('maxFileSize').value = this.settings.maxFileSize;
-        document.getElementById('autoHLS').checked = this.settings.autoHLS;
-        document.getElementById('allowComments').checked = this.settings.allowComments;
-        document.getElementById('requireLogin').checked = this.settings.requireLogin;
-        document.getElementById('moderateComments').checked = this.settings.moderateComments;
-        
-        // HLS qualities
-        const qualityCheckboxes = document.querySelectorAll('input[name="hlsQuality"]');
-        qualityCheckboxes.forEach(checkbox => {
-            checkbox.checked = this.settings.hlsQualities.includes(checkbox.value);
-        });
-    }
-
-    setupSettingsEvents() {
-        const saveBtn = document.getElementById('saveSettings');
-        const resetBtn = document.getElementById('resetSettings');
-        
-        if (saveBtn) {
-            saveBtn.addEventListener('click', () => {
-                this.saveSettings();
-            });
-        }
-        
-        if (resetBtn) {
-            resetBtn.addEventListener('click', () => {
-                this.loadSettings();
-                this.showToast('Einstellungen wurden zurückgesetzt', 'info');
-            });
-        }
-    }
-
-    saveSettings() {
-        // Collect settings from form
-        const newSettings = {
-            siteName: document.getElementById('siteName').value,
-            siteDescription: document.getElementById('siteDescription').value,
-            maxFileSize: parseInt(document.getElementById('maxFileSize').value),
-            autoHLS: document.getElementById('autoHLS').checked,
-            allowComments: document.getElementById('allowComments').checked,
-            requireLogin: document.getElementById('requireLogin').checked,
-            moderateComments: document.getElementById('moderateComments').checked,
-            hlsQualities: Array.from(document.querySelectorAll('input[name="hlsQuality"]:checked')).map(cb => cb.value)
-        };
-        
-        // Save to localStorage
-        this.settings = { ...this.settings, ...newSettings };
-        localStorage.setItem('streamArchive_settings', JSON.stringify(this.settings));
-        
-        this.showToast('Einstellungen wurden gespeichert', 'success');
-    }
-
-    // Utility functions
-    formatNumber(num) {
-        if (num >= 1000000) {
-            return (num / 1000000).toFixed(1) + 'M';
-        } else if (num >= 1000) {
-            return (num / 1000).toFixed(1) + 'K';
-        }
-        return num.toString();
-    }
-
-    formatDate(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('de-DE', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-        });
-    }
-
-    formatDuration(seconds) {
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        return `${hours}:${minutes.toString().padStart(2, '0')}h`;
-    }
-
-    formatViews(views) {
-        return this.formatNumber(views);
-    }
-
-    getRoleDisplayName(role) {
-        const roleNames = {
-            'admin': 'Administrator',
-            'moderator': 'Moderator',
-            'user': 'Benutzer'
-        };
-        return roleNames[role] || role;
-    }
-
-    getStatusDisplayName(status) {
-        const statusNames = {
-            'published': 'Veröffentlicht',
-            'draft': 'Entwurf',
-            'scheduled': 'Geplant'
-        };
-        return statusNames[status] || status;
-    }
-
-    // Logo Management Methods
-    loadLogos() {
-        this.renderLogos(this.logos);
-    }
-
-    renderLogos(logos) {
-        const container = document.getElementById('logosGrid');
-        if (!container) return;
-
-        if (logos.length === 0) {
-            container.innerHTML = `
-                <div class="logo-empty-state">
-                    <i class="fas fa-images"></i>
-                    <h3>Keine Logos vorhanden</h3>
-                    <p>Füge dein erstes Spiel-Logo hinzu, um loszulegen.</p>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = logos.map(logo => `
-            <div class="logo-card">
-                <div class="logo-card-header">
-                    <img src="${logo.logoUrl}" alt="${logo.gameName}" class="logo-card-image" 
-                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="logo-card-fallback" style="display: none; width: 48px; height: 48px; background: var(--primary-color); border-radius: 8px; align-items: center; justify-content: center; color: white; font-weight: bold;">
-                        ${logo.gameName.charAt(0).toUpperCase()}
-                    </div>
-                    <div class="logo-card-info">
-                        <h3>${logo.gameName}</h3>
-                    </div>
-                </div>
-                ${logo.aliases && logo.aliases.length > 0 ? `
-                    <div class="logo-card-aliases">
-                        <strong>Alternative Namen:</strong>
-                        <div class="logo-aliases">
-                            ${logo.aliases.map(alias => `<span class="logo-alias">${alias}</span>`).join('')}
-                        </div>
-                    </div>
-                ` : ''}
-                <div class="logo-card-actions">
-                    <button class="action-btn edit" onclick="adminPanel.editLogo(${logo.id})" title="Bearbeiten">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="action-btn delete" onclick="adminPanel.deleteLogo(${logo.id})" title="Löschen">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    filterLogos(searchTerm) {
-        if (!searchTerm.trim()) {
-            this.renderLogos(this.logos);
-            return;
-        }
-
-        const filtered = this.logos.filter(logo => {
-            const searchLower = searchTerm.toLowerCase();
-            return logo.gameName.toLowerCase().includes(searchLower) ||
-                   logo.aliases.some(alias => alias.toLowerCase().includes(searchLower));
-        });
-
-        this.renderLogos(filtered);
-    }
-
-    showLogoModal(logo = null) {
-        const modal = document.getElementById('logoModal');
-        const title = document.getElementById('logoModalTitle');
-        const form = document.getElementById('logoForm');
-        
-        // Initialize tabs - default to URL tab
-        this.switchLogoTab('url');
-        
-        if (logo) {
-            title.textContent = 'Logo bearbeiten';
-            document.getElementById('logoGameName').value = logo.gameName;
-            document.getElementById('logoUrl').value = logo.logoUrl;
-            document.getElementById('logoAliases').value = logo.aliases.join(', ');
-            this.currentLogoId = logo.id;
-            this.updateLogoPreview(logo.logoUrl);
-        } else {
-            title.textContent = 'Logo hinzufügen';
-            form.reset();
-            this.currentLogoId = null;
-            this.updateLogoPreview('');
-        }
-        
-        modal.classList.add('active');
-    }
-
-    hideLogoModal() {
-        const modal = document.getElementById('logoModal');
-        modal.classList.remove('active');
-        this.currentLogoId = null;
-    }
-
-    setupLogoModalEvents() {
-        const modal = document.getElementById('logoModal');
-        const closeBtn = modal?.querySelector('.modal-close');
-        const cancelBtn = document.getElementById('cancelLogo');
-        const saveBtn = document.getElementById('saveLogo');
-        const logoUrlInput = document.getElementById('logoUrl');
-
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => this.hideLogoModal());
-        }
-
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', () => this.hideLogoModal());
-        }
-
-        if (saveBtn) {
-            saveBtn.addEventListener('click', () => this.saveLogo());
-        }
-
-        if (logoUrlInput) {
-            logoUrlInput.addEventListener('input', (e) => {
-                this.updateLogoPreview(e.target.value);
-            });
-        }
-
-        // File upload handling
-        const logoFileInput = document.getElementById('logoFile');
-        if (logoFileInput) {
-            logoFileInput.addEventListener('change', () => this.handleFileUpload());
-        }
-
-        // Tab switching
-        const tabBtns = modal?.querySelectorAll('.tab-btn');
-        if (tabBtns) {
-            tabBtns.forEach(btn => {
-                btn.addEventListener('click', () => this.switchLogoTab(btn.dataset.tab));
-            });
-        }
-
-        // Close modal when clicking outside
-        if (modal) {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    this.hideLogoModal();
-                }
-            });
-        }
-    }
-
-    updateLogoPreview(url) {
-        const preview = document.getElementById('logoPreview');
-        const img = document.getElementById('logoPreviewImg');
-        const placeholder = preview?.querySelector('.logo-preview-placeholder');
-
-        if (!preview || !img || !placeholder) return;
-
-        if (url && url.trim()) {
-            img.src = url;
-            img.style.display = 'block';
-            placeholder.style.display = 'none';
-            preview.classList.add('has-image');
-            
-            img.onerror = () => {
-                img.style.display = 'none';
-                placeholder.style.display = 'block';
-                placeholder.textContent = 'Fehler beim Laden des Bildes';
-                preview.classList.remove('has-image');
-            };
-            
-            img.onload = () => {
-                preview.classList.add('has-image');
-            };
-        } else {
-            img.style.display = 'none';
-            placeholder.style.display = 'block';
-            placeholder.textContent = 'Logo-URL eingeben für Vorschau';
-            preview.classList.remove('has-image');
-        }
-    }
-
-    switchLogoTab(tab) {
-        const modal = document.getElementById('logoModal');
-        const tabBtns = modal.querySelectorAll('.tab-btn');
-        const tabContents = modal.querySelectorAll('.tab-content');
-        
-        // Update tab buttons
-        tabBtns.forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === tab);
-        });
-        
-        // Update tab contents
-        tabContents.forEach(content => {
-            content.classList.toggle('active', content.dataset.tab === tab);
-        });
-        
-        // Clear preview when switching tabs
-        this.updateLogoPreview('');
-        
-        // Clear file input when switching away from upload tab
-        if (tab !== 'upload') {
-            const fileInput = document.getElementById('logoFile');
-            if (fileInput) fileInput.value = '';
-        }
-        
-        // Clear URL input when switching away from URL tab
-        if (tab !== 'url') {
-            const urlInput = document.getElementById('logoUrl');
-            if (urlInput) urlInput.value = '';
-        }
-    }
-
-    handleFileUpload() {
-        const fileInput = document.getElementById('logoFile');
-        const file = fileInput.files[0];
-        
-        if (!file) return;
-        
-        // Validate file type
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
-        if (!allowedTypes.includes(file.type)) {
-            alert('Bitte wählen Sie eine gültige Bilddatei (JPG, PNG, GIF, WebP, SVG).');
-            fileInput.value = '';
-            return;
-        }
-        
-        // Validate file size (5MB limit)
-        const maxSize = 5 * 1024 * 1024; // 5MB in bytes
-        if (file.size > maxSize) {
-            alert('Die Datei ist zu groß. Maximale Größe: 5MB.');
-            fileInput.value = '';
-            return;
-        }
-        
-        // Convert to base64 and preview
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const base64 = e.target.result;
-            this.updateLogoPreview(base64);
-        };
-        reader.readAsDataURL(file);
-    }
-
-    saveLogo() {
-        const form = document.getElementById('logoForm');
-        const formData = new FormData(form);
-        
-        const gameName = formData.get('gameName')?.trim();
-        const logoUrl = formData.get('logoUrl')?.trim();
-        const aliases = formData.get('aliases');
-        const logoFile = formData.get('logoFile');
-        
-        // Check which tab is active
-        const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
-        
-        if (!gameName) {
-            alert('Bitte geben Sie einen Spielnamen ein.');
-            return;
-        }
-        
-        let finalLogoUrl = '';
-        
-        if (activeTab === 'url') {
-            if (!logoUrl) {
-                alert('Bitte geben Sie eine Logo-URL ein.');
-                return;
-            }
-            finalLogoUrl = logoUrl;
-        } else if (activeTab === 'upload') {
-            if (!logoFile || logoFile.size === 0) {
-                alert('Bitte wählen Sie eine Datei aus.');
-                return;
-            }
-            
-            // For file uploads, we use the base64 data that was set in the preview
-            const previewImg = document.getElementById('logoPreviewImg');
-            if (previewImg && previewImg.src && previewImg.src.startsWith('data:')) {
-                finalLogoUrl = previewImg.src;
-            } else {
-                alert('Fehler beim Verarbeiten der Datei.');
-                return;
-            }
-        } else {
-            alert('Bitte wählen Sie eine Logo-Quelle aus.');
-            return;
-        }
-        
-        const logoData = {
-            gameName,
-            logoUrl: finalLogoUrl,
-            aliases: aliases ? 
-                aliases.split(',').map(alias => alias.trim()).filter(alias => alias) : []
-        };
-
-        // Check for duplicate game names (excluding current logo when editing)
-        const existingLogo = this.logos.find(logo => 
-            logo.gameName.toLowerCase() === logoData.gameName.toLowerCase() && 
-            logo.id !== this.currentLogoId
-        );
-        
-        if (existingLogo) {
-            alert('Ein Logo für dieses Spiel existiert bereits.');
-            return;
-        }
-
-        if (this.currentLogoId) {
-            // Edit existing logo
-            const logoIndex = this.logos.findIndex(logo => logo.id === this.currentLogoId);
-            if (logoIndex !== -1) {
-                this.logos[logoIndex] = { ...this.logos[logoIndex], ...logoData };
-            }
-        } else {
-            // Add new logo
-            const newId = Math.max(...this.logos.map(logo => logo.id), 0) + 1;
-            this.logos.push({ id: newId, ...logoData });
-        }
-
-        // Save to localStorage
-        localStorage.setItem('streamArchive_logos', JSON.stringify(this.logos));
-        
-        // Update UI
-        this.loadLogos();
-        this.hideLogoModal();
-        
-        // Update chat.js logo database
-        this.updateChatLogoDatabase();
-    }
-
-    editLogo(logoId) {
-        const logo = this.logos.find(l => l.id === logoId);
-        if (logo) {
-            this.showLogoModal(logo);
-        }
-    }
-
-    deleteLogo(logoId) {
-        const logo = this.logos.find(l => l.id === logoId);
-        if (!logo) return;
-
-        if (confirm(`Möchtest du das Logo für "${logo.gameName}" wirklich löschen?`)) {
-            this.logos = this.logos.filter(l => l.id !== logoId);
-            localStorage.setItem('streamArchive_logos', JSON.stringify(this.logos));
-            this.loadLogos();
-            this.updateChatLogoDatabase();
-        }
-    }
-
-    updateChatLogoDatabase() {
-        // This method updates the logo database used by chat.js
-        // We'll store it in a format that chat.js can easily access
-        const chatLogos = {};
-        this.logos.forEach(logo => {
-            const lowerName = logo.gameName.toLowerCase();
-            chatLogos[lowerName] = logo.logoUrl;
-            
-            // Add aliases
-            logo.aliases.forEach(alias => {
-                chatLogos[alias.toLowerCase()] = logo.logoUrl;
-            });
-        });
-        
-        localStorage.setItem('streamArchive_chatLogos', JSON.stringify(chatLogos));
-    }
-
-    showToast(message, type = 'info') {
-        // Create toast element
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        toast.innerHTML = `
-            <div class="toast-content">
-                <i class="fas fa-${this.getToastIcon(type)}"></i>
-                <span>${message}</span>
-            </div>
-        `;
-        
-        // Add styles if not already present
-        if (!document.querySelector('#toast-styles')) {
-            const styles = document.createElement('style');
-            styles.id = 'toast-styles';
-            styles.textContent = `
-                .toast {
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    background: var(--card-bg);
-                    border: 1px solid var(--border-color);
-                    border-radius: 8px;
-                    padding: 1rem;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                    z-index: 10000;
-                    transform: translateX(100%);
-                    transition: transform 0.3s ease;
-                }
-                .toast.show {
-                    transform: translateX(0);
-                }
-                .toast-content {
-                    display: flex;
-                    align-items: center;
-                    gap: 0.5rem;
-                    color: var(--text-color);
-                }
-                .toast-success { border-left: 4px solid var(--success-color); }
-                .toast-error { border-left: 4px solid var(--error-color); }
-                .toast-info { border-left: 4px solid var(--primary-color); }
-            `;
-            document.head.appendChild(styles);
-        }
-        
-        document.body.appendChild(toast);
-        
-        // Show toast
-        setTimeout(() => toast.classList.add('show'), 100);
-        
-        // Remove toast
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => document.body.removeChild(toast), 300);
-        }, 3000);
-    }
-
-    getToastIcon(type) {
-        const icons = {
-            'success': 'check-circle',
-            'error': 'exclamation-circle',
-            'info': 'info-circle'
-        };
-        return icons[type] || 'info-circle';
     }
 
     convertFileToBase64(file) {
@@ -1646,21 +1226,208 @@ class AdminPanel {
             reader.readAsDataURL(file);
         });
     }
-
-    exportData() {
+    
+    extractDurationFromChat(chatData) {
         try {
+            // Check if chatData has comments array
+            if (!chatData.comments || !Array.isArray(chatData.comments)) {
+                console.warn('No comments array found in chat data');
+                return 0;
+            }
+            
+            // Find the last message timestamp to determine stream duration
+            let maxTimestamp = 0;
+            
+            chatData.comments.forEach(comment => {
+                if (comment.content_offset_seconds) {
+                    maxTimestamp = Math.max(maxTimestamp, comment.content_offset_seconds);
+                }
+            });
+            
+            // Convert seconds to milliseconds and return
+            return Math.round(maxTimestamp * 1000);
+        } catch (error) {
+            console.error('Error extracting duration from chat:', error);
+            return 0;
+        }
+    }
+    
+    formatDuration(milliseconds) {
+        if (!milliseconds || milliseconds <= 0) return '0:00';
+        
+        const totalSeconds = Math.floor(milliseconds / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        
+        if (hours > 0) {
+            return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        } else {
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+    }
+    
+    async updateExistingStreamDurations() {
+        try {
+            this.showToast('Funktion wird in einer zukünftigen Version verfügbar sein', 'info');
+            // TODO: Implement functionality to update existing stream durations
+            // This would require:
+            // 1. Loading existing chat files for streams without duration
+            // 2. Processing each chat file to extract duration
+            // 3. Updating the stream records with the extracted duration
+        } catch (error) {
+            console.error('Error updating stream durations:', error);
+            this.showToast('Fehler beim Aktualisieren der Stream-Dauern', 'error');
+        }
+    }
+    
+    async checkChatDataStatus(streamId) {
+        const statusIcon = document.getElementById('editChatStatusIcon');
+        const statusText = document.getElementById('editChatStatusText');
+        
+        try {
+            const response = await fetch(`${this.apiBase}/chat_data/${streamId}`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: this.getAuthHeaders()
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                statusIcon.className = 'fas fa-circle text-success';
+                statusText.textContent = 'Chat-Daten vorhanden';
+                document.getElementById('editChatFileLabel').textContent = 'Chat-JSON aktualisieren';
+            } else {
+                statusIcon.className = 'fas fa-circle text-warning';
+                statusText.textContent = 'Keine Chat-Daten vorhanden';
+                document.getElementById('editChatFileLabel').textContent = 'Chat-JSON hochladen';
+            }
+        } catch (error) {
+            console.error('Error checking chat data status:', error);
+            statusIcon.className = 'fas fa-circle text-error';
+            statusText.textContent = 'Fehler beim Prüfen der Chat-Daten';
+        }
+    }
+    
+    setupEditChatFileInput() {
+        const fileInput = document.getElementById('editChatFile');
+        const label = document.querySelector('label[for="editChatFile"]');
+        
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                // Update label
+                const fileName = file.name;
+                let fileNameSpan = label.querySelector('.file-name');
+                if (!fileNameSpan) {
+                    fileNameSpan = document.createElement('span');
+                    fileNameSpan.className = 'file-name';
+                    label.appendChild(fileNameSpan);
+                }
+                fileNameSpan.textContent = fileName;
+                label.classList.add('file-selected');
+            } else {
+                const fileNameSpan = label.querySelector('.file-name');
+                if (fileNameSpan) fileNameSpan.remove();
+                label.classList.remove('file-selected');
+            }
+        });
+    }
+
+    updateTagsDisplay() {
+        const tagsList = document.getElementById('tagsList');
+        if (!tagsList) return;
+        
+        tagsList.innerHTML = '';
+        
+        this.tags.forEach((tag, index) => {
+            const tagElement = document.createElement('span');
+            tagElement.className = 'tag';
+            tagElement.innerHTML = `
+                ${tag}
+                <button type="button" class="tag-remove" onclick="adminPanel.removeTag(${index})">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            tagsList.appendChild(tagElement);
+        });
+    }
+
+    removeTag(index) {
+        this.tags.splice(index, 1);
+        this.updateTagsDisplay();
+    }
+
+    setupEditTagsInput() {
+        const tagsInput = document.getElementById('editTags');
+        const tagsList = document.getElementById('editTagsList');
+        
+        if (!tagsInput || !tagsList) return;
+        
+        tagsInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const tag = tagsInput.value.trim();
+                if (tag && !this.editTags.includes(tag)) {
+                    this.editTags.push(tag);
+                    this.updateEditTagsDisplay();
+                    tagsInput.value = '';
+                }
+            }
+        });
+    }
+
+    updateEditTagsDisplay() {
+        const tagsList = document.getElementById('editTagsList');
+        if (!tagsList) return;
+        
+        tagsList.innerHTML = '';
+        
+        this.editTags.forEach((tag, index) => {
+            const tagElement = document.createElement('span');
+            tagElement.className = 'tag';
+            tagElement.innerHTML = `
+                ${tag}
+                <button type="button" class="tag-remove" onclick="adminPanel.removeEditTag(${index})">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            tagsList.appendChild(tagElement);
+        });
+    }
+
+    removeEditTag(index) {
+        this.editTags.splice(index, 1);
+        this.updateEditTagsDisplay();
+    }
+
+    async exportData() {
+        try {
+            // Get all data from APIs
+            const [usersResponse, streamsResponse, settingsResponse, logosResponse] = await Promise.all([
+                fetch(`${this.apiBase}/users/list`),
+                fetch(`${this.apiBase}/streams`),
+                fetch(`${this.apiBase}/settings/all`),
+                fetch(`${this.apiBase}/logos`)
+            ]);
+            
+            const [usersData, streamsData, settingsData, logosData] = await Promise.all([
+                usersResponse.json(),
+                streamsResponse.json(),
+                settingsResponse.json(),
+                logosResponse.json()
+            ]);
+            
             const exportData = {
-                streams: this.streams,
-                users: this.users,
-                settings: this.settings,
-                logos: this.logos,
-                exportDate: new Date().toISOString(),
-                version: '1.0'
+                users: usersData.success ? usersData.data : [],
+                streams: streamsData.success ? streamsData.data : [],
+                settings: settingsData.success ? settingsData.data : [],
+                logos: logosData.success ? logosData.data : [],
+                exportDate: new Date().toISOString()
             };
             
-            const dataStr = JSON.stringify(exportData, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-            
+            const dataBlob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(dataBlob);
             link.download = `stream-archive-backup-${new Date().toISOString().split('T')[0]}.json`;
@@ -1675,39 +1442,44 @@ class AdminPanel {
         }
     }
 
-    clearAllData() {
-        if (confirm('Sind Sie sicher, dass Sie alle gespeicherten Daten löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden!')) {
-            if (confirm('LETZTE WARNUNG: Alle Streams, Benutzer und Einstellungen werden unwiderruflich gelöscht. Fortfahren?')) {
+    async importData(file) {
+        if (!file) return;
+        
+        try {
+            const text = await file.text();
+            const data = JSON.parse(text);
+            
+            if (confirm('Möchten Sie wirklich alle Daten importieren? Dies überschreibt vorhandene Daten!')) {
+                // Note: This would require additional API endpoints for bulk import
+                // For now, we'll show a message that this feature needs to be implemented
+                this.showToast('Import-Funktion wird in einer zukünftigen Version verfügbar sein', 'info');
+            }
+        } catch (error) {
+            console.error('Import error:', error);
+            this.showToast('Fehler beim Importieren der Daten', 'error');
+        }
+    }
+
+    async clearAllData() {
+        if (confirm('Sind Sie sicher, dass Sie ALLE Daten löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden!')) {
+            if (confirm('Letzte Bestätigung: Wirklich ALLE Daten löschen?')) {
                 try {
-                    // Clear all localStorage data
-                    localStorage.removeItem('streamArchive_streams');
-                    localStorage.removeItem('streamArchive_users');
-                    localStorage.removeItem('streamArchive_settings');
-                    localStorage.removeItem('streamArchive_logos');
+                    // Clear all data via APIs
+                    await Promise.all([
+                        fetch(`${this.apiBase}/analytics/all`, { method: 'DELETE' }),
+                        // Note: We don't delete users and streams here as that would require
+                        // individual delete calls for each item
+                    ]);
                     
-                    // Reset class properties
-                    this.streams = [];
-                    this.users = [];
-                    this.logos = [];
-                    this.settings = {
-                        siteName: 'Stream Archive',
-                        siteDescription: 'Dein persönliches Stream-Archiv',
-                        maxFileSize: 100,
-                        autoHLS: true,
-                        allowComments: true,
-                        requireLogin: false,
-                        moderateComments: false,
-                        hlsQualities: ['720p', '480p', '360p']
-                    };
+                    this.showToast('Daten wurden erfolgreich gelöscht', 'success');
                     
-                    // Reload all sections
+                    // Reload all data
+                    await this.loadMockData();
                     this.loadDashboard();
                     this.loadUsers();
                     this.loadArchive();
                     this.loadSettings();
                     this.loadLogos();
-                    
-                    this.showToast('Alle Daten wurden erfolgreich gelöscht', 'success');
                 } catch (error) {
                     console.error('Clear data error:', error);
                     this.showToast('Fehler beim Löschen der Daten', 'error');
@@ -1716,52 +1488,44 @@ class AdminPanel {
         }
     }
 
-    async checkAdminAccess() {
-        const token = cookieManager.getPreference('session_token');
-        if (!token) {
-            return false;
-        }
-
-        try {
-            const response = await fetch(`${CONFIG.getApiBase()}/users/profile`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                if (data.success && data.data && data.data.user) {
-                    const user = data.data.user;
-                    // Check if user has admin role
-                    return user.role === 'admin';
-                }
-            }
-        } catch (error) {
-            console.error('Admin access check failed:', error);
-        }
-        
-        return false;
+    formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('de-DE', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     }
 
-    redirectToLogin() {
-        // Show unauthorized message
-        document.body.innerHTML = `
-            <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; font-family: Arial, sans-serif;">
-                <div style="text-align: center; padding: 2rem; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9;">
-                    <h2 style="color: #d32f2f; margin-bottom: 1rem;">🚫 Zugriff verweigert</h2>
-                    <p style="margin-bottom: 1.5rem; color: #666;">Sie haben keine Berechtigung, auf den Admin-Bereich zuzugreifen.</p>
-                    <p style="margin-bottom: 1.5rem; color: #666;">Nur Benutzer mit Administrator-Rechten können diese Seite aufrufen.</p>
-                    <a href="index.html" style="display: inline-block; padding: 0.75rem 1.5rem; background: #1976d2; color: white; text-decoration: none; border-radius: 4px; transition: background 0.3s;">← Zurück zur Startseite</a>
-                </div>
+    showToast(message, type = 'info') {
+        // Create toast notification
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `
+            <div class="toast-content">
+                <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation-triangle' : 'info'}"></i>
+                <span>${message}</span>
             </div>
+            <button class="toast-close" onclick="this.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
         `;
+        
+        // Add to page
+        document.body.appendChild(toast);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.remove();
+            }
+        }, 5000);
     }
 }
 
 // Initialize admin panel when DOM is loaded
-let adminPanel;
 document.addEventListener('DOMContentLoaded', () => {
-    adminPanel = new AdminPanel();
-    window.adminManager = adminPanel; // Make it globally accessible
+    window.adminPanel = new AdminPanel();
 });

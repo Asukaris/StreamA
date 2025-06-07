@@ -555,6 +555,91 @@
         </div>
     </main>
 
+    <!-- Edit Stream Modal -->
+    <div id="editStreamModal" class="modal">
+        <div class="modal-content edit-modal-content">
+            <span class="close" onclick="adminPanel.closeEditModal()">&times;</span>
+            <h2><i class="fas fa-edit"></i> Stream bearbeiten</h2>
+            
+            <form id="editStreamForm">
+                <div class="edit-form-grid">
+                    <div class="edit-form-section">
+                        <h3>Grundinformationen</h3>
+                        <div class="form-group">
+                            <label for="editTitle">Titel *</label>
+                            <input type="text" id="editTitle" name="title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editDescription">Beschreibung</label>
+                            <textarea id="editDescription" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="editGame">Spiel</label>
+                            <input type="text" id="editGame" name="game">
+                        </div>
+                        <div class="form-group">
+                            <label for="editTags">Tags</label>
+                            <div class="tags-input">
+                                <input type="text" id="editTags" placeholder="Tag eingeben und Enter drücken">
+                                <div class="tags-list" id="editTagsList"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="editStreamUrl">Stream-URL</label>
+                            <input type="url" id="editStreamUrl" name="stream_url">
+                        </div>
+                    </div>
+                    
+                    <div class="edit-form-section">
+                        <h3>Thumbnail</h3>
+                        <div class="current-thumbnail">
+                            <img id="currentThumbnail" src="" alt="Current Thumbnail" class="thumbnail-preview">
+                        </div>
+                        <div class="form-group">
+                            <label for="editThumbnailFile">Neues Thumbnail</label>
+                            <div class="file-upload">
+                                <input type="file" id="editThumbnailFile" name="thumbnailFile" accept="image/*">
+                                <label for="editThumbnailFile" class="file-upload-label">
+                                    <i class="fas fa-image"></i>
+                                    Thumbnail ändern
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="edit-form-section">
+                        <h3>Chat-Daten</h3>
+                        <div class="chat-status" id="editChatStatus">
+                            <div class="status-indicator">
+                                <i class="fas fa-circle" id="editChatStatusIcon"></i>
+                                <span id="editChatStatusText">Wird geladen...</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="editChatFile">Chat-JSON</label>
+                            <div class="file-upload">
+                                <input type="file" id="editChatFile" name="chatFile" accept=".json">
+                                <label for="editChatFile" class="file-upload-label">
+                                    <i class="fas fa-comments"></i>
+                                    <span id="editChatFileLabel">Chat-JSON hochladen/aktualisieren</span>
+                                </label>
+                            </div>
+                            <small class="form-help">Lade eine neue Chat-JSON-Datei hoch oder aktualisiere die bestehende.</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminPanel.closeEditModal()">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Änderungen speichern
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Footer will be loaded dynamically by footer.js -->
 
     <!-- Modals -->
