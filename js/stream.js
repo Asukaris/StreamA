@@ -26,30 +26,53 @@ class StreamPage {
         }
     }
     
-    loadStreamData() {
-        // Load streams from localStorage
-        const storedStreams = localStorage.getItem('streamArchive_streams');
-        const streams = storedStreams ? JSON.parse(storedStreams) : [];
-        
-
-        // Find the stream by ID (handle both string and number comparisons)
-        this.streamData = streams.find(stream => {
-            const streamIdStr = String(stream.id);
-            const searchIdStr = String(this.streamId);
-            return streamIdStr === searchIdStr;
-        });
-        
-        if (!this.streamData) {
-            console.error('Stream not found! Available IDs:', streams.map(s => s.id));
-            this.showStreamNotFound();
-            return;
+    async loadStreamData() {
+        try {
+            // Get the API base path from config
+            const apiBase = window.CONFIG?.apiBase || '/api';
+            
+            // Fetch the specific stream from API
+            const response = await fetch(`${apiBase}/streams/${this.streamId}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (!result.success || !result.data) {
+                throw new Error('Stream not found in API response');
+            }
+            
+            this.streamData = result.data;
+            
+            this.populateStreamInfo();
+            this.initializePlayer();
+            await this.loadChatData();
+            
+        } catch (error) {
+            console.error('Failed to load stream data:', error);
+            
+            // Fallback: try to load from localStorage
+            const storedStreams = localStorage.getItem('streamArchive_streams');
+            const streams = storedStreams ? JSON.parse(storedStreams) : [];
+            
+            this.streamData = streams.find(stream => {
+                const streamIdStr = String(stream.id);
+                const searchIdStr = String(this.streamId);
+                return streamIdStr === searchIdStr;
+            });
+            
+            if (!this.streamData) {
+                console.error('Stream not found! Available IDs:', streams.map(s => s.id));
+                this.showStreamNotFound();
+                return;
+            }
+            
+            this.populateStreamInfo();
+            this.initializePlayer();
+            await this.loadChatData();
         }
-        
-
-        
-        this.populateStreamInfo();
-        this.initializePlayer();
-        this.loadChatData();
     }
     
     showStreamNotFound() {
@@ -83,28 +106,34 @@ class StreamPage {
         
         if (titleElement) titleElement.textContent = this.streamData.title;
         if (gameElement) gameElement.textContent = this.streamData.game;
-        if (dateElement) dateElement.textContent = this.formatDate(this.streamData.date);
+        if (dateElement) dateElement.textContent = this.formatDate(this.streamData.created_at || this.streamData.date);
         if (durationElement) durationElement.textContent = this.formatDuration(this.streamData.duration);
-        if (viewsElement) viewsElement.textContent = this.formatViews(this.streamData.views);
+        if (viewsElement) viewsElement.textContent = this.formatViews(this.streamData.viewer_count || this.streamData.views || 0);
         if (descriptionElement) descriptionElement.textContent = this.streamData.description;
         
         // Update tags
         if (tagsElement && this.streamData.tags) {
-            tagsElement.innerHTML = this.streamData.tags
+            let tags = this.streamData.tags;
+            // Handle both string and array formats
+            if (typeof tags === 'string') {
+                tags = tags.split(',').map(tag => tag.trim());
+            }
+            tagsElement.innerHTML = tags
                 .map(tag => `<span class="stream-tag">${tag}</span>`)
                 .join('');
         }
     }
     
     initializePlayer() {
-        if (!this.streamData || !this.streamData.link) return;
+        if (!this.streamData || (!this.streamData.stream_url && !this.streamData.link)) return;
         
         // Prevent multiple initialization attempts
         if (this.initializingPlayer) return;
         this.initializingPlayer = true;
         
         // Clean the video URL by removing extra spaces and backticks
-        const cleanUrl = this.streamData.link.trim().replace(/`/g, '');
+        const videoUrl = this.streamData.stream_url || this.streamData.link;
+        const cleanUrl = videoUrl ? videoUrl.trim().replace(/`/g, '') : '';
         
         if (!cleanUrl) {
             console.error('No valid video URL found after cleaning');
@@ -156,7 +185,7 @@ class StreamPage {
         }
     }
     
-    loadChatData() {
+    async loadChatData() {
         const chatContainer = document.querySelector('.chat-container');
         if (!chatContainer) {
             console.error('Chat container not found!');
@@ -172,11 +201,29 @@ class StreamPage {
                 autoScroll: true
             });
             
-            // Load chat data if available
-            if (this.streamData.chatData) {
-                this.chatSync.loadChatData(this.streamData.chatData);
-            } else {
-                this.chatSync.showEmpty();
+            // Load chat data from API
+            try {
+                const apiBase = window.CONFIG?.apiBase || '/api';
+                const chatResponse = await fetch(`${apiBase}/chat_data/${this.streamId}`);
+                if (chatResponse.ok) {
+                    const chatResult = await chatResponse.json();
+                    if (chatResult.success && chatResult.data) {
+                        this.chatSync.loadChatData(chatResult.data.chat_data);
+                    } else {
+                        this.chatSync.showEmpty();
+                    }
+                } else {
+                    console.warn('Chat data not available for this stream');
+                    this.chatSync.showEmpty();
+                }
+            } catch (error) {
+                console.error('Failed to load chat data:', error);
+                // Fallback: check if chat data is in streamData (for backward compatibility)
+                if (this.streamData.chatData) {
+                    this.chatSync.loadChatData(this.streamData.chatData);
+                } else {
+                    this.chatSync.showEmpty();
+                }
             }
             
             // Connect to player if available

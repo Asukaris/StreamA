@@ -36,5 +36,8 @@ const CONFIG = {
     }
 };
 
+// Set the apiBase property for easy access
+CONFIG.apiBase = CONFIG.getApiBase();
+
 // Export for use in other files
 window.CONFIG = CONFIG;
