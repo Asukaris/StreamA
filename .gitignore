@@ -139,3 +139,12 @@ build/
 *.bak
 *.backup
 *.old
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+data/
+api/data/
+/data/app.db
+/api/data/app.db
