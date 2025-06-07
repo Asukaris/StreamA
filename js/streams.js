@@ -512,7 +512,7 @@ class StreamsManager {
     
     openStream(streamId) {
         // Navigate to individual stream page using SPA navigation
-        if (window.SPAManager) {
+        if (window.spaManager) {
             // Use SPA navigation with hash-based routing
             window.location.hash = `stream?id=${streamId}`;
         } else {
@@ -543,7 +543,7 @@ class StreamsManager {
         const stream = this.streams.find(s => s.id === streamId);
         if (!stream) return;
         
-        const url = `${window.location.origin}/stream.html?id=${streamId}`;
+        const url = `${window.location.origin}${window.location.pathname}#stream?id=${streamId}`;
         
         if (navigator.share) {
             navigator.share({

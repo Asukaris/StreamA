@@ -31,11 +31,11 @@ class StreamPage {
         
         if (!this.streamId) {
             // Use SPA navigation if available, otherwise redirect
-            if (window.SPAManager) {
-                window.location.hash = 'streams';
-            } else {
-                window.location.href = 'streams.html';
-            }
+            if (window.spaManager) {
+            window.location.hash = 'streams';
+        } else {
+            window.location.hash = 'streams';
+        }
             return;
         }
     }
@@ -97,7 +97,7 @@ class StreamPage {
                 <div class="error-message">
                     <h2>Stream nicht gefunden</h2>
                     <p>Der angeforderte Stream konnte nicht gefunden werden.</p>
-                    <a href="streams.html" class="btn btn-primary">Zurück zu den Streams</a>
+                    <a href="#streams" class="btn btn-primary">Zurück zu den Streams</a>
                 </div>
             `;
         }
@@ -412,7 +412,7 @@ class StreamPage {
                     <i class="fas fa-video-slash"></i>
                     <h2>Stream nicht gefunden</h2>
                     <p>Der angeforderte Stream konnte nicht gefunden werden.</p>
-                    <a href="streams.html" class="btn btn-primary">
+                    <a href="#streams" class="btn btn-primary">
                         <i class="fas fa-arrow-left"></i>
                         Zurück zu den Streams
                     </a>
