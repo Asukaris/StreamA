@@ -17,7 +17,10 @@ class HeaderComponent {
             const headerHTML = await response.text();
             
             // Insert header at the beginning of body (after cookie consent)
-            const cookieConsent = document.getElementById('cookieConsent') || document.querySelector('.cookie-toast');
+            const cookieConsent = document.getElementById('cookieConsent') || 
+                                document.getElementById('cookieToast') || 
+                                document.querySelector('.cookie-toast') ||
+                                document.querySelector('.cookie-consent');
             if (cookieConsent) {
                 cookieConsent.insertAdjacentHTML('afterend', headerHTML);
             } else {

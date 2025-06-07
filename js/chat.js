@@ -423,10 +423,43 @@ class ChatSync {
      }
      
      async getSteamLogo(gameName) {
-        // Load logo database from admin panel
-        const chatLogos = JSON.parse(cookieManager.getPreference('streamArchive_chatLogos') || '{}');
+        // Initialize chatLogos outside try-catch to ensure it's always available
+        let chatLogos = {};
         
-        // Fallback to default logos if admin database is empty
+        try {
+            // Load logo database from API
+            const apiBase = window.CONFIG?.apiBase || '/api';
+            const response = await fetch(`${apiBase}/logos`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.data) {
+                    // Convert API data to lookup object
+                    data.data.forEach(logo => {
+                        const gameName = (logo.game_name || logo.gameName || '').toLowerCase();
+                        const logoUrl = logo.logo_url || logo.logoUrl;
+                        if (gameName && logoUrl) {
+                            chatLogos[gameName] = logoUrl;
+                            
+                            // Also add aliases
+                            if (logo.aliases && Array.isArray(logo.aliases)) {
+                                logo.aliases.forEach(alias => {
+                                    if (alias && alias.trim()) {
+                                        chatLogos[alias.toLowerCase().trim()] = logoUrl;
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            } else {
+                console.warn('Failed to load logos from API, using fallback');
+            }
+        } catch (error) {
+            console.warn('Error loading logos from API:', error);
+        }
+        
+        // Fallback to default logos if API fails or is empty
         const defaultGames = {
             'minecraft': 'https://www.minecraft.net/etc.clientlibs/minecraft/clientlibs/main/resources/favicon-96x96.png',
             'fortnite': 'https://cdn2.unrealengine.com/Fortnite%2Ffn-game-icon-285x285-285x285-0b364143e0c9.png',
@@ -439,7 +472,7 @@ class ChatSync {
             'apex legends': 'https://media.contentapi.ea.com/content/dam/apex-legends/images/2019/01/apex-legends-meta-image.jpg'
         };
         
-        // Combine admin logos with default logos (admin logos take priority)
+        // Combine API logos with default logos (API logos take priority)
         const allLogos = { ...defaultGames, ...chatLogos };
         
         const lowerName = gameName.toLowerCase().trim();

@@ -211,6 +211,6 @@ class Database {
     }
 }
 
-// Global database instance - commented out to prevent automatic instantiation
-// $database = new Database();
+// Global database instance
+$database = new Database();
 ?>

@@ -8,7 +8,9 @@ class CookieManager {
     setCookie(name, value, days = 30) {
         const expires = new Date();
         expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
-        document.cookie = `${this.prefix}${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/`;
+        // Get the base path for the cookie
+        const basePath = window.CONFIG ? window.CONFIG.getBasePath() : '/';
+        document.cookie = `${this.prefix}${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=${basePath}`;
     }
 
     // Get a cookie
@@ -27,7 +29,9 @@ class CookieManager {
 
     // Delete a cookie
     deleteCookie(name) {
-        document.cookie = `${this.prefix}${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/`;
+        // Get the base path for the cookie
+        const basePath = window.CONFIG ? window.CONFIG.getBasePath() : '/';
+        document.cookie = `${this.prefix}${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=${basePath}`;
     }
 
     // Check if a cookie exists

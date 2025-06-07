@@ -534,6 +534,11 @@ function copyCode(button) {
 document.addEventListener('DOMContentLoaded', () => {
     new APIDocumentation();
     
+    // Initialize StreamArchiveApp for login functionality
+    if (typeof StreamArchiveApp !== 'undefined') {
+        window.streamApp = new StreamArchiveApp();
+    }
+    
     // Load saved theme
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);

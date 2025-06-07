@@ -215,6 +215,46 @@ class AdminPanel {
             });
         }
 
+        // Add Logo Button
+        const addLogoBtn = document.getElementById('addLogoBtn');
+        if (addLogoBtn) {
+            addLogoBtn.addEventListener('click', () => {
+                this.openLogoModal();
+            });
+        }
+
+        // Save Logo Button
+        const saveLogoBtn = document.getElementById('saveLogo');
+        if (saveLogoBtn) {
+            saveLogoBtn.addEventListener('click', () => {
+                this.saveLogo();
+            });
+        }
+
+        // Cancel Logo Button
+        const cancelLogoBtn = document.getElementById('cancelLogo');
+        if (cancelLogoBtn) {
+            cancelLogoBtn.addEventListener('click', () => {
+                this.closeLogoModal();
+            });
+        }
+
+        // Logo search
+        const logoSearch = document.getElementById('logoSearch');
+        if (logoSearch) {
+            logoSearch.addEventListener('input', (e) => {
+                this.filterLogos(e.target.value);
+            });
+        }
+
+        // Logo URL preview
+        const logoUrl = document.getElementById('logoUrl');
+        if (logoUrl) {
+            logoUrl.addEventListener('input', (e) => {
+                this.updateLogoPreview(e.target.value);
+            });
+        }
+
         // Export/Import buttons
         const exportBtn = document.getElementById('exportData');
         if (exportBtn) {
@@ -816,10 +856,33 @@ class AdminPanel {
             });
         }
 
-        // Setup escape key to close modal
+        // Setup logo modal functionality
+        const logoModal = document.getElementById('logoModal');
+        const logoCloseBtn = document.querySelector('#logoModal .modal-close');
+        
+        if (logoCloseBtn) {
+            logoCloseBtn.addEventListener('click', () => {
+                this.closeLogoModal();
+            });
+        }
+        
+        if (logoModal) {
+            logoModal.addEventListener('click', (e) => {
+                if (e.target === logoModal) {
+                    this.closeLogoModal();
+                }
+            });
+        }
+
+        // Setup escape key to close modals
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal && modal.style.display === 'block') {
-                this.closeEditModal();
+            if (e.key === 'Escape') {
+                if (modal && modal.style.display === 'block') {
+                    this.closeEditModal();
+                }
+                if (logoModal && logoModal.style.display === 'block') {
+                    this.closeLogoModal();
+                }
             }
         });
     }
@@ -973,22 +1036,22 @@ class AdminPanel {
     }
 
     renderLogos() {
-        const logosList = document.getElementById('logosList');
-        if (!logosList) return;
+        const logosGrid = document.getElementById('logosGrid');
+        if (!logosGrid) return;
 
         if (this.logos.length === 0) {
-            logosList.innerHTML = '<p class="no-data">Keine Logos gefunden.</p>';
+            logosGrid.innerHTML = '<p class="no-data">Keine Logos gefunden.</p>';
             return;
         }
 
-        logosList.innerHTML = this.logos.map(logo => `
+        logosGrid.innerHTML = this.logos.map(logo => `
             <div class="logo-item" data-logo-id="${logo.id}">
                 <div class="logo-preview">
-                    <img src="${logo.logo_url}" alt="${logo.game_name}" onerror="this.src='/images/default-logo.png'">
+                    <img src="${logo.logo_url || logo.logoUrl}" alt="${logo.game_name || logo.gameName}" onerror="this.src='/css/placeholder-thumbnail.svg'">
                 </div>
                 <div class="logo-info">
-                    <h4>${logo.game_name}</h4>
-                    <p>Aliase: ${logo.aliases ? logo.aliases.join(', ') : 'Keine'}</p>
+                    <h4>${logo.game_name || logo.gameName}</h4>
+                    <p>Aliase: ${logo.aliases && logo.aliases.length > 0 ? logo.aliases.join(', ') : 'Keine'}</p>
                     <small>Erstellt: ${this.formatDate(logo.created_at)}</small>
                 </div>
                 <div class="logo-actions">
@@ -1048,14 +1111,30 @@ class AdminPanel {
         const logo = this.logos.find(l => l.id === logoId);
         if (!logo) return;
 
+        const modal = document.getElementById('logoModal');
+        const modalTitle = document.getElementById('logoModalTitle');
         const form = document.getElementById('logoForm');
-        if (!form) return;
-
-        form.querySelector('[name="gameName"]').value = logo.game_name;
-        form.querySelector('[name="logoUrl"]').value = logo.logo_url;
-        form.querySelector('[name="aliases"]').value = logo.aliases ? logo.aliases.join(', ') : '';
         
+        if (!form || !modal || !modalTitle) return;
+
+        // Fill form fields
+        const gameNameField = form.querySelector('[name="gameName"]') || document.getElementById('logoGameName');
+        const logoUrlField = form.querySelector('[name="logoUrl"]') || document.getElementById('logoUrl');
+        const aliasesField = form.querySelector('[name="aliases"]') || document.getElementById('logoAliases');
+        
+        if (gameNameField) gameNameField.value = logo.game_name || logo.gameName || '';
+        if (logoUrlField) logoUrlField.value = logo.logo_url || logo.logoUrl || '';
+        if (aliasesField) aliasesField.value = logo.aliases && logo.aliases.length > 0 ? logo.aliases.join(', ') : '';
+        
+        // Update preview
+        this.updateLogoPreview(logo.logo_url || logo.logoUrl || '');
+        
+        // Set modal title and current ID
+        modalTitle.textContent = 'Logo bearbeiten';
         this.currentLogoId = logoId;
+        
+        // Show modal
+        modal.style.display = 'block';
     }
 
     async deleteLogo(logoId) {
@@ -1077,6 +1156,65 @@ class AdminPanel {
                 this.showToast('Fehler beim Löschen des Logos', 'error');
             }
         }
+    }
+
+    openLogoModal() {
+        const modal = document.getElementById('logoModal');
+        const modalTitle = document.getElementById('logoModalTitle');
+        const form = document.getElementById('logoForm');
+        
+        if (modal && modalTitle && form) {
+            modalTitle.textContent = 'Logo hinzufügen';
+            form.reset();
+            this.currentLogoId = null;
+            this.updateLogoPreview('');
+            modal.style.display = 'block';
+        }
+    }
+
+    closeLogoModal() {
+        const modal = document.getElementById('logoModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    updateLogoPreview(url) {
+        const previewImg = document.getElementById('logoPreviewImg');
+        const placeholder = document.querySelector('.logo-preview-placeholder');
+        
+        if (url && url.trim()) {
+            if (previewImg) {
+                previewImg.src = url;
+                previewImg.style.display = 'block';
+            }
+            if (placeholder) {
+                placeholder.style.display = 'none';
+            }
+        } else {
+            if (previewImg) {
+                previewImg.style.display = 'none';
+            }
+            if (placeholder) {
+                placeholder.style.display = 'block';
+            }
+        }
+    }
+
+    filterLogos(searchTerm) {
+        const logoItems = document.querySelectorAll('.logo-item');
+        const term = searchTerm.toLowerCase();
+        
+        logoItems.forEach(item => {
+            const gameName = item.querySelector('h4').textContent.toLowerCase();
+            const aliases = item.querySelector('p').textContent.toLowerCase();
+            
+            if (gameName.includes(term) || aliases.includes(term)) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
     }
 
     setupUploadForm() {
