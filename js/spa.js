@@ -482,27 +482,38 @@ class SPAManager {
             case 'logos':
             case 'data-management':
             case 'settings':
+                console.log('---- SPA: Admin case reached, AdminManager available:', !!window.AdminManager);
                 if (window.AdminManager) {
                     // Only create new AdminManager if one doesn't exist
                     if (!window.adminManagerInstance) {
+                        console.log('---- SPA: Creating new AdminManager instance');
                         const adminManager = new AdminManager();
                         window.adminManagerInstance = adminManager;
                         // Also assign to adminPanel for onclick compatibility
                         window.adminPanel = adminManager;
+                    } else {
+                        console.log('---- SPA: AdminManager instance already exists');
                     }
                     // If it's an admin sub-page, activate the specific tab
                     const route = this.routes[page];
+                    console.log('---- SPA: Route found:', route);
                     if (route && route.adminTab) {
+                        console.log('---- SPA: Admin tab to activate:', route.adminTab);
                         // If admin panel already exists, activate tab immediately
                         if (window.adminManagerInstance) {
+                            console.log('---- SPA: Activating tab immediately');
                             this.activateAdminTab(route.adminTab);
                         } else {
+                            console.log('---- SPA: Waiting for admin panel to initialize');
                             // Wait for admin panel to initialize, then activate the tab
                             setTimeout(() => {
+                                console.log('---- SPA: Timeout reached, activating tab');
                                 this.activateAdminTab(route.adminTab);
                             }, 200);
                         }
                     }
+                } else {
+                    console.error('---- SPA: AdminManager class not available!');
                 }
                 break;
             case 'api':

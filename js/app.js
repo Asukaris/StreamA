@@ -386,7 +386,7 @@ class StreamArchiveApp {
     }
     
     openStream(streamId) {
-        window.location.href = `stream.html?id=${streamId}`;
+        window.location.hash = `stream?id=${streamId}`;
     }
     
     // Utility Functions
